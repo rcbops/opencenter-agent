@@ -82,5 +82,7 @@ class PluginManager:
         # look at the dispatch table for matching actions
         # and dispatch them in order to the registered
         # handlers.
-        if action in self.dispatch_table:
-            for fn in self.dispatch_table[action]:
+        # if action in self.dispatch_table:
+        #     for fn in self.dispatch_table[action]:
+
+        pass
