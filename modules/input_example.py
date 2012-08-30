@@ -32,7 +32,7 @@ class ServerThread(threading.Thread):
 
     def run(self):
         server_class = BaseHTTPServer.HTTPServer
-        self.httpd = server_class(('0.0.0.0', 8080), RestishHandler)
+        self.httpd = server_class(('0.0.0.0', 8000), RestishHandler)
         while not server_quit:
             try:
                 self.httpd.handle_request()
