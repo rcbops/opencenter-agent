@@ -6,23 +6,17 @@ import logging
 
 LOG = logging.getLogger('plugins')
 
-# incoming json looks like:
-#
-# { "command": {
-#     "action": "registered_action",
-#     "args": []
-#     }
-# }
+# incoming data is the action and an arbitrary dict.
 #
 # Each plugin must register its own actions.  Multiply registered
 # actions will all receive notification for the event.
 #
-# Return values are json, looking like:
+# Return values are dicts, looking like:
 #
 # { "response": {
 #     "result_code": <result-code-ish>
 #     "result_str": <error-or-success-message>
-#     "result_err": <extended error info (backtrace, stderr, etc)
+#     "result_data": <extended error info or arbitrary data>
 #   }
 # }
 
@@ -87,6 +81,6 @@ class PluginManager:
         if action in self.dispatch_table:
             for fn in self.dispatch_table[action]:
                 # FIXME(rp): handle exeptions
-                fn(payload)
+                fn(action, payload)
         else:
             LOG.warning('No dispatch for action "%s"' % action)

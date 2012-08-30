@@ -2,6 +2,7 @@
 
 import BaseHTTPServer
 import threading
+import json
 
 producer_lock = threading.Lock()
 producer_queue = []
@@ -13,7 +14,7 @@ class RestishHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         # Maybe this is send request
 
         producer_lock.acquire()
-        producer_queue.append('{ "action": "testing", "payload": {} ')
+        producer_queue.append(json.loads('{ "action": "testing", "payload": {} '))
 
         # should use a pthread_cond here
         producer_lock.release()
