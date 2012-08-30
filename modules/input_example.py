@@ -27,24 +27,32 @@ class RestishHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         pass
 
 class ServerThread(threading.Thread):
+    def stop(self):
+        self.httpd.socket.close()
+
     def run(self):
         server_class = BaseHTTPServer.HTTPServer
-        httpd = server_class(('0.0.0.0', 8080), RestishHandler)
+        self.httpd = server_class(('0.0.0.0', 8080), RestishHandler)
         while not server_quit:
-            httpd.handle_request()
+            try:
+                self.httpd.handle_request()
+            except Exception as e:
+                LOG.error("Got an exception: %s.  Aborting." % type(e))
+                return
 
 # Amazing stupid handler.  Throw off a thread
 # and start waiting for stuff...
 def setup():
+    global server_thread
     LOG.debug('Starting rest-ish server')
     server_thread = ServerThread()
-    print "server_thread in setup" + str(dir(server_thread))
     server_thread.start()
 
 def teardown():
+    global server_thread
     LOG.debug('Shutting down rest-ish server')
+    server_thread.stop()
     server_quit = True
-    print "server thread in teardown: " + str(dir(server_thread))
     server_thread.join()
 
 def fetch():

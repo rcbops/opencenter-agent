@@ -54,8 +54,6 @@ class InputManager:
         # FIXME(rp): Handle exceptions
         execfile(path,ns)
 
-        print "server_thread in loadfile: " + str(dir(ns['server_thread']))
-
         name = path
         if 'name' in ns:
             name = ns['name']
@@ -64,8 +62,6 @@ class InputManager:
 
         if 'setup' in ns:
             ns['setup']()
-
-        print "server_thread after setup in loadfile: " + str(dir(ns['server_thread']))
 
     def load(self, path):
         # Load a plugin by file name.  modules with
