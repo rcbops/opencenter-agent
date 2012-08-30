@@ -54,6 +54,8 @@ class InputManager:
         # FIXME(rp): Handle exceptions
         execfile(path,ns)
 
+        print "server_thread in loadfile: " + str(dir(ns['server_thread']))
+
         name = path
         if 'name' in ns:
             name = ns['name']
@@ -62,6 +64,8 @@ class InputManager:
 
         if 'setup' in ns:
             ns['setup']()
+
+        print "server_thread after setup in loadfile: " + str(dir(ns['server_thread']))
 
     def load(self, path):
         # Load a plugin by file name.  modules with
@@ -76,6 +80,13 @@ class InputManager:
             else:
                 self._load_file(path)
 
+    def stop(self):
+        # run 'teardown' on all the loaded modules
+        for input_plugin in self.input_plugins:
+            if 'teardown' in self.input_plugins[input_plugin]:
+                self.input_plugins[input_plugin]['teardown']()
+
+
     def fetch(self):
         # walk through all the different input managers and fetch the
         # next input message.
@@ -89,7 +100,7 @@ class InputManager:
 
         for input_plugin in self.input_plugins:
             if 'fetch' in self.input_plugins[input_plugin]:
-                result = self.input_plugins['fetch']()
+                result = self.input_plugins[input_plugin]['fetch']()
                 if len(result):
                     return result
 
