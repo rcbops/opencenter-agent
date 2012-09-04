@@ -10,11 +10,28 @@ server_quit = False
 server_thread = None
 
 class RestishHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+    # these will be
     def do_POST(self):
-        # Maybe this is send request
+        action = self.path.split("/")[1]
+        retval = { 'action': action }
+
+        if self.headers.getheader('content-type') == 'application/json':
+            payload_len = self.headers.getheader('content-length')
+
+            # FIXME: Danger, timeout vs. memory.
+            try:
+                if payload_len:
+                    retval['payload'] = json.loads(self.rfile.read(int(payload_len)))
+                else:
+                    retval['payload'] = json.load(self.rfile)
+            except ValueError:
+                self.send_response(500)
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                return
 
         producer_lock.acquire()
-        producer_queue.append(json.loads('{ "action": "testing", "payload": {}} '))
+        producer_queue.append(retval)
 
         # should use a pthread_cond here
         producer_lock.release()
@@ -32,6 +49,8 @@ class ServerThread(threading.Thread):
         self.httpd.socket.close()
 
     def run(self):
+        global server_quit
+
         server_class = BaseHTTPServer.HTTPServer
         self.httpd = server_class(('0.0.0.0', 8000), RestishHandler)
         while not server_quit:
@@ -39,7 +58,8 @@ class ServerThread(threading.Thread):
                 self.httpd.handle_request()
             except Exception as e:
                 LOG.error("Got an exception: %s.  Aborting." % type(e))
-                return
+                if server_quit:
+                    return
 
 # Amazing stupid handler.  Throw off a thread
 # and start waiting for stuff...
@@ -51,9 +71,11 @@ def setup():
 
 def teardown():
     global server_thread
+    global server_quit
+
     LOG.debug('Shutting down rest-ish server')
-    server_thread.stop()
     server_quit = True
+    server_thread.stop()
     server_thread.join()
 
 def fetch():

@@ -14,8 +14,8 @@ if __name__ == "__main__":
     log.setLevel(logging.DEBUG)
     log.addHandler(logging.StreamHandler(sys.stderr))
 
-    output_handler = PluginManager(['modules/plugin_example.py'])
-    input_handler = InputManager(['modules/input_example.py'])
+    output_handler = PluginManager(['modules/plugin_files.py'])
+    input_handler = InputManager(['modules/task_input.py'])
 
     # we'll assume non-blocking.  we should negotiate this
     # with the plugins, I suppose
@@ -27,7 +27,24 @@ if __name__ == "__main__":
             if len(result) == 0:
                 time.sleep(5)
             else:
-                output_handler.dispatch('test', result)
+                log.debug('Got input from input handler "%s"' %
+                          result['plugin'])
+                log.debug('Data: %s' % result['data'])
+
+                out = {'result_code': 255,
+                       'result_str': 'unknown error',
+                       'result_data': ''}
+
+                try:
+                    out = output_handler.dispatch(result['data']['action'],
+                                                  result['data']['payload'])
+                except Exception as e:
+                    out = { 'result_code': 254,
+                            'result_str': 'dispatch error',
+                            'result_data': str(e) }
+
+                input_handler.result(result, out)
+
     except KeyboardInterrupt:
         pass
 

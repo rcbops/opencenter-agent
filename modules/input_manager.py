@@ -5,16 +5,15 @@ import logging
 
 LOG = logging.getLogger('input')
 
-# incoming json looks like:
+# input module recieve task data in any manner necessary,
+# and return a python dict in this form:
 #
-# { "command": {
-#     "action": "registered_action",
-#     "args": []
-#     }
-# }
+# { 'id': ...,            # some unique id for the command
+#   'action': '...',      # output handler dispatcher
+#   'payload': '...' }    # arbitrary jsonable data for task dispatcher
 #
 # input plugins receive the data, and mash it into the
-# proper json form, if necessary.  Plugins can thread,
+# proper dict form, if necessary.  Plugins can thread,
 # although input is serialized, and dispatched serially
 # through consumer plugins.
 #
@@ -28,6 +27,8 @@ LOG = logging.getLogger('input')
 # a plugin which does not block can pass back an empty dict,
 # which will drop the manager into polling mode.
 #
+# In addition, the result code and and result blob will be
+# passed to the result() function if present.
 
 class InputManager:
     def __init__(self, path):
@@ -82,6 +83,13 @@ class InputManager:
             if 'teardown' in self.input_plugins[input_plugin]:
                 self.input_plugins[input_plugin]['teardown']()
 
+    def result(self, event, result_hash):
+        plugin = event['plugin']
+        txid = event['data']['id']
+
+        if 'result' in self.input_plugins[plugin]:
+            LOG.debug('sending result outcome to plugin "%s"' % plugin)
+            self.input_plugins[plugin]['result'](txid, result_hash)
 
     def fetch(self):
         # walk through all the different input managers and fetch the
@@ -92,13 +100,12 @@ class InputManager:
         # plugins by last valid response or something to keep one plugin
         # from monopolizing the input queue.  In fact, FIXME
         #
-        result = {}
-
         for input_plugin in self.input_plugins:
             if 'fetch' in self.input_plugins[input_plugin]:
-                result = self.input_plugins[input_plugin]['fetch']()
-                if len(result):
-                    return result
+                fetch_result = self.input_plugins[input_plugin]['fetch']()
+                if len(fetch_result):
+                    return {"plugin": self.input_plugins[input_plugin]['name'],
+                            "data": fetch_result}
 
         # otherwise, nothing
-        return result
+        return {}
