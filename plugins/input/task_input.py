@@ -171,6 +171,9 @@ def fetch():
     global task_getter
     return task_getter.fetch()
 
-def result(txid, result_hash):
+def result(input_data, output_data):
     global task_getter
+
+    txid = input_data['id']
+    result_hash = output_data
     return task_getter.result(txid, result_hash)

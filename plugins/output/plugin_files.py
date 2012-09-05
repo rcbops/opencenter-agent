@@ -7,7 +7,10 @@ def setup():
     register_action('files_list', handle_files)
     register_action('files_get', handle_files)
 
-def handle_files(action, payload):
+def handle_files(input_data):
+    action = input_data['action']
+    payload = input_data['payload']
+
     result_code = 1
     result_str = 'no file specified'
     result_data = ''

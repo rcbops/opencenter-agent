@@ -1,4 +1,4 @@
 #!/usr/bin/env python
 
-from plugin_manager import PluginManager
+from output_manager import OutputManager
 from input_manager import InputManager

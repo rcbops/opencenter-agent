@@ -20,7 +20,7 @@ LOG = logging.getLogger('plugins')
 #   }
 # }
 
-class PluginManager:
+class OutputManager:
     def __init__(self, path):
         # Load all available plugins, or those
         # specficied by the config.
@@ -74,10 +74,17 @@ class PluginManager:
             else:
                 self._load_file(path)
 
-    def dispatch(self, action, payload):
+    def dispatch(self, input_data):
         # look at the dispatch table for matching actions
         # and dispatch them in order to the registered
         # handlers.
+        #
+        # Not sure what exactly to do with multiple
+        # registrations for the same event, so we'll
+        # punt and just pass to the first successful.
+        #
+        action = input_data['action']
+
         result = {'result_code': 253,
                   'result_str': 'no dispatcher',
                   'result_data': '' }
@@ -86,12 +93,11 @@ class PluginManager:
             LOG.debug('plugin_manager: dispatching action %s' % action)
             for fn in self.dispatch_table[action]:
                 # FIXME(rp): handle exeptions
-                result = fn(action, payload)
+                result = fn(input_data)
                 LOG.debug('Got result %s' % result)
                 if 'result_code' in result and result['result_code'] == 0:
                     return result
 
-            LOG.warning('plugin_manager: could not successfully dispatch')
             return result
         else:
             LOG.warning('No dispatch for action "%s"' % action)
