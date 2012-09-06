@@ -24,12 +24,4 @@ def install_chef(input_data):
             return { 'result_code': 22,
              'result_str': 'Bad Request (missing %s)' % r,
              'result_data': None }
-    script.run_env("install_chef.sh", env, "")
-    return { 'result_code': 0,
-             'result_str': 'success',
-             'result_data': None }
-    #env = {"CHEFSERVER": "
-    #script.run_env(
-
-def get_env_from_payload(payload, accept_keys):
-    
+    return script.run_env("install_chef.sh", env, "")
