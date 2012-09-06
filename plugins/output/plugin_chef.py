@@ -17,7 +17,8 @@ def install_chef(input_data):
     action  = input_data['action']
     required = ["CHEF_SERVER", "CHEF_VALIDATOR"]
     optional = ["CHEF_RUNLIST", "CHEF_ENVIRONMENT", "CHEF_VALIDATION_NAME"]
-    env = dict([k,v for k,v in payload if k in required + optional ])
+    env = dict([(k,v) for k,v in payload.iteritems() 
+                if k in required + optional ])
     for r in required:
         if not env.has_key(required):
             return { 'result_code': 22,
