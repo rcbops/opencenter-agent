@@ -61,10 +61,15 @@ class TaskThread(threading.Thread):
         else:
             raise ValueError
 
-        if self._is_success(r.status_code):
-            return (r.status_code, json.loads(r.text))
+        try:
+            text = r.text
+        except AttributeError:
+            text = r.content
 
-        return (r.status_code, r.text)
+        if self._is_success(r.status_code):
+            return (r.status_code, json.loads(text))
+
+        return (r.status_code, text)
 
     def _get(self, partial_uri):
         return self._request('GET', self.endpoint + partial_uri)
