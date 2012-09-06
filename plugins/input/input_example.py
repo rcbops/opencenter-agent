@@ -63,7 +63,7 @@ class ServerThread(threading.Thread):
 
 # Amazing stupid handler.  Throw off a thread
 # and start waiting for stuff...
-def setup():
+def setup(config={}):
     global server_thread
     LOG.debug('Starting rest-ish server')
     server_thread = ServerThread()

@@ -21,10 +21,12 @@ LOG = logging.getLogger('plugins')
 # }
 
 class OutputManager:
-    def __init__(self, path):
+    def __init__(self, path, config={}):
         # Load all available plugins, or those
         # specficied by the config.
+
         self.dispatch_table = {}
+        self.config = config
         self.load(path)
 
         LOG.debug('Dispatch table: %s' % self.dispatch_table)
@@ -48,8 +50,14 @@ class OutputManager:
         # FIXME(rp): Handle exceptions
         execfile(path,ns)
 
+        if not 'name' in ns:
+            raise ImportError('Plugin missing "name" value')
+
+        name = ns['name']
+        config = self.config.get(name, {})
+
         if 'setup' in ns:
-            ns['setup']()
+            ns['setup'](config)
         else:
             LOG.warning('No setup function in %s.  Ignoring.' % path)
 

@@ -2,7 +2,9 @@
 
 import os
 
-def setup():
+name = 'files'
+
+def setup(config={}):
     LOG.debug('doing setup for files handler')
     register_action('files_list', handle_files)
     register_action('files_get', handle_files)

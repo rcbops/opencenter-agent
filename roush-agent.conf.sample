@@ -1,0 +1,17 @@
+[main]
+
+base_dir = .
+plugin_dir = ./plugins
+
+# comma separated list of files or dirs
+input_handlers = plugins/input/task_input.py
+
+# comma separated list of files or dirs
+output_handlers = plugins/output
+
+[restish]
+bind_address = 0.0.0.0
+bind_port = 8000
+
+[taskerator]
+endpoint = http://localhost:8080

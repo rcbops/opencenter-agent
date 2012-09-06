@@ -60,10 +60,11 @@ LOG = logging.getLogger('input')
 #
 
 class InputManager:
-    def __init__(self, path):
+    def __init__(self, path, config={}):
         # Load all available plugins, or those
         # specficied by the config.
         self.input_plugins = {}
+        self.config = config
         self.load(path)
 
     def _load_directory(self, path):
@@ -84,14 +85,17 @@ class InputManager:
         # FIXME(rp): Handle exceptions
         execfile(path,ns)
 
-        name = path
-        if 'name' in ns:
-            name = ns['name']
+        if not 'name' in ns:
+            raise ImportError('Plugin missing name value')
+
+        name = ns['name']
 
         self.input_plugins[name] = ns
 
+        config = self.config.get(name, {})
+
         if 'setup' in ns:
-            ns['setup']()
+            ns['setup'](config)
 
     def load(self, path):
         # Load a plugin by file name.  modules with

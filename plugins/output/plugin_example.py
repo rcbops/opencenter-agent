@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-def setup():
+name = 'example'
+
+def setup(config={}):
     LOG.debug('Doing setup in test.py')
     register_action('test', handle_test)
 

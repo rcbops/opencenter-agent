@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
 import json
+import os
 import threading
 import time
 
 import requests
 
-name = 'RoushTaskInput'
+name = 'taskerator'
 task_getter = None
 
 class TaskThread(threading.Thread):
@@ -157,10 +158,13 @@ class TaskGetter:
     def result(self, txid, result):
         return self.server_thread.result(txid, result)
 
-def setup():
+def setup(config={}):
     global task_getter
 
-    task_getter = TaskGetter('http://localhost:8080', 'foo')
+    hostname = config.get('hostname', os.popen('hostname -f').read().strip())
+    endpoint = config.get('endpoint', 'http://localhost:8080')
+
+    task_getter = TaskGetter(endpoint, hostname)
     task_getter.run()
 
 def teardown():
