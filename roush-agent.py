@@ -66,8 +66,8 @@ if __name__ == '__main__':
 
     # get directory/path layout
     base_dir = config['main'].get('base_dir', os.path.dirname(__file__))
-    plugin_dir = config['main'].get('plugin_dir', os.path.join(base_dir, '/plugins'))
-    sys.path.append(os.path.join(plugin_dir, '/lib'))
+    plugin_dir = config['main'].get('plugin_dir', os.path.join(base_dir, 'plugins'))
+    sys.path.append(os.path.join(plugin_dir, 'lib'))
 
     # find input and output handlers to load
     output_handlers = config['main'].get('output_handlers', 'plugins/output/plugin_files.py')
