@@ -7,6 +7,7 @@ import os
 import socket
 import sys
 import time
+import traceback
 
 from ConfigParser import ConfigParser
 from logging.handlers import SysLogHandler
@@ -69,7 +70,8 @@ if __name__ == '__main__':
         log.addHandler(logging.StreamHandler(sys.stderr))
 
     # get directory/path layout
-    base_dir = config['main'].get('base_dir')
+    base_dir = config['main'].get('base_dir', './')
+
     plugin_dir = config['main'].get('plugin_dir', os.path.join(base_dir, 'plugins'))
     sys.path.append(os.path.join(plugin_dir, 'lib'))
 
@@ -104,9 +106,15 @@ if __name__ == '__main__':
                     result['output'] = output_handler.dispatch(result['input'])
 
                 except Exception as e:
-                    result['output'] = { 'result_code': 254,
-                                         'result_str': 'dispatch error',
-                                         'result_data': str(e) }
+                    exc_type, exc_value, exc_traceback = sys.exc_info()
+                    full_traceback = repr(traceback.format_exception(
+                            exc_type, exc_value, exc_traceback))
+
+                    result['output'] = {'result_code': 254,
+                                        'result_str': 'dispatch error',
+                                        'result_data': full_traceback}
+                    print full_traceback
+                    log.warn(full_traceback)
 
                 input_handler.result(result)
 
