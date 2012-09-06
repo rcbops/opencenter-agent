@@ -6,7 +6,7 @@ import json
 import logging
 import time
 
-from modules import PluginManager
+from modules import OutputManager
 from modules import InputManager
 
 if __name__ == "__main__":
@@ -14,8 +14,8 @@ if __name__ == "__main__":
     log.setLevel(logging.DEBUG)
     log.addHandler(logging.StreamHandler(sys.stderr))
 
-    output_handler = PluginManager(['modules/plugin_files.py'])
-    input_handler = InputManager(['modules/task_input.py'])
+    output_handler = OutputManager(['plugins/output/plugin_files.py'])
+    input_handler = InputManager(['plugins/input/task_input.py'])
 
     # we'll assume non-blocking.  we should negotiate this
     # with the plugins, I suppose
@@ -29,21 +29,21 @@ if __name__ == "__main__":
             else:
                 log.debug('Got input from input handler "%s"' %
                           result['plugin'])
-                log.debug('Data: %s' % result['data'])
+                log.debug('Data: %s' % result['input'])
 
-                out = {'result_code': 255,
-                       'result_str': 'unknown error',
-                       'result_data': ''}
+                result['output'] = {'result_code': 255,
+                                    'result_str': 'unknown error',
+                                    'result_data': ''}
 
                 try:
-                    out = output_handler.dispatch(result['data']['action'],
-                                                  result['data']['payload'])
-                except Exception as e:
-                    out = { 'result_code': 254,
-                            'result_str': 'dispatch error',
-                            'result_data': str(e) }
+                    result['output'] = output_handler.dispatch(result['input'])
 
-                input_handler.result(result, out)
+                except Exception as e:
+                    result['output'] = { 'result_code': 254,
+                                         'result_str': 'dispatch error',
+                                         'result_data': str(e) }
+
+                input_handler.result(result)
 
     except KeyboardInterrupt:
         pass
