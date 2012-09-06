@@ -7,8 +7,10 @@ import os
 import socket
 import sys
 import time
+import traceback
 
 from ConfigParser import ConfigParser
+from logging.handlers import SysLogHandler
 
 from modules import OutputManager
 from modules import InputManager
@@ -24,7 +26,7 @@ def daemonize():
             sys.exit(0)
 
 if __name__ == '__main__':
-    daemonize = False
+    background = False
     debug = False
     configfile = None
     config = {"main": {}}
@@ -42,7 +44,7 @@ if __name__ == '__main__':
         elif o == '-v':
             debug = True
         elif o == '-d':
-            daemonize = True
+            background = True
         else:
             usage()
             sys.exit(1)
@@ -53,19 +55,23 @@ if __name__ == '__main__':
     else:
         log.setLevel(logging.WARNING)
 
-    if daemonize:
-        log.addHandler(logging.SysLogHandler(address='/var/log'))
+    if configfile:
+        base = os.path.realpath(os.path.dirname(__file__))
+        cp = ConfigParser(defaults={'base_dir': base})
+        cp.read(configfile)
+        config = dict([[s, dict(cp.items(s))] for s in cp.sections()])
+
+    if background:
+        logdev = config['main'].get('syslog_dev','/dev/log')
+
+        log.addHandler(SysLogHandler(address=logdev))
         daemonize()
     else:
         log.addHandler(logging.StreamHandler(sys.stderr))
 
-    if configfile:
-        cp = ConfigParser()
-        cp.read(configfile)
-        config = dict([[s, dict(cp.items(s))] for s in cp.sections()])
-
     # get directory/path layout
-    base_dir = config['main'].get('base_dir', os.path.dirname(__file__))
+    base_dir = config['main'].get('base_dir', './')
+
     plugin_dir = config['main'].get('plugin_dir', os.path.join(base_dir, 'plugins'))
     sys.path.append(os.path.join(plugin_dir, 'lib'))
 
@@ -100,9 +106,15 @@ if __name__ == '__main__':
                     result['output'] = output_handler.dispatch(result['input'])
 
                 except Exception as e:
-                    result['output'] = { 'result_code': 254,
-                                         'result_str': 'dispatch error',
-                                         'result_data': str(e) }
+                    exc_type, exc_value, exc_traceback = sys.exc_info()
+                    full_traceback = repr(traceback.format_exception(
+                            exc_type, exc_value, exc_traceback))
+
+                    result['output'] = {'result_code': 254,
+                                        'result_str': 'dispatch error',
+                                        'result_data': full_traceback}
+                    print full_traceback
+                    log.warn(full_traceback)
 
                 input_handler.result(result)
 

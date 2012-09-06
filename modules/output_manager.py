@@ -25,7 +25,11 @@ class OutputManager:
         # Load all available plugins, or those
         # specficied by the config.
 
-        self.dispatch_table = {}
+        # should all actions be named module.action?
+        self.loaded_modules = ['modules']
+        self.dispatch_table = {'modules.list': [self.handle_modules],
+                               'modules.load': [self.handle_modules],
+                               'modules.reload': [self.handle_modules]}
         self.config = config
         self.load(path)
 
@@ -54,6 +58,7 @@ class OutputManager:
             raise ImportError('Plugin missing "name" value')
 
         name = ns['name']
+        self.loaded_modules.append(name)
         config = self.config.get(name, {})
 
         if 'setup' in ns:
@@ -109,3 +114,32 @@ class OutputManager:
             return result
         else:
             LOG.warning('No dispatch for action "%s"' % action)
+
+    # some internal methods to provide some agent introspection
+    def handle_modules(self, input_data):
+        action = input_data['action']
+        payload = input_data['payload']
+
+        result_code = 1
+        result_str = 'failed to perform action'
+        result_data = ''
+
+        if action == 'modules.list':
+            result_code = 0
+            result_str = 'success'
+            result_data = self.loaded_modules
+        elif action == 'modules.load':
+            if not 'path' in payload:
+                result_str = 'no "path" specified in payload'
+            elif not os.path.isfile(payload['path']):
+                result_str = 'specified module does not exist'
+            else:
+                # any exceptions we'll bubble up from the manager
+                self.loadfile(payload['path'])
+
+        elif action == 'modules.reload':
+            pass
+
+        return {'result_code': result_code,
+                'result_str': result_str,
+                'result_data': result_data}
