@@ -1,7 +1,7 @@
 #!/bin/bash
 
 REQUIRED="CHEF_SERVER CHEF_VALIDATOR"
-for r in required; do
+for r in $REQUIRED; do
     if [[ -z ${!r} ]]; then
         exit 1
     fi
