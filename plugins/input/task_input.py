@@ -10,6 +10,7 @@ import requests
 name = 'taskerator'
 task_getter = None
 
+
 class TaskThread(threading.Thread):
     def __init__(self, endpoint, hostname):
         # python, I hate you.
@@ -34,7 +35,8 @@ class TaskThread(threading.Thread):
 
                 if self._is_success(rc):
                     self.host_id = data['node']['id']
-                    LOG.info('Created new host entry with ID %s' % self.host_id)
+                    LOG.info('Created new host entry with ID %s' %
+                             self.host_id)
                 else:
                     LOG.error('Error creating new node object.')
                     raise RuntimeError
@@ -74,11 +76,11 @@ class TaskThread(threading.Thread):
     def _get(self, partial_uri):
         return self._request('GET', self.endpoint + partial_uri)
 
-    def _post(self, partial_uri, data_dict = None):
+    def _post(self, partial_uri, data_dict=None):
         return self._request('POST', self.endpoint + partial_uri,
                              json.dumps(data_dict))
 
-    def _put(self, partial_uri, data_dict = None):
+    def _put(self, partial_uri, data_dict=None):
         return self._request('PUT', self.endpoint + partial_uri,
                               json.dumps(data_dict))
 
@@ -120,7 +122,7 @@ class TaskThread(threading.Thread):
             self._put('/tasks/%s' % task['id'], {'state': 'running'})
 
             # throw it into the running list
-            self.running_tasks[retval['id']]=retval
+            self.running_tasks[retval['id']] = retval
 
         self.producer_lock.release()
         return retval
@@ -163,6 +165,7 @@ class TaskGetter:
     def result(self, txid, result):
         return self.server_thread.result(txid, result)
 
+
 def setup(config={}):
     global task_getter
 
@@ -172,13 +175,16 @@ def setup(config={}):
     task_getter = TaskGetter(endpoint, hostname)
     task_getter.run()
 
+
 def teardown():
     global task_getter
     task_getter.stop()
 
+
 def fetch():
     global task_getter
     return task_getter.fetch()
+
 
 def result(input_data, output_data):
     global task_getter
