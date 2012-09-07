@@ -9,7 +9,7 @@ def name_mangle(s, prefix=""):
     prefix = prefix.upper()
     r = s.upper().replace("-", "_")
     # first character must be _ or alphabet
-    if not r[0] == '_' or r[0].isalpha() and len(prefix) == 0:
+    if not r[0] == '_' or (not r[0].isalpha() and len(prefix) == 0):
         r = "".join(["_", r])
     # rest of the characters must be alphanumeric or _
     valid = string.digits + string.ascii_uppercase + "_"
