@@ -20,6 +20,7 @@ LOG = logging.getLogger('plugins')
 #   }
 # }
 
+
 class OutputManager:
     def __init__(self, path, config={}):
         # Load all available plugins, or those
@@ -46,13 +47,13 @@ class OutputManager:
     def _load_file(self, path):
         # we can't really load this into the existing namespace --
         # we'll have registration collisions.
-        ns = { 'register_action': self.register_action,
-               'LOG': LOG }
+        ns = {'register_action': self.register_action,
+               'LOG': LOG}
 
         LOG.debug('Loading plugin file %s' % path)
 
         # FIXME(rp): Handle exceptions
-        execfile(path,ns)
+        execfile(path, ns)
 
         if not 'name' in ns:
             raise ImportError('Plugin missing "name" value')
@@ -100,7 +101,7 @@ class OutputManager:
 
         result = {'result_code': 253,
                   'result_str': 'no dispatcher',
-                  'result_data': '' }
+                  'result_data': ''}
 
         if action in self.dispatch_table:
             LOG.debug('plugin_manager: dispatching action %s' % action)
