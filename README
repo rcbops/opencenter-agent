@@ -1,0 +1,5 @@
+roush-agent
+===========
+
+Pluggable, modular host-based agent.  See the output and input
+managers for docs on how to write plugins.

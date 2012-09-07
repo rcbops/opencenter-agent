@@ -12,8 +12,8 @@ import traceback
 from ConfigParser import ConfigParser
 from logging.handlers import SysLogHandler
 
-from modules import OutputManager
-from modules import InputManager
+from roushagent.modules import OutputManager
+from roushagent.modules import InputManager
 
 
 def daemonize():
