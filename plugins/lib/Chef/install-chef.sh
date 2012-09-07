@@ -16,8 +16,8 @@ cat <<EOF >/etc/chef/client.rb
 chef_server_url "$CHEF_SERVER"
 chef_environment "$CHEF_ENVIRONMENT"
 EOF
-if [ -n "${VALIDATION_NAME}" ]; then
-    echo "validation_client_name '$VALIDATION_NAME'" >> /etc/chef/client.rb
+if [ -n "${CHEF_VALIDATION_NAME}" ]; then
+    echo "validation_client_name '$CHEF_VALIDATION_NAME'" >> /etc/chef/client.rb
 fi
 
 cat <<EOF > /etc/chef/validation.pem
