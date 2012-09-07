@@ -3,13 +3,14 @@
 import sys
 from bashscriptrunner import BashScriptRunner
 
-name = "Chef"
-script = BashScriptRunner(script_path=["plugins/lib/%s" % name])
+name = "chef"
+script = BashScriptRunner(script_path=["roushagent/plugins/lib/%s" % name])
 
 
 def setup(config):
     LOG.debug('Doing setup in test.py')
     register_action('install_chef', install_chef)
+    register_action('run_chef', run_chef)
 
 
 def install_chef(input_data):
@@ -25,3 +26,8 @@ def install_chef(input_data):
                     'result_str': 'Bad Request (missing %s)' % r,
                     'result_data': None}
     return script.run_env("install-chef.sh", env, "")
+
+def run_chef(input_data):
+    payload = input_data['payload']
+    action = input_data['action']
+    return script.run("run-chef.sh")
