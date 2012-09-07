@@ -59,6 +59,7 @@ LOG = logging.getLogger('input')
 # the plugin has a need to update status, it can do so.
 #
 
+
 class InputManager:
     def __init__(self, path, config={}):
         # Load all available plugins, or those
@@ -78,12 +79,12 @@ class InputManager:
     def _load_file(self, path):
         # we can't really load this into the existing namespace --
         # we'll have registration collisions.
-        ns = { 'LOG': LOG }
+        ns = {'LOG': LOG}
 
         LOG.debug("Loading input plugin file %s" % path)
 
         # FIXME(rp): Handle exceptions
-        execfile(path,ns)
+        execfile(path, ns)
 
         if not 'name' in ns:
             raise ImportError('Plugin missing name value')
