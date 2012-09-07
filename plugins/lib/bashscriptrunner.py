@@ -35,8 +35,8 @@ def find_script(script, script_path):
     for path in script_path:
         filename = os.path.join(path, script)
         if os.path.exists(filename) and \
-           os.path.dirname(os.path.realpath(filename)) == \
-           os.path.realpath(path):
+                os.path.dirname(os.path.realpath(filename)) == \
+                os.path.realpath(path):
             found = True
             break
     if not found:

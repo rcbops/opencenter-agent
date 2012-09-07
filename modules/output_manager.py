@@ -48,7 +48,7 @@ class OutputManager:
         # we can't really load this into the existing namespace --
         # we'll have registration collisions.
         ns = {'register_action': self.register_action,
-               'LOG': LOG}
+              'LOG': LOG}
 
         LOG.debug('Loading plugin file %s' % path)
 

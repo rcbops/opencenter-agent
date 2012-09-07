@@ -49,5 +49,5 @@ def handle_files(input_data):
                 result_data = ''  # could be full backtrace
 
     return {'result_code': result_code,
-             'result_str': result_str,
-             'result_data': result_data}
+            'result_str': result_str,
+            'result_data': result_data}

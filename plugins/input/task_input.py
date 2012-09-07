@@ -82,7 +82,7 @@ class TaskThread(threading.Thread):
 
     def _put(self, partial_uri, data_dict=None):
         return self._request('PUT', self.endpoint + partial_uri,
-                              json.dumps(data_dict))
+                             json.dumps(data_dict))
 
     def stop(self):
         self.running = False
