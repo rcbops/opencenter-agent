@@ -15,6 +15,7 @@ from logging.handlers import SysLogHandler
 from modules import OutputManager
 from modules import InputManager
 
+
 def daemonize():
     if os.fork():
         sys.exit(0)
@@ -62,7 +63,7 @@ if __name__ == '__main__':
         config = dict([[s, dict(cp.items(s))] for s in cp.sections()])
 
     if background:
-        logdev = config['main'].get('syslog_dev','/dev/log')
+        logdev = config['main'].get('syslog_dev', '/dev/log')
 
         log.addHandler(SysLogHandler(address=logdev))
         daemonize()
@@ -72,17 +73,20 @@ if __name__ == '__main__':
     # get directory/path layout
     base_dir = config['main'].get('base_dir', './')
 
-    plugin_dir = config['main'].get('plugin_dir', os.path.join(base_dir, 'plugins'))
+    plugin_dir = config['main'].get('plugin_dir',
+                                    os.path.join(base_dir, 'plugins'))
     sys.path.append(os.path.join(plugin_dir, 'lib'))
 
     # find input and output handlers to load
-    output_handlers = config['main'].get('output_handlers', 'plugins/output/plugin_files.py')
-    input_handlers = config['main'].get('input_handlers', 'plugins/input/task_input.py')
+    output_handlers = config['main'].get('output_handlers',
+                                         'plugins/output/plugin_files.py')
+    input_handlers = config['main'].get('input_handlers',
+                                        'plugins/input/task_input.py')
 
     output_handler = OutputManager(
-        [ x.strip() for x in output_handlers.split(',')], config)
+        [x.strip() for x in output_handlers.split(',')], config)
     input_handler = InputManager(
-        [ x.strip() for x in input_handlers.split(',')], config)
+        [x.strip() for x in input_handlers.split(',')], config)
 
     # we'll assume non-blocking.  we should negotiate this
     # with the plugins, I suppose
@@ -107,7 +111,8 @@ if __name__ == '__main__':
 
                 except Exception as e:
                     exc_type, exc_value, exc_traceback = sys.exc_info()
-                    full_traceback = repr(traceback.format_exception(
+                    full_traceback = repr(
+                        traceback.format_exception(
                             exc_type, exc_value, exc_traceback))
 
                     result['output'] = {'result_code': 254,
