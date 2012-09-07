@@ -24,4 +24,4 @@ def install_chef(input_data):
             return { 'result_code': 22,
              'result_str': 'Bad Request (missing %s)' % r,
              'result_data': None }
-    return script.run_env("install_chef.sh", env, "")
+    return script.run_env("install-chef.sh", env, "")
