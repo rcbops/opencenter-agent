@@ -3,7 +3,7 @@
 import sys
 from bashscriptrunner import BashScriptRunner
 
-name = "Chef"
+name = "chef"
 script = BashScriptRunner(script_path=["plugins/lib/%s" % name])
 
 
@@ -25,3 +25,8 @@ def install_chef(input_data):
                     'result_str': 'Bad Request (missing %s)' % r,
                     'result_data': None}
     return script.run_env("install-chef.sh", env, "")
+
+def run_chef(input_data):
+    payload = input_data['payload']
+    action = input_data['action']
+    return script.run("run-chef.sh")
