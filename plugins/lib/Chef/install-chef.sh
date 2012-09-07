@@ -7,6 +7,7 @@ for r in $REQUIRED; do
         exit 22
     fi
 done
+
 CHEF_ENVIRONMENT=${CHEF_ENVIRONMENT:-_default}
 DEBIAN_FRONTEND=noninteractive apt-get install curl -y --force-yes
 curl -skS https://raw.github.com/opscode/omnibus/master/source/install.sh | bash
@@ -22,8 +23,7 @@ fi
 cat <<EOF > /etc/chef/validation.pem
 $CHEF_VALIDATOR
 EOF
-cp /opt/chef/embedded/lib/ruby/gems/1.9.1/gems/chef-10.12.0/distro/debian/e
-tc/default/chef-client /etc/default/chef-client
+cp /opt/chef/embedded/lib/ruby/gems/1.9.1/gems/chef-10.12.0/distro/debian/etc/default/chef-client /etc/default/chef-client
 cp /opt/chef/embedded/lib/ruby/gems/1.9.1/gems/chef-10.12.0/distro/debian/etc/init.d/chef-client /etc/init.d/chef-client
 mkdir -p /var/log/chef
 /etc/init.d/chef-client start
