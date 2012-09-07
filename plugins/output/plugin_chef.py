@@ -20,7 +20,7 @@ def install_chef(input_data):
     env = dict([(k,v) for k,v in payload.iteritems() 
                 if k in required + optional ])
     for r in required:
-        if not env.has_key(required):
+        if not env.has_key(r):
             return { 'result_code': 22,
              'result_str': 'Bad Request (missing %s)' % r,
              'result_data': None }
