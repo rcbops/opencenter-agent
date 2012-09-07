@@ -3,7 +3,8 @@
 REQUIRED="CHEF_SERVER CHEF_VALIDATOR"
 for r in $REQUIRED; do
     if [[ -z ${!r} ]]; then
-        exit 1
+        echo Environment variable $r required but not set 1>&2
+        exit 22
     fi
 done
 CHEF_ENVIRONMENT=${CHEF_ENVIRONMENT:-_default}
