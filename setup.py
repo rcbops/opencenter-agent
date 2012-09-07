@@ -20,7 +20,6 @@ def files_for_path(path_tuples):
         else:
             output_array.append((destination, [path]))
 
-    print output_array
     return output_array
 
 setup(
