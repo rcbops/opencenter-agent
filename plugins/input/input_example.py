@@ -9,11 +9,12 @@ producer_queue = []
 server_quit = False
 server_thread = None
 
+
 class RestishHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     # these will be
     def do_POST(self):
         action = self.path.split("/")[1]
-        retval = { 'action': action }
+        retval = {'action': action}
 
         if self.headers.getheader('content-type') == 'application/json':
             payload_len = self.headers.getheader('content-length')
@@ -21,7 +22,8 @@ class RestishHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             # FIXME: Danger, timeout vs. memory.
             try:
                 if payload_len:
-                    retval['payload'] = json.loads(self.rfile.read(int(payload_len)))
+                    retval['payload'] = json.loads(self.rfile.read(
+                        int(payload_len)))
                 else:
                     retval['payload'] = json.load(self.rfile)
             except ValueError:
@@ -44,6 +46,7 @@ class RestishHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         # Maybe this is status?
         pass
 
+
 class ServerThread(threading.Thread):
     def stop(self):
         self.httpd.socket.close()
@@ -61,6 +64,7 @@ class ServerThread(threading.Thread):
                 if server_quit:
                     return
 
+
 # Amazing stupid handler.  Throw off a thread
 # and start waiting for stuff...
 def setup(config={}):
@@ -68,6 +72,7 @@ def setup(config={}):
     LOG.debug('Starting rest-ish server')
     server_thread = ServerThread()
     server_thread.start()
+
 
 def teardown():
     global server_thread
@@ -77,6 +82,7 @@ def teardown():
     server_quit = True
     server_thread.stop()
     server_thread.join()
+
 
 def fetch():
     result = {}
