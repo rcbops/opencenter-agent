@@ -4,10 +4,12 @@ import os
 
 name = 'files'
 
+
 def setup(config={}):
     LOG.debug('doing setup for files handler')
     register_action('files_list', handle_files)
     register_action('files_get', handle_files)
+
 
 def handle_files(input_data):
     action = input_data['action']
@@ -46,6 +48,6 @@ def handle_files(input_data):
                 result_str = str(e)
                 result_data = ''  # could be full backtrace
 
-    return { 'result_code': result_code,
+    return {'result_code': result_code,
              'result_str': result_str,
-             'result_data': result_data }
+             'result_data': result_data}
