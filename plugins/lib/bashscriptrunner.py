@@ -63,8 +63,8 @@ class BashScriptRunner(object):
         # }
         env = {}
         env.update(self.environment)
-        env.update(dict([(name_mangle(k, prefix), v) 
-                         for k,v in environment.iteritems()]))
+        env.update(dict([(name_mangle(k, prefix), v)
+                         for k, v in environment.iteritems()]))
         response = {"response": {}}
         path = find_script(script, self.script_path)
 
@@ -72,23 +72,21 @@ class BashScriptRunner(object):
             response['result_code'] = 127
             response['result_str'] = "%s not found in %s" % (
                 script, ":".join(self.script_path))
-            response['result_data'] = {"script": script, 
+            response['result_data'] = {"script": script,
                                        "output": "",
                                        "error": ""}
             return response
 
-        
         to_run = [path] + list(args)
         #first pass, never use bash to run things
         c = subprocess.Popen(to_run,
-                             stdin=open("/dev/null","r"),
+                             stdin=open("/dev/null", "r"),
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE,
                              env=env)
         response['result_code'] = c.wait()
         response['result_str'] = os.strerror(c.returncode)
-        response['result_data'] = {"script": path, 
+        response['result_data'] = {"script": path,
                                    "output": c.stdout.read(),
                                    "error": c.stderr.read()}
         return response
-
