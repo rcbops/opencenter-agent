@@ -4,7 +4,7 @@ import sys
 from bashscriptrunner import BashScriptRunner
 
 name = "chef"
-script = BashScriptRunner(script_path=["plugins/lib/%s" % name])
+script = BashScriptRunner(script_path=["roushagent/plugins/lib/%s" % name])
 
 
 def setup(config):
