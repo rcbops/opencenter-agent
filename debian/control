@@ -19,3 +19,32 @@ Depends: ${python:Depends}, ${misc:Depends},
  python-requests
 Provides: ${python:Provides}
 Description: Yet another pluggable host-based agent
+
+Package: roush-agent-input-task
+Architecture: all
+Section: python
+Depends: roush-agent (= ${binary:Version})
+Provides: ${python:Provides}
+Description: the input task plug-in
+
+Package: roush-agent-output-chef
+Architecture: all
+Section: python
+Depends: roush-agent (= ${binary:Version}),
+ roush-agent-lib-bash (= ${binary:Version})
+Provides: ${python:Provides}
+Description: the input task plug-in
+
+Package: roush-agent-lib-bash
+Architecture: all
+Section: python
+Depends: roush-agent (= ${binary:Version})
+Provides: ${python:Provides}
+Description: the input task plug-in
+
+Package: roush-agent-output-files
+Architecture: all
+Section: python
+Depends: roush-agent (= ${binary:Version})
+Provides: ${python:Provides}
+Description: the input task plug-in

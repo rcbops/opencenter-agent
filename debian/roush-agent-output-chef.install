@@ -1,0 +1,2 @@
+usr/share/roush-agent/plugins/lib/chef/*
+usr/share/roush-agent/plugins/output/plugin_chef.py
