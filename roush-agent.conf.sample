@@ -15,6 +15,11 @@ output_handlers = %(plugin_dir)s/output
 # except osx, which is probably /var/run/syslog
 syslog_dev = /var/run/syslog
 
+# pidfile.  Only gets dropped if run as daemon, and with
+# no pidfile specified, no pidfile will be generated
+#
+# pidfile = /var/run/roush-agent.pid
+
 [restish]
 bind_address = 0.0.0.0
 bind_port = 8000

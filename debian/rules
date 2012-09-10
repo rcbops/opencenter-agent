@@ -40,3 +40,14 @@ override_dh_auto_clean:
 # override_dh_auto_install:
 # 	python setup.py install --root=debian/roush-agent --prefix=/usr
 # 	ls -lR debian
+
+override_dh_installinit:
+	# installinit prefers .upstart to .init
+	if dpkg-vendor --derives-from ubuntu; then \
+		for i in debian/*upstart.in; do \
+			MYPKG=`basename $$i .updstart.in`; \
+			cp debian/$$MYPKG.upstart.in debian/$$MYPKG.upstart; \
+		done; \
+	fi
+
+	dh_installinit --name "roush-agent"

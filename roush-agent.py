@@ -30,6 +30,7 @@ if __name__ == '__main__':
     background = False
     debug = False
     configfile = None
+    pidfile = None
     config = {"main": {}}
 
     try:
@@ -67,6 +68,17 @@ if __name__ == '__main__':
 
         log.addHandler(SysLogHandler(address=logdev))
         daemonize()
+        if 'pidfile' in config['main']:
+            pidfile = open(config['main']['pidfile'], 'a+')
+            try:
+                fcntl.flock(pidfile.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except IOError:
+                log.error('Lock exists on pidfile: already running')
+            pidfile.seek(0)
+            pidfile.truncate()
+            pidfile.write(str(os.getpid()))
+            pidfile.flush()
+
     else:
         log.addHandler(logging.StreamHandler(sys.stderr))
 
