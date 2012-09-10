@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -o errexit
+
 if [[ -f /etc/redhat-release ]]; then
     DISTRO="redhat"
 else
