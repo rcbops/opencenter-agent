@@ -26,3 +26,7 @@ bind_port = 8000
 
 [taskerator]
 endpoint = http://localhost:8080
+
+[chef]
+#plugin_dir from main is not accessible here
+script_path = roushagent/plugins/lib/chef
