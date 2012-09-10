@@ -8,7 +8,7 @@ producer_lock = threading.Lock()
 producer_queue = []
 server_quit = False
 server_thread = None
-
+name = "example"
 
 class RestishHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     # these will be
