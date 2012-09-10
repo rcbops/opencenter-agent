@@ -5,6 +5,7 @@ import getopt
 import json
 import logging
 import os
+import signal
 import socket
 import sys
 import time
@@ -33,6 +34,11 @@ if __name__ == '__main__':
     configfile = None
     pidfile = None
     config = {"main": {}}
+
+
+    def do_exit():
+        input_handler.stop()
+        sys.exit(0)
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'c:vd')
@@ -64,11 +70,14 @@ if __name__ == '__main__':
         cp.read(configfile)
         config = dict([[s, dict(cp.items(s))] for s in cp.sections()])
 
+    signal.signal(signal.SIGTERM, lambda a,b: do_exit())
+
     if background:
         logdev = config['main'].get('syslog_dev', '/dev/log')
 
         log.addHandler(SysLogHandler(address=logdev))
         daemonize()
+
         if 'pidfile' in config['main']:
             pidfile = open(config['main']['pidfile'], 'a+')
             try:
@@ -139,4 +148,4 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
 
-    input_handler.stop()
+    do_exit()
