@@ -27,6 +27,7 @@ def install_chef(input_data):
                     'result_data': None}
     return script.run_env("install-chef.sh", env, "")
 
+
 def run_chef(input_data):
     payload = input_data['payload']
     action = input_data['action']
