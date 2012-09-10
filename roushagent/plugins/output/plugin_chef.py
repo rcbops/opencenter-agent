@@ -8,8 +8,9 @@ name = "chef"
 
 def setup(config={}):
     LOG.debug('Doing setup in test.py')
-    plugin_dir = config.get("plugin_dir", "roushagent/plugins")
-    script_path = [os.path.join(plugin_dir, "lib", name)]
+    if not config.has_key("script_path"):
+        raise ValueError("Expecting script_path in configuration")
+    script_path = [config["script_path"]]
     script = BashScriptRunner(script_path=script_path)
     chef = ChefThing(script, config)
     register_action('install_chef', chef.install_chef)
