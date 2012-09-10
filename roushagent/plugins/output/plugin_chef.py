@@ -1,19 +1,21 @@
 #!/usr/bin/env python
 
 import sys
+import os
 from bashscriptrunner import BashScriptRunner
 
 name = "chef"
-script = BashScriptRunner(script_path=["roushagent/plugins/lib/%s" % name])
 
-
-def setup(config):
+def setup(config={}):
     LOG.debug('Doing setup in test.py')
-    register_action('install_chef', install_chef)
-    register_action('run_chef', run_chef)
+    plugin_dir = config.get("plugin_dir", "roushagent/plugins")
+    script_path = [os.path.join(plugin_dir, "lib", name)]
+    script = BashScriptRunner(script_path=script_path)
+    register_action('install_chef', lambda x: install_chef(x, script))
+    register_action('run_chef', lambda x: run_chef(x, script))
 
 
-def install_chef(input_data):
+def install_chef(input_data, script):
     payload = input_data['payload']
     action = input_data['action']
     required = ["CHEF_SERVER", "CHEF_VALIDATOR"]
@@ -28,7 +30,7 @@ def install_chef(input_data):
     return script.run_env("install-chef.sh", env, "")
 
 
-def run_chef(input_data):
+def run_chef(input_data, script):
     payload = input_data['payload']
     action = input_data['action']
     return script.run("run-chef.sh")
