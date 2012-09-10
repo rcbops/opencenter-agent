@@ -3,6 +3,7 @@
 import BaseHTTPServer
 import threading
 import json
+import urllib
 
 producer_lock = threading.Lock()
 producer_queue = []
@@ -49,7 +50,14 @@ class RestishHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
 class ServerThread(threading.Thread):
     def stop(self):
-        self.httpd.socket.close()
+        LOG.debug("closing underlying server socket")
+        # make a best-effort attempt to kill the underlying server
+        try:
+            LOG.debug(urllib.urlopen('http://%s:%s' % self.httpd.server_address))
+            self.httpd.shutdown()
+            self.httpd.socket.close()
+        except Exception as e:
+            pass
 
     def run(self):
         global server_quit
@@ -64,6 +72,7 @@ class ServerThread(threading.Thread):
                 if server_quit:
                     return
 
+        LOG.error("Exiting run thread")
 
 # Amazing stupid handler.  Throw off a thread
 # and start waiting for stuff...
