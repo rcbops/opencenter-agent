@@ -39,5 +39,6 @@ elif [[ $DISTRO = "redhat" ]]; then
     chkconfig chef-client on
 fi
 
+chmod +rx /etc/init.d/chef-client
 mkdir -p /var/log/chef
 /etc/init.d/chef-client start
