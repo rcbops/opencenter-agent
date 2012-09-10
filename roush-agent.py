@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import fcntl
 import getopt
 import json
 import logging
