@@ -66,7 +66,10 @@ class TaskThread(threading.Thread):
         try:
             text = r.text
         except AttributeError:
-            text = r.content
+            pass
+        finally:
+            if not text:
+                text = r.content
 
         if self._is_success(r.status_code):
             return (r.status_code, json.loads(text))

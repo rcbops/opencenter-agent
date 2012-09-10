@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [[ -f /etc/redhat-release ]]; then
+    DISTRO="redhat"
+else
+    DISTRO="debian"
+fi
+
 REQUIRED="CHEF_SERVER CHEF_VALIDATOR"
 for r in $REQUIRED; do
     if [[ -z ${!r} ]]; then
@@ -23,7 +29,16 @@ fi
 cat <<EOF > /etc/chef/validation.pem
 $CHEF_VALIDATOR
 EOF
-cp /opt/chef/embedded/lib/ruby/gems/1.9.1/gems/chef-10.12.0/distro/debian/etc/default/chef-client /etc/default/chef-client
-cp /opt/chef/embedded/lib/ruby/gems/1.9.1/gems/chef-10.12.0/distro/debian/etc/init.d/chef-client /etc/init.d/chef-client
+
+if [[ $DISTRO = "debian" ]]; then
+    cp /opt/chef/embedded/lib/ruby/gems/1.9.1/gems/chef-10.12.0/distro/debian/etc/default/chef-client /etc/default/chef-client
+    cp /opt/chef/embedded/lib/ruby/gems/1.9.1/gems/chef-10.12.0/distro/debian/etc/init.d/chef-client /etc/init.d/chef-client
+elif [[ $DISTRO = "redhat" ]]; then
+    cp /opt/chef/embedded/./lib/ruby/gems/1.9.1/gems/chef-10.12.0.rc.1/distro/redhat/etc/init.d/chef-client /etc/init.d/chef-client
+    chkconfig --add /etc/init.d/chef-client
+    chkconfig chef-client on
+fi
+
+chmod +rx /etc/init.d/chef-client
 mkdir -p /var/log/chef
 /etc/init.d/chef-client start
