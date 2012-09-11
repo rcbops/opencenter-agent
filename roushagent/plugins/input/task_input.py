@@ -63,6 +63,7 @@ class TaskThread(threading.Thread):
         else:
             raise ValueError
 
+        text = None
         try:
             text = r.text
         except AttributeError:
