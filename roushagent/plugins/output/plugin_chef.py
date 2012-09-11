@@ -44,8 +44,9 @@ class ChefThing(object):
         action = input_data['action']
         required = ["CHEF_SERVER", "CHEF_VALIDATOR"]
         optional = ["CHEF_RUNLIST", "CHEF_ENVIRONMENT", "CHEF_VALIDATION_NAME"]
-        success, env = get_environment(required, optional, payload)
-        return env if not success
+        good, env = get_environment(required, optional, payload)
+        if not good:
+            return env
         return self.script.run_env("install-chef.sh", env, "")
 
     def run_chef(self, input_data):
@@ -56,15 +57,16 @@ class ChefThing(object):
     def install_chef_server(self, input_data):
         payload = input_data['payload']
         action = input_data['action']
-        success, env = get_environment([], 
-                                       ["CHEF_URL", "CHEF_WEBUI_PASSWORD" ],
-                                       payload)
-        return env if not success
+        good, env = get_environment([], 
+                                    ["CHEF_URL", "CHEF_WEBUI_PASSWORD"],
+                                    payload)
+        if not good:
+            return env
         return self.script.run_env("install-chef-server.sh", env, "")
 
     def get_validation_pem(self, input_data):
         try:
-            with f as open("/etc/chef/validation.pem", "r"):
+            with open("/etc/chef/validation.pem", "r") as f:
                 return success("Success", f.read())
         except IOError as e:
             return retval(e.errno, str(e), None)
