@@ -1,6 +1,8 @@
-Name:		roush-agent
-Version:	1.0
-Release:	5%{?dist}
+%define ver 6
+
+Name:       roush-agent
+Version:    1.0
+Release:    %{ver}%{?dist}
 Summary:	Pluggable, modular host-based agent.
 
 Group:		System
@@ -38,7 +40,7 @@ install -m 755 $RPM_SOURCE_DIR/roush-agent.init $RPM_BUILD_ROOT/etc/init.d/roush
 %files
 %config(noreplace) /etc/roush-agent.conf
 %defattr(-,root,root)
-/usr/lib/python2.6/site-packages/roushagent*
+%{python_sitelib}/roushagent*
 /usr/share/roush-agent/
 /usr/bin/roush-agent.py
 /etc/init.d/roush-agent
