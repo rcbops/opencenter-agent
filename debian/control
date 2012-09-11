@@ -34,18 +34,18 @@ Section: python
 Depends: roush-agent (= ${binary:Version}),
  roush-agent-lib-bash (= ${binary:Version})
 Provides: ${python:Provides}
-Description: the input task plug-in
+Description: an output plugin to run chef tasks
 
 Package: roush-agent-lib-bash
 Architecture: all
 Section: python
 Depends: roush-agent (= ${binary:Version})
 Provides: ${python:Provides}
-Description: the input task plug-in
+Description: libraries necessary for output tasks to do bash-y things
 
 Package: roush-agent-output-files
 Architecture: all
 Section: python
 Depends: roush-agent (= ${binary:Version})
 Provides: ${python:Provides}
-Description: the input task plug-in
+Description: a simple file management plugin.  very very unsafe.
