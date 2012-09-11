@@ -15,6 +15,8 @@ def setup(config={}):
     chef = ChefThing(script, config)
     register_action('install_chef', chef.install_chef)
     register_action('run_chef', chef.run_chef)
+    register_action('install_chef_server', chef.install_chef_server)
+    register_action('get_validation_pem', chef.get_validation_pem)
 
 def get_environment(required, optional, payload):
     env = dict([(k, v) for k, v in payload.iteritems()
