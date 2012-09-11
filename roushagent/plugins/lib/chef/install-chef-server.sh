@@ -3,6 +3,7 @@
 
 set -e
 set -u
+export DEBIAN_FRONTEND=noninteractive
 
 if ! [[ -e /etc/debian_version ]] ; then
     echo "Attempted to run debian derivative script on non-debian distribution" 1>&2
