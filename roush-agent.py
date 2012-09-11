@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-from roushagent import main
+from roushagent import RoushAgent
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    roushagent = RoushAgent(sys.argv[1:])
