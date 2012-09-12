@@ -3,8 +3,7 @@
 import os
 import logging
 
-
-LOG = logging.getLogger('plugins')
+LOG = logging.getLogger('output')
 
 # incoming data is the action and an arbitrary dict.
 #
