@@ -55,6 +55,7 @@ if ! dpkg -l chef-server &>/dev/null; then
     apt-get install -y --force-yes opscode-keyring
     sudo apt-get upgrade -y --force-yes
     sudo apt-get install -y --force-yes chef chef-server
+    CHEF_INSTALLED=1
 fi
 
 HOMEDIR=$(getent passwd ${CHEF_UNIX_USER} | cut -d: -f6)
@@ -67,6 +68,7 @@ if [[ -f ${HOMEDIR}/.chef/knife.rb ]]; then
     mv ${HOMEDIR}/.chef/knife.rb{,.old}
 fi
 
+if [[ -n "$CHEF_INSTALLED" ]]; then
 cat <<EOF | knife configure -i
 ${HOMEDIR}/.chef/knife.rb
 ${CHEF_URL}
@@ -77,6 +79,7 @@ chef-validator
 ${HOMEDIR}/.chef/validation.pem
 
 EOF
+fi
 
 #print some json in case someone wants to do something with it
 printf '{"URL": "%s", "VALIDATION_PEM": "%s", "WEBUI_PASSWORD": "%s"}' \
