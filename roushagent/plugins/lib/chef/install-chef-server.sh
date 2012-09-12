@@ -50,15 +50,22 @@ chef-solr chef-solr/amqp_password password ${CHEF_AMQP_PASSWORD}
 chef-server-webui chef-server-webui/admin_password password ${CHEF_WEBUI_PASSWORD}
 EOF
 
-apt-get update
-apt-get install -y --force-yes opscode-keyring
-sudo apt-get upgrade -y --force-yes
-sudo apt-get install -y --force-yes chef chef-server
+if ! dpkg -l chef-server &>/dev/null; then
+    apt-get update
+    apt-get install -y --force-yes opscode-keyring
+    sudo apt-get upgrade -y --force-yes
+    sudo apt-get install -y --force-yes chef chef-server
+fi
 
 HOMEDIR=$(getent passwd ${CHEF_UNIX_USER} | cut -d: -f6)
 mkdir -p ${HOMEDIR}/.chef
 cp /etc/chef/validation.pem /etc/chef/webui.pem ${HOMEDIR}/.chef
 chown -R ${CHEF_UNIX_USER}: ${HOMEDIR}/.chef
+
+
+if [[ -f ${HOMEDIR}/.chef/knife.rb ]]; then
+    mv ${HOMEDIR}/.chef/knife.rb{,.old}
+fi
 
 cat <<EOF | knife configure -i
 ${HOMEDIR}/.chef/knife.rb
