@@ -21,7 +21,8 @@ from roushagent.modules import InputManager
 input_handler = None
 log = logging.getLogger()
 
-def do_exit():
+
+def _do_exit():
     global input_handler
     global log
 
@@ -31,13 +32,14 @@ def do_exit():
     log.debug("Bailing")
     sys.exit(0)
 
+
 def main(argv):
-    signal.signal(signal.SIGTERM, lambda a,b: do_exit())
+    signal.signal(signal.SIGTERM, lambda a, b: _do_exit())
 
     try:
         _main(argv)
     except KeyboardInterrupt:
-        do_exit()
+        _do_exit()
     except SystemExit:
         raise
     except:
@@ -55,6 +57,46 @@ def main(argv):
         sys.exit(1)
     else:
         sys.exit(retval)
+
+
+def _read_config(configfile, defaults={}):
+    cp = ConfigParser(defaults=defaults)
+    cp.read(configfile)
+    config = dict([[s, dict(cp.items(s))] for s in cp.sections()])
+
+    if 'main' in config:
+        if 'include' in config['main']:
+            # import and merge a single file
+            if not os.path.isfile(config['main']['include']):
+                raise RuntimeError(
+                    'file %s: include directive %s is not a file' % (
+                        configfile,
+                        config['main']['include'],))
+
+            config = _read_config(config['main']['include'])
+
+        if 'include_dir' in config['main']:
+            # import and merge a whole directory
+            if not os.path.isdir(config['main']['include_dir']):
+                raise RuntimeError(
+                    'file %s: include_dir directive %s is not a dir' % (
+                        configfile,
+                        config['main']['include_dir'],))
+
+            for d in sorted(os.listdir(config['main']['include_dir'])):
+                import_file = os.path.join(config['main']['include_dir'], d)
+
+                config = _read_config(import_file, config)
+
+    # merge in the read config into the exisiting config
+    for section in config:
+        if section in defaults:
+            defaults[section].update(config[section])
+        else:
+            defaults[section] = config[section]
+
+    print defaults
+    return defaults
 
 
 def _main(argv):
@@ -76,7 +118,6 @@ def _main(argv):
             os.umask(0)
             if os.fork():
                 sys.exit(0)
-
 
     try:
         opts, args = getopt.getopt(argv, 'c:vd')
@@ -103,9 +144,7 @@ def _main(argv):
 
     if configfile:
         base = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
-        cp = ConfigParser(defaults={'base_dir': base})
-        cp.read(configfile)
-        config = dict([[s, dict(cp.items(s))] for s in cp.sections()])
+        config = _read_config(configfile, defaults={'base_dir': base})
 
     if background:
         logdev = config['main'].get('syslog_dev', '/dev/log')
@@ -136,12 +175,11 @@ def _main(argv):
     sys.path.append(os.path.join(plugin_dir, 'lib'))
 
     # find input and output handlers to load
-    output_handlers = config['main'].get('output_handlers',
-                                         os.path.join(plugin_dir,
-                                                      'output/plugin_files.py'))
-    input_handlers = config['main'].get('input_handlers',
-                                        os.path.join(plugin_dir,
-                                                     'input/task_input.py'))
+    default_out = os.path.join(plugin_dir, 'output/plugin_files.py')
+    default_in = os.path.join(plugin_dir, 'input/task_input.py')
+
+    output_handlers = config['main'].get('output_handlers', default_out)
+    input_handlers = config['main'].get('input_handlers', default_in)
 
     output_handler = OutputManager(
         [x.strip() for x in output_handlers.split(',')], config)

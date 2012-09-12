@@ -6,9 +6,10 @@ from bashscriptrunner import BashScriptRunner
 
 name = "chef"
 
+
 def setup(config={}):
     LOG.debug('Doing setup in test.py')
-    if not config.has_key("script_path"):
+    if not 'script_path' in config:
         raise ValueError("Expecting script_path in configuration")
     script_path = [config["script_path"]]
     script = BashScriptRunner(script_path=script_path)
@@ -17,6 +18,7 @@ def setup(config={}):
     register_action('run_chef', chef.run_chef)
     register_action('install_chef_server', chef.install_chef_server)
     register_action('get_validation_pem', chef.get_validation_pem)
+
 
 def get_environment(required, optional, payload):
     env = dict([(k, v) for k, v in payload.iteritems()
@@ -28,19 +30,22 @@ def get_environment(required, optional, payload):
                            'result_data': None}
     return True, env
 
+
 def retval(result_code, result_str, result_data):
     return {'result_code': result_code,
             'result_str': result_str,
             'result_data': result_data}
 
+
 def success(result_str="success", result_data=None):
     return retval(0, result_str, result_data)
+
 
 class ChefThing(object):
     def __init__(self, script, config):
         self.script = script
         self.config = config
-        
+
     def install_chef(self, input_data):
         payload = input_data['payload']
         action = input_data['action']
@@ -59,7 +64,7 @@ class ChefThing(object):
     def install_chef_server(self, input_data):
         payload = input_data['payload']
         action = input_data['action']
-        good, env = get_environment([], 
+        good, env = get_environment([],
                                     ["CHEF_URL", "CHEF_WEBUI_PASSWORD"],
                                     payload)
         if not good:
