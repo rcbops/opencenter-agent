@@ -18,11 +18,11 @@ from roushagent.modules import OutputManager
 from roushagent.modules import InputManager
 
 class RoushAgent():
-    def __init__(self, argv):
+    def __init__(self, argv, config_section='main'):
         log = self.log = logging.getLogger()
         self.input_handler = None
         self.config = {'main': {}}
-        self.config_section = 'main'
+        self.config_section = config_section
 
         signal.signal(signal.SIGTERM, lambda a,b: self._exit())
 
@@ -43,7 +43,7 @@ class RoushAgent():
                           tb_lineno, tb_func)
             else:  # string exception
                 log.error(exc_info[0])
-            if self.log.isEnabledFor(logging.DEBUG):
+            if log.isEnabledFor(logging.DEBUG):
                 print ''
                 traceback.print_exception(*exc_info)
             sys.exit(1)
@@ -124,8 +124,8 @@ class RoushAgent():
                     pidfile.truncate()
                     pidfile.write(str(os.getpid()))
                     pidfile.flush()
-            else:
-                log.addHandler(logging.StreamHandler(sys.stderr))
+        else:
+            log.addHandler(logging.StreamHandler(sys.stderr))
 
     def _setup_handlers(self):
         config = self.config
