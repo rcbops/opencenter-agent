@@ -11,6 +11,7 @@ server_quit = False
 server_thread = None
 name = "example"
 
+
 class RestishHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     # these will be
     def do_POST(self):
@@ -53,7 +54,8 @@ class ServerThread(threading.Thread):
         LOG.debug("closing underlying server socket")
         # make a best-effort attempt to kill the underlying server
         try:
-            LOG.debug(urllib.urlopen('http://%s:%s' % self.httpd.server_address))
+            LOG.debug('kicking web service')
+            urllib.urlopen('http://%s:%s' % self.httpd.server_address)
             self.httpd.shutdown()
             self.httpd.socket.close()
         except Exception as e:
@@ -73,6 +75,7 @@ class ServerThread(threading.Thread):
                     return
 
         LOG.error("Exiting run thread")
+
 
 # Amazing stupid handler.  Throw off a thread
 # and start waiting for stuff...
