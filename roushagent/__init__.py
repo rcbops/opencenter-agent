@@ -19,10 +19,11 @@ from roushagent.modules import InputManager
 
 class RoushAgent():
     def __init__(self, argv, config_section='main'):
+        self.base = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
         log = self.log = logging.getLogger()
+        self.config_section = config_section
         self.input_handler = None
         self.config = {'main': {}}
-        self.config_section = config_section
 
         signal.signal(signal.SIGTERM, lambda a, b: self._exit())
 
@@ -123,6 +124,7 @@ class RoushAgent():
     def _setup_scaffolding(self, argv):
         background, debug, configfile = self._parse_opts(argv)
         config_section = self.config_section
+        config = self.config
         log = self.log
 
         if debug:
@@ -131,8 +133,7 @@ class RoushAgent():
             log.setLevel(logging.WARNING)
 
         if configfile:
-            base = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-            config = self.config = self._read_config(configfile, defaults={'base_dir': base})
+            config = self.config = self._read_config(configfile, defaults={'base_dir': self.base})
 
         if background:
             logdev = config[config_section].get('syslog_dev', '/dev/log')
@@ -166,7 +167,7 @@ class RoushAgent():
         config_section = self.config_section
 
         # get directory/path layout
-        base_dir = config[config_section].get('base_dir', '../')
+        base_dir = config[config_section].get('base_dir', self.base)
 
         plugin_dir = config[config_section].get('plugin_dir',
                                                 os.path.join(base_dir,
