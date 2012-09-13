@@ -24,12 +24,11 @@ class RoushAgent():
         self.config = {'main': {}}
         self.config_section = config_section
 
-        signal.signal(signal.SIGTERM, lambda a,b: self._exit())
+        signal.signal(signal.SIGTERM, lambda a, b: self._exit())
 
         try:
             self._setup_scaffolding(argv)
             self._setup_handlers()
-            self.dispatch()
         except KeyboardInterrupt:
             self._exit()
         except SystemExit:
@@ -84,6 +83,46 @@ class RoushAgent():
 
         return background, debug, configfile
 
+    def _read_config(self, configfile, defaults={}):
+        cp = ConfigParser(defaults=defaults)
+        cp.read(configfile)
+        config = self.config = dict([[s, dict(cp.items(s))] for s in cp.sections()])
+        config_section = self.config_section
+
+        if config_section in config:
+            if 'include' in config[config_section]:
+                # import and merge a single file
+                if not os.path.isfile(config[config_section]['include']):
+                    raise RuntimeError(
+                        'file %s: include directive %s is not a file' % (
+                            configfile,
+                            config[config_section]['include'],))
+
+                config = self.config = self._read_config(config[config_section]['include'])
+
+            if 'include_dir' in config[config_section]:
+                # import and merge a whole directory
+                if not os.path.isdir(config[config_section]['include_dir']):
+                    raise RuntimeError(
+                        'file %s: include_dir directive %s is not a dir' % (
+                            configfile,
+                            config[config_section]['include_dir'],))
+
+                for d in sorted(os.listdir(config[config_section]['include_dir'])):
+                    import_file = os.path.join(config[config_section]['include_dir'], d)
+
+                    config = self.config = self._read_config(import_file, config)
+
+        # merge in the read config into the exisiting config
+        for section in config:
+            if section in defaults:
+                defaults[section].update(config[section])
+            else:
+                defaults[section] = config[section]
+
+        print defaults
+        return defaults
+
     def _setup_scaffolding(self, argv):
         background, debug, configfile = self._parse_opts(argv)
         config_section = self.config_section
@@ -96,9 +135,7 @@ class RoushAgent():
 
         if configfile:
             base = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-            cp = ConfigParser(defaults={'base_dir': base})
-            cp.read(configfile)
-            config = self.config = dict([[s, dict(cp.items(s))] for s in cp.sections()])
+            config = self.config = self._read_config(configfile, defaults={'base_dir': base})
 
         if background:
             logdev = config[config_section].get('syslog_dev', '/dev/log')
@@ -140,12 +177,11 @@ class RoushAgent():
         sys.path.append(os.path.join(plugin_dir, 'lib'))
 
         # find input and output handlers to load
-        output_handlers = config[config_section].get('output_handlers',
-                                             os.path.join(plugin_dir,
-                                                          'output/plugin_files.py'))
-        input_handlers = config[config_section].get('input_handlers',
-                                            os.path.join(plugin_dir,
-                                                         'input/task_input.py'))
+        default_out = os.path.join(plugin_dir, 'output/plugin_files.py')
+        default_in = os.path.join(plugin_dir, 'input/task_input.py')
+
+        output_handlers = config['main'].get('output_handlers', default_out)
+        input_handlers = config['main'].get('input_handlers', default_in)
 
         self.output_handler = OutputManager(
             [x.strip() for x in output_handlers.split(',')], config)
