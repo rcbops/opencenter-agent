@@ -3,8 +3,7 @@
 import os
 import logging
 
-
-LOG = logging.getLogger('plugins')
+LOG = logging.getLogger('output')
 
 # output modules recieve an input action, and return an output
 # result.  Generally they take the form of actions to perform.
