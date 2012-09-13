@@ -25,30 +25,35 @@ class RoushAgent():
         self.input_handler = None
         self.config = {'main': {}}
 
-        signal.signal(signal.SIGTERM, lambda a, b: self._exit())
+        signal.signal(signal.SIGTERM, lambda a, b: self._cleanup())
 
         try:
             self._setup_scaffolding(argv)
             self._setup_handlers()
         except KeyboardInterrupt:
-            self._exit()
+            self._cleanup()
         except SystemExit:
             raise
         except:
-            exc_info = sys.exc_info()
-            if hasattr(exc_info[0], '__name__'):
-                exc_class, exc, tb = exc_info
-                tb_path, tb_lineno, tb_func = traceback.extract_tb(tb)[-1][:3]
-                log.error('%s (%s:%s in %s)', exc_info[1], tb_path,
-                          tb_lineno, tb_func)
-            else:  # string exception
-                log.error(exc_info[0])
+            self._exit()
+
+    def _exit(self):
+        log = self.log
+
+        exc_info = sys.exc_info()
+        if hasattr(exc_info[0], '__name__'):
+            exc_class, exc, tb = exc_info
+            tb_path, tb_lineno, tb_func = traceback.extract_tb(tb)[-1][:3]
+            log.error('%s (%s:%s in %s)', exc_info[1], tb_path,
+                      tb_lineno, tb_func)
+        else:  # string exception
+            log.error(exc_info[0])
             if log.isEnabledFor(logging.DEBUG):
                 print ''
                 traceback.print_exception(*exc_info)
             sys.exit(1)
 
-    def _exit(self):
+    def _cleanup(self):
         input_handler = self.input_handler
         log = self.log
 
@@ -186,16 +191,21 @@ class RoushAgent():
         self.input_handler = InputManager(
             [x.strip() for x in input_handlers.split(',')], config)
 
-    def dispatch(self):
+    def dispatch(self, one_shot=False):
+        try:
+            self._dispatch(one_shot)
+        except:
+            self._exit()
+
+    def _dispatch(self, one_shot):
         output_handler = self.output_handler
         input_handler = self.input_handler
         log = self.log
 
         # we'll assume non-blocking.  we should negotiate this
         # with the plugins, I suppose
-        do_quit = False
 
-        while not do_quit:
+        while not one_shot:
             result = input_handler.fetch()
             if len(result) == 0:
                 time.sleep(5)
