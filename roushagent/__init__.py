@@ -46,8 +46,6 @@ class RoushAgent():
                 print ''
                 traceback.print_exception(*exc_info)
             sys.exit(1)
-        else:
-            sys.exit(retval)
 
     def _exit(self):
         input_handler = self.input_handler
@@ -120,7 +118,6 @@ class RoushAgent():
             else:
                 defaults[section] = config[section]
 
-        print defaults
         return defaults
 
     def _setup_scaffolding(self, argv):
@@ -172,8 +169,8 @@ class RoushAgent():
         base_dir = config[config_section].get('base_dir', '../')
 
         plugin_dir = config[config_section].get('plugin_dir',
-                                        os.path.join(base_dir,
-                                                     'roushagent/plugins'))
+                                                os.path.join(base_dir,
+                                                             'roushagent/plugins'))
         sys.path.append(os.path.join(plugin_dir, 'lib'))
 
         # find input and output handlers to load
