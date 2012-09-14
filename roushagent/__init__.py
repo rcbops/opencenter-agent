@@ -25,13 +25,13 @@ class RoushAgent():
         self.input_handler = None
         self.config = {'main': {}}
 
-        signal.signal(signal.SIGTERM, lambda a, b: self._cleanup())
+        signal.signal(signal.SIGTERM, lambda a, b: self._exit())
 
         try:
             self._setup_scaffolding(argv)
             self._setup_handlers()
         except KeyboardInterrupt:
-            self._cleanup()
+            self._exit()
         except SystemExit:
             raise
         except:
@@ -39,6 +39,8 @@ class RoushAgent():
 
     def _exit(self):
         log = self.log
+
+        self._cleanup()
 
         exc_info = sys.exc_info()
         if hasattr(exc_info[0], '__name__'):
