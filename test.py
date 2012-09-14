@@ -7,7 +7,7 @@ from roushagent import RoushAgent
 class TestRoushAgent(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.agent = RoushAgent(["-v", "-c", "roush-agent-test.conf"])
+        cls.agent = RoushAgent(["-c", "roush-agent-test.conf"])
 
     def test_1_input_handler_setup(self):
         self.assertTrue(self.agent.input_handler.input_plugins['input']['state'].input_setup_called)
