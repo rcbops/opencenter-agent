@@ -178,4 +178,5 @@ class OutputManager:
 
     def stop(self):
         for plugin in self.output_plugins:
-            self.output_plugins[plugin]['teardown']()
+            if 'teardown' in self.output_plugins[plugin]:
+                self.output_plugins[plugin]['teardown']()
