@@ -63,7 +63,7 @@ LOG = logging.getLogger('input')
 class InputManager:
     def __init__(self, path, config={}):
         # Load all available plugins, or those
-        # specficied by the config.
+        # specified by the config.
         self.input_plugins = {}
         self.config = config
         self.load(path)
