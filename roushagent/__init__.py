@@ -57,14 +57,17 @@ class RoushAgent():
         sys.exit(0)
 
     def _cleanup(self):
+        output_handler = self.output_handler
         input_handler = self.input_handler
         log = self.log
 
         if input_handler:
             log.debug('Stopping input handler.')
             input_handler.stop()
-        log.debug('Bailing')
-        sys.exit(0)
+
+        if output_handler:
+            log.debug('Stopping output handler.')
+            output_handler.stop()
 
     def _parse_opts(self, argv):
         background = debug = False
