@@ -204,8 +204,9 @@ class RoushAgent():
 
         # we'll assume non-blocking.  we should negotiate this
         # with the plugins, I suppose
+        do_quit = False
 
-        while not one_shot:
+        while not do_quit:
             result = input_handler.fetch()
             if len(result) == 0:
                 time.sleep(5)
@@ -234,3 +235,6 @@ class RoushAgent():
                     log.warn(full_traceback)
 
                 input_handler.result(result)
+
+            if one_shot:
+                do_quit = True
