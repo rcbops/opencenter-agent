@@ -50,7 +50,8 @@ LOG = logging.getLogger('output')
 class OutputManager:
     def __init__(self, path, config={}):
         # Load all available plugins, or those
-        # specficied by the config.
+        # specified by the config.
+        self.output_plugins = {}
 
         # should all actions be named module.action?
         self.loaded_modules = ['modules']
@@ -87,6 +88,7 @@ class OutputManager:
 
         name = ns['name']
         self.loaded_modules.append(name)
+        self.output_plugins[name] = ns
         config = self.config.get(name, {})
 
         ns['module_config'] = config
@@ -173,3 +175,7 @@ class OutputManager:
         return {'result_code': result_code,
                 'result_str': result_str,
                 'result_data': result_data}
+
+    def stop(self):
+        for plugin in self.output_plugins:
+            self.output_plugins[plugin]['teardown']()
