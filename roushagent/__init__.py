@@ -52,6 +52,7 @@ class RoushAgent():
                 print ''
                 traceback.print_exception(*exc_info)
             sys.exit(1)
+        sys.exit(0)
 
     def _cleanup(self):
         input_handler = self.input_handler
