@@ -195,7 +195,7 @@ class RoushAgent():
         try:
             self._dispatch(one_shot)
         except:
-            self._exit()
+            self._cleanup()
 
     def _dispatch(self, one_shot):
         output_handler = self.output_handler
@@ -221,6 +221,9 @@ class RoushAgent():
 
                 try:
                     result['output'] = output_handler.dispatch(result['input'])
+
+                except KeyboardInterrupt:
+                    raise KeyboardInterrupt
 
                 except Exception as e:
                     exc_type, exc_value, exc_traceback = sys.exc_info()
