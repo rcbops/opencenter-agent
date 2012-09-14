@@ -197,13 +197,7 @@ class RoushAgent():
         self.input_handler = InputManager(
             [x.strip() for x in input_handlers.split(',')], config)
 
-    def dispatch(self, one_shot=False):
-        try:
-            self._dispatch(one_shot)
-        except:
-            self._cleanup()
-
-    def _dispatch(self, one_shot):
+    def dispatch(self):
         output_handler = self.output_handler
         input_handler = self.input_handler
         log = self.log
@@ -211,39 +205,36 @@ class RoushAgent():
         # we'll assume non-blocking.  we should negotiate this
         # with the plugins, I suppose
         do_quit = False
+        try:
+            while not do_quit:
+                result = input_handler.fetch()
+                if len(result) == 0:
+                    time.sleep(5)
+                else:
+                    log.debug('Got input from input handler "%s"' %
+                              result['plugin'])
+                    log.debug('Data: %s' % result['input'])
 
-        while not do_quit:
-            result = input_handler.fetch()
-            if len(result) == 0:
-                time.sleep(5)
-            else:
-                log.debug('Got input from input handler "%s"' %
-                          result['plugin'])
-                log.debug('Data: %s' % result['input'])
+                    result['output'] = {'result_code': 255,
+                                        'result_str': 'unknown error',
+                                        'result_data': ''}
 
-                result['output'] = {'result_code': 255,
-                                    'result_str': 'unknown error',
-                                    'result_data': ''}
+                    try:
+                        result['output'] = output_handler.dispatch(result['input'])
+                    except KeyboardInterrupt:
+                        raise KeyboardInterrupt
+                    except Exception as e:
+                        exc_type, exc_value, exc_traceback = sys.exc_info()
+                        full_traceback = repr(
+                            traceback.format_exception(
+                                exc_type, exc_value, exc_traceback))
 
-                try:
-                    result['output'] = output_handler.dispatch(result['input'])
+                        result['output'] = {'result_code': 254,
+                                            'result_str': 'dispatch error',
+                                            'result_data': full_traceback}
+                        print full_traceback
+                        log.warn(full_traceback)
 
-                except KeyboardInterrupt:
-                    raise KeyboardInterrupt
-
-                except Exception as e:
-                    exc_type, exc_value, exc_traceback = sys.exc_info()
-                    full_traceback = repr(
-                        traceback.format_exception(
-                            exc_type, exc_value, exc_traceback))
-
-                    result['output'] = {'result_code': 254,
-                                        'result_str': 'dispatch error',
-                                        'result_data': full_traceback}
-                    print full_traceback
-                    log.warn(full_traceback)
-
-                input_handler.result(result)
-
-            if one_shot:
-                do_quit = True
+                    input_handler.result(result)
+        except:
+            self._exit()
