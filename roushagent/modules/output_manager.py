@@ -79,32 +79,35 @@ class OutputManager:
               'LOG': LOG}
 
         LOG.debug('Loading plugin file %s' % path)
-
         try:
-            execfile(path, ns)
-        except Exception as e:
-            LOG.warning("Unable to load %s: '%s'. Ignoring." % (path,
-                                                            e.message))
-            return
-
-        if not 'name' in ns:
-            LOG.warning('Plugin missing "name" value. Ignoring.')
-            return
-
-        name = ns['name']
-        self.loaded_modules.append(name)
-        self.output_plugins[name] = ns
-        config = self.config.get(name, {})
-
-        ns['module_config'] = config
-
-        if 'setup' in ns:
             try:
-                ns['setup'](config)
-            except:
-                LOG.debug("Failed to run setup on %s" % path)
-        else:
-            LOG.warning('No setup function in %s. Ignoring.' % path)
+                execfile(path, ns)
+            except Exception as e:
+                LOG.warning("Unable to load %s: '%s'. Ignoring." % (path,
+                                                                    e.message))
+                return
+
+            if not 'name' in ns:
+                LOG.warning('Plugin missing "name" value. Ignoring.')
+                return
+
+            name = ns['name']
+            self.loaded_modules.append(name)
+            self.output_plugins[name] = ns
+            config = self.config.get(name, {})
+
+            ns['module_config'] = config
+
+            if 'setup' in ns:
+                try:
+                    ns['setup'](config)
+                except:
+                    LOG.debug("Failed to run setup on %s" % path)
+            else:
+                LOG.warning('No setup function in %s. Ignoring.' % path)
+        except Exception as e:
+            LOG.warning("An unexpected error occured in %s: %s" % (
+                path, e.message))
 
     def register_action(self, action, method):
         LOG.debug('registering handler for action %s' % action)

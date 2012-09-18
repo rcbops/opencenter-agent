@@ -106,7 +106,7 @@ class InputManager:
                 LOG.warning('No setup function in %s. Ignoring.' % path)
         except Exception as e:
             LOG.warning("An unexpected error occurred when loading %s: %s" % (
-                path, e.message)
+                path, e.message))
 
     def load(self, path):
         # Load a plugin by file name.  modules with
