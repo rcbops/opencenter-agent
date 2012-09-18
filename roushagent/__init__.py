@@ -23,6 +23,7 @@ class RoushAgent():
         log = self.log = logging.getLogger()
         self.config_section = config_section
         self.input_handler = None
+        self.output_handler = None
         self.config = {config_section: {}}
 
         signal.signal(signal.SIGTERM, lambda a, b: self._exit())
