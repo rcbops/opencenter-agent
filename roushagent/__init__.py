@@ -23,7 +23,7 @@ class RoushAgent():
         log = self.log = logging.getLogger()
         self.config_section = config_section
         self.input_handler = None
-        self.config = {'main': {}}
+        self.config = {config_section: {}}
 
         signal.signal(signal.SIGTERM, lambda a, b: self._exit())
 
@@ -189,8 +189,8 @@ class RoushAgent():
         default_out = os.path.join(plugin_dir, 'output/plugin_files.py')
         default_in = os.path.join(plugin_dir, 'input/task_input.py')
 
-        output_handlers = config['main'].get('output_handlers', default_out)
-        input_handlers = config['main'].get('input_handlers', default_in)
+        output_handlers = config[config_section].get('output_handlers', default_out)
+        input_handlers = config[config_section].get('input_handlers', default_in)
 
         self.output_handler = OutputManager(
             [x.strip() for x in output_handlers.split(',')], config)
