@@ -17,11 +17,7 @@ def teardown():
     state.input_teardown_called = True
 
 def fetch():
-    result = {
-        'id': 'test',
-        'action': 'test',
-        'payload': '{}'
-        }
+    result = { 'foo': 'bar' }
 
     state.input_fetch_called = True
     return result
