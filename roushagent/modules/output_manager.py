@@ -80,18 +80,17 @@ class OutputManager:
 
         LOG.debug('Loading plugin file %s' % path)
 
-        # FIXME(rp): Handle exceptions
         try:
             execfile(path, ns)
         except Exception as e:
             LOG.warning("Unable to load %s: '%s'. Ignoring." % (path,
                                                             e.message))
             return
- 
+
         if not 'name' in ns:
             LOG.warning('Plugin missing "name" value. Ignoring.')
             return
-        
+
         name = ns['name']
         self.loaded_modules.append(name)
         self.output_plugins[name] = ns

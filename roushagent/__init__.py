@@ -97,11 +97,17 @@ class RoushAgent():
 
         if input_handler:
             log.debug('Stopping input handler.')
-            input_handler.stop()
+            try:
+                input_handler.stop()
+            except:
+                pass
 
         if output_handler:
             log.debug('Stopping output handler.')
-            output_handler.stop()
+            try:
+                output_handler.stop()
+            except:
+                pass
 
     def _parse_opts(self, argv):
         background = debug = False
