@@ -3,6 +3,7 @@
 import json
 import time
 import threading
+import logging
 
 from apiclient import RoushEndpoint
 from multiprocessing import Pool
@@ -10,8 +11,11 @@ from multiprocessing import Pool
 # primitive functions for orchestration.
 
 class OrchestratorTasks:
-    def __init__(self, endpoint = 'http://localhost:8080'):
+    def __init__(self, endpoint = 'http://localhost:8080', logger = None):
         self.endpoint = RoushEndpoint(endpoint)
+        self.logger = logger
+        if not self.logger:
+            self.logger = logging.getLogger()
 
     # submit a task and return the task ID
     def submit_task(self, node, action, payload):
@@ -24,11 +28,12 @@ class OrchestratorTasks:
         new_task.state = 'pending'
 
         new_task.save()
+        self.logger.debug('submitting "%s" task as %d' % (action, new_task.id))
         return new_task.id
 
     # given a list of tasks, wait for each task to
     # complete, and return aggregate status (success/fail)
-    def wait_for_tasks(self, task_list, timeout, poll_interval = 10):
+    def wait_for_tasks(self, task_list, timeout, poll_interval = 2):
         start_time = time.time()
         success = True
 
@@ -36,8 +41,10 @@ class OrchestratorTasks:
 
         while(len(task_list) > 0 and ((time.time() - start_time) < timeout)):
             for task in task_list:
-                task_obj = self.endpoint.tasks[int(task)]
-                if task_obj.state != 'pending' and task_obj.status != 'running':
+                task_obj = self.endpoint.tasks[task]
+                # force a refresh
+                task_obj._request('get')
+                if task_obj.state != 'pending' and task_obj.state != 'running':
                     # task is done.
                     task_list.remove(task)
                     complete_tasks.append(task)
@@ -46,7 +53,11 @@ class OrchestratorTasks:
                         success = False
                     else:
                         # done
-                        success = success and (task_obj.result == 0)
+                        self.logger.debug('Task %d completed' % task)
+                        result = json.loads(task_obj.result)
+                        self.logger.debug('Task output: %s' % result)
+                        success = success and (result['result_code'] == 0)
+                        self.logger.debug('Success: %s' % success)
 
             time.sleep(poll_interval)
 

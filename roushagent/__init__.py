@@ -10,12 +10,45 @@ import socket
 import sys
 import time
 import traceback
+import threading
 
 from ConfigParser import ConfigParser
 from logging.handlers import SysLogHandler
 
 from roushagent.modules import OutputManager
 from roushagent.modules import InputManager
+
+class RoushAgentDispatchThread(threading.Thread):
+    def __init__(self, input_handler, output_handler, data):
+        super(RoushAgentDispatchThread, self).__init__()
+
+        self.data = data
+        self.output_handler = output_handler
+        self.input_handler = input_handler
+
+    def run(self):
+        data = self.data
+        input_handler = self.input_handler
+        output_handler = self.output_handler
+
+        data['output'] = {'result_code': 255,
+                          'result_str': 'unknown error',
+                          'result_data': ''}
+
+        try:
+            data['output'] = output_handler.dispatch(data['input'])
+        except Exception as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            full_traceback = repr(
+                traceback.format_exception(
+                    exc_type, exc_value, exc_traceback))
+
+            data['output'] = {'result_code': 254,
+                              'result_str': 'dispatch error',
+                              'result_data': full_traceback}
+
+        input_handler.result(data)
+
 
 class RoushAgent():
     def __init__(self, argv, config_section='main'):
@@ -216,26 +249,8 @@ class RoushAgent():
                               result['plugin'])
                     log.debug('Data: %s' % result['input'])
 
-                    result['output'] = {'result_code': 255,
-                                        'result_str': 'unknown error',
-                                        'result_data': ''}
-
-                    try:
-                        result['output'] = output_handler.dispatch(result['input'])
-                    except KeyboardInterrupt:
-                        raise KeyboardInterrupt
-                    except Exception as e:
-                        exc_type, exc_value, exc_traceback = sys.exc_info()
-                        full_traceback = repr(
-                            traceback.format_exception(
-                                exc_type, exc_value, exc_traceback))
-
-                        result['output'] = {'result_code': 254,
-                                            'result_str': 'dispatch error',
-                                            'result_data': full_traceback}
-                        print full_traceback
-                        log.warn(full_traceback)
-
-                    input_handler.result(result)
+                    # likely this should be done in a thread pool or something,
+                    # or at least the threads should be tracked.
+                    RoushAgentDispatchThread(input_handler, output_handler, result).start()
         except:
             self._exit()
