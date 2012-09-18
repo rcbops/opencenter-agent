@@ -88,6 +88,7 @@ class InputManager:
             except Exception as e:
                 LOG.warning("Unable to load %s: '%s'. Ignoring." % (path,
                                                                 e.message))
+                return
             if not 'name' in ns:
                 LOG.warning('Plugin missing "name" value. Ignoring.')
                 return
