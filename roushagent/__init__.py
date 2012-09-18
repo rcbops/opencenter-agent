@@ -25,13 +25,13 @@ class RoushAgent():
         self.input_handler = None
         self.config = {'main': {}}
 
-        signal.signal(signal.SIGTERM, lambda a, b: self._cleanup())
+        signal.signal(signal.SIGTERM, lambda a, b: self._exit())
 
         try:
             self._setup_scaffolding(argv)
             self._setup_handlers()
         except KeyboardInterrupt:
-            self._cleanup()
+            self._exit()
         except SystemExit:
             raise
         except:
@@ -39,6 +39,8 @@ class RoushAgent():
 
     def _exit(self):
         log = self.log
+
+        self._cleanup()
 
         exc_info = sys.exc_info()
         if hasattr(exc_info[0], '__name__'):
@@ -52,16 +54,20 @@ class RoushAgent():
                 print ''
                 traceback.print_exception(*exc_info)
             sys.exit(1)
+        sys.exit(0)
 
     def _cleanup(self):
+        output_handler = self.output_handler
         input_handler = self.input_handler
         log = self.log
 
         if input_handler:
             log.debug('Stopping input handler.')
             input_handler.stop()
-        log.debug('Bailing')
-        sys.exit(0)
+
+        if output_handler:
+            log.debug('Stopping output handler.')
+            output_handler.stop()
 
     def _parse_opts(self, argv):
         background = debug = False
@@ -191,13 +197,7 @@ class RoushAgent():
         self.input_handler = InputManager(
             [x.strip() for x in input_handlers.split(',')], config)
 
-    def dispatch(self, one_shot=False):
-        try:
-            self._dispatch(one_shot)
-        except:
-            self._cleanup()
-
-    def _dispatch(self, one_shot):
+    def dispatch(self):
         output_handler = self.output_handler
         input_handler = self.input_handler
         log = self.log
@@ -205,39 +205,36 @@ class RoushAgent():
         # we'll assume non-blocking.  we should negotiate this
         # with the plugins, I suppose
         do_quit = False
+        try:
+            while not do_quit:
+                result = input_handler.fetch()
+                if len(result) == 0:
+                    time.sleep(5)
+                else:
+                    log.debug('Got input from input handler "%s"' %
+                              result['plugin'])
+                    log.debug('Data: %s' % result['input'])
 
-        while not do_quit:
-            result = input_handler.fetch()
-            if len(result) == 0:
-                time.sleep(5)
-            else:
-                log.debug('Got input from input handler "%s"' %
-                          result['plugin'])
-                log.debug('Data: %s' % result['input'])
+                    result['output'] = {'result_code': 255,
+                                        'result_str': 'unknown error',
+                                        'result_data': ''}
 
-                result['output'] = {'result_code': 255,
-                                    'result_str': 'unknown error',
-                                    'result_data': ''}
+                    try:
+                        result['output'] = output_handler.dispatch(result['input'])
+                    except KeyboardInterrupt:
+                        raise KeyboardInterrupt
+                    except Exception as e:
+                        exc_type, exc_value, exc_traceback = sys.exc_info()
+                        full_traceback = repr(
+                            traceback.format_exception(
+                                exc_type, exc_value, exc_traceback))
 
-                try:
-                    result['output'] = output_handler.dispatch(result['input'])
+                        result['output'] = {'result_code': 254,
+                                            'result_str': 'dispatch error',
+                                            'result_data': full_traceback}
+                        print full_traceback
+                        log.warn(full_traceback)
 
-                except KeyboardInterrupt:
-                    raise KeyboardInterrupt
-
-                except Exception as e:
-                    exc_type, exc_value, exc_traceback = sys.exc_info()
-                    full_traceback = repr(
-                        traceback.format_exception(
-                            exc_type, exc_value, exc_traceback))
-
-                    result['output'] = {'result_code': 254,
-                                        'result_str': 'dispatch error',
-                                        'result_data': full_traceback}
-                    print full_traceback
-                    log.warn(full_traceback)
-
-                input_handler.result(result)
-
-            if one_shot:
-                do_quit = True
+                    input_handler.result(result)
+        except:
+            self._exit()
