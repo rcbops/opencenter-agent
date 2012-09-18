@@ -81,11 +81,17 @@ class OutputManager:
         LOG.debug('Loading plugin file %s' % path)
 
         # FIXME(rp): Handle exceptions
-        execfile(path, ns)
-
+        try:
+            execfile(path, ns)
+        except Exception as e:
+            LOG.warning("Unable to load %s: '%s'. Ignoring." % (path,
+                                                            e.message))
+            return
+ 
         if not 'name' in ns:
-            raise ImportError('Plugin missing "name" value')
-
+            LOG.warning('Plugin missing "name" value. Ignoring.')
+            return
+        
         name = ns['name']
         self.loaded_modules.append(name)
         self.output_plugins[name] = ns
@@ -94,9 +100,12 @@ class OutputManager:
         ns['module_config'] = config
 
         if 'setup' in ns:
-            ns['setup'](config)
+            try:
+                ns['setup'](config)
+            except:
+                LOG.debug("Failed to run setup on %s" % path)
         else:
-            LOG.warning('No setup function in %s.  Ignoring.' % path)
+            LOG.warning('No setup function in %s. Ignoring.' % path)
 
     def register_action(self, action, method):
         LOG.debug('registering handler for action %s' % action)
