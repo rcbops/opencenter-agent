@@ -1,10 +1,15 @@
 #!/usr/bin/env python
 
 import unittest
+import logging
 
 from roushagent import RoushAgent
 
-class TestRoushAgent(unittest.TestCase):
+# Suppress WARNING logs
+LOG = logging.getLogger('output')
+LOG.setLevel(logging.ERROR)
+
+class TestRoushAgentWorking(unittest.TestCase):
     def setUp(self):
         self.agent = RoushAgent(["-c", "roush-agent-test.conf"])
         self.output_handler = self.agent.output_handler
