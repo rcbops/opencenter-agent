@@ -143,9 +143,10 @@ class OutputManager:
                 if 'result_code' in result and result['result_code'] == 0:
                     return result
 
-            return result
         else:
             LOG.warning('No dispatch for action "%s"' % action)
+
+        return result
 
     # some internal methods to provide some agent introspection
     def handle_modules(self, input_data):
