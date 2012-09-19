@@ -97,12 +97,12 @@ class TaskThread(threading.Thread):
         while self.running:
             # FIXME(rp): handle error cases
             (rc, data) = self._get('/nodes/%s/tasks' % self.host_id)
-            if self._is_success(rc) and data['state'] == 'pending':
+            if self._is_success(rc) and data['task']['state'] == 'pending':
                 # we have a new pending task.
                 self.producer_lock.acquire()
-                if data['id'] not in [x['id'] for x in self.pending_tasks]:
-                    self.pending_tasks.append(data)
-                    LOG.debug('Found new pending task with id %s' % data['id'])
+                if data['task']['id'] not in [x['id'] for x in self.pending_tasks]:
+                    self.pending_tasks.append(data['task'])
+                    LOG.debug('Found new pending task with id %s' % data['task']['id'])
                 self.producer_lock.release()
 
             time.sleep(15)

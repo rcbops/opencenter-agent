@@ -6,16 +6,65 @@ import threading
 import logging
 
 from apiclient import RoushEndpoint
-from multiprocessing import Pool
+from state import StateMachine, StateMachineState
 
 # primitive functions for orchestration.
-
 class OrchestratorTasks:
-    def __init__(self, endpoint = 'http://localhost:8080', logger = None):
+    def __init__(self, endpoint='http://localhost:8080', logger=None):
         self.endpoint = RoushEndpoint(endpoint)
         self.logger = logger
-        if not self.logger:
+        if not logger:
             self.logger = logging.getLogger()
+
+    def sm_eval(self, sm_dict, input_state):
+        def otask(fn, *args, **kwargs):
+            def outer(input_state, **outer_args):
+                kwargs.update(outer_args)
+                return fn(input_state, *args, **kwargs)
+            return outer
+
+        sm = StateMachine(input_state)
+        if 'start_state' in sm_dict:
+            sm.set_state(sm_dict['start_state'])
+
+        for state, vals in sm_dict['states'].items():
+            action = vals['action']
+            parameters = vals['parameters']
+
+            del vals['action']
+            del vals['parameters']
+
+            if not hasattr(self, 'primitive_%s' % action):
+                self.logger.debug('cannot find primitive "%s"' % action)
+                return ({ 'result_code': 1,
+                          'result_str': 'cannot find primitive "%s"' % action,
+                          'result_data': {}},{})
+
+            fn = otask(getattr(self,'primitive_%s' % action), **parameters)
+            sm.add_state(state, StateMachineState(advance=fn, **vals))
+
+        result_data, end_state = sm.run_to_completion()
+        return (result_data, end_state)
+
+    def primitive_log(self, state_data, msg='default msg'):
+        self.logger.debug(msg)
+        self.logger.debug('state_data: %s' % state_data)
+        return ({'result_code': 0,
+                 'result_str': 'success',
+                 'result_data': {}}, state_data)
+
+    def primitive_filter(self, state_data, criteria=None):
+        if criteria:
+            # do some real filtering here
+            self.logger.debug('popping a node')
+            state_data['nodes'].pop()
+            return ({'result_code': 0,
+                     'result_str': 'filtered nodes',
+                     'result_data': {}}, state_data)
+        else:
+            return ({'result_code': 1,
+                     'result_str': 'no state filter criteria specified',
+                     'result_data': {}}, state_data)
 
     # submit a task and return the task ID
     def submit_task(self, node, action, payload):
