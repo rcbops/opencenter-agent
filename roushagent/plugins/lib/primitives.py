@@ -5,7 +5,7 @@ import time
 import threading
 import logging
 
-from apiclient import RoushEndpoint
+from roushclient.client import RoushEndpoint
 from state import StateMachine, StateMachineState
 
 # primitive functions for orchestration.
