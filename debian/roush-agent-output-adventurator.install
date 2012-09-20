@@ -1,0 +1,4 @@
+usr/share/roush-agent/plugins/lib/primitives.py
+usr/share/roush-agent/plugins/lib/state.py
+usr/share/roush-agent/plugins/output/plugin_adventurator.py
+debian/roush-agent-adventurator.conf etc/roush-agent.d
