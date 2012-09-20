@@ -51,7 +51,7 @@ Provides: ${python:Provides}
 Description: a simple file management plugin.  very very unsafe.
 
 Package: roush-agent-output-adventurator
-Architectue: all
+Architecture: all
 Section: python
 Depends: roush-agent(= ${binary:Version})
 Provides: ${python:Provides}
