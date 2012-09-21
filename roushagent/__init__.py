@@ -158,10 +158,10 @@ class RoushAgent():
                             configfile,
                             config[config_section]['include_dir'],))
 
-                for d in sorted(os.listdir(config[config_section]['include_dir'])):
-                    import_file = os.path.join(config[config_section]['include_dir'], d)
-
-                    config = self.config = self._read_config(import_file, config)
+                for f in sorted(os.listdir(config[config_section]['include_dir'])):
+                    if f.endswith('.conf'):
+                        import_file = os.path.join(config[config_section]['include_dir'], f)
+                        config = self.config = self._read_config(import_file, config)
 
         # merge in the read config into the exisiting config
         for section in config:

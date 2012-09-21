@@ -14,6 +14,11 @@ name = 'adventurator'
 
 
 def setup(config={}):
+    self.roush_endpoint = 'http://localhost:8080'
+
+    if 'roush_endpoint' in config:
+        self.roush_endpoint = config['roush_endpoint']
+
     LOG.debug('doing setup for %s handler' % name)
     register_action('adventurate', handle_adventurate)
 
@@ -42,7 +47,7 @@ def handle_adventurate(input_data):
     ns['LOG'] = LOG
     ns['StateMachine'] = StateMachine
     ns['StateMachineState'] = StateMachineState
-    ns['tasks'] = OrchestratorTasks()
+    ns['tasks'] = OrchestratorTasks(endpoint=self.roush_endpoint)
     ns['input_data'] = payload['initial_state']
     ns['result_str'] = 'fail'
     ns['result_code'] = 254

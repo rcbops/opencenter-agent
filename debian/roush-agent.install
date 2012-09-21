@@ -3,3 +3,4 @@ usr/share/roush-agent/plugins/output/plugin_example.py
 usr/share/roush-agent/plugins/input/input_example.py
 usr/bin/*
 debian/roush-agent.conf etc
+debian/conf.d.readme etc/roush-agent.d

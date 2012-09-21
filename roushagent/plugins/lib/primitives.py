@@ -5,7 +5,7 @@ import time
 import threading
 import logging
 
-from apiclient import RoushEndpoint
+from roushclient.client import RoushEndpoint
 from state import StateMachine, StateMachineState
 
 # primitive functions for orchestration.
@@ -49,25 +49,67 @@ class OrchestratorTasks:
     def primitive_log(self, state_data, msg='default msg'):
         self.logger.debug(msg)
         self.logger.debug('state_data: %s' % state_data)
-        return ({'result_code': 0,
-                 'result_str': 'success',
-                 'result_data': {}}, state_data)
+        return self._success(state_data)
 
     def primitive_filter(self, state_data, criteria=None):
         if criteria:
             # do some real filtering here
             self.logger.debug('popping a node')
             state_data['nodes'].pop()
-            return ({'result_code': 0,
-                     'result_str': 'filtered nodes',
-                     'result_data': {}}, state_data)
+            return self._success(state_data)
         else:
-            return ({'result_code': 1,
-                     'result_str': 'no state filter criteria specified',
-                     'result_data': {}}, state_data)
+            return self._failure(state_data, result_str='no state filter criteria specified')
+
+    def primitive_run_task(self, state_data, action, payload={}, timeout=3600, poll_interval=5):
+        if not 'nodes' in state_data:
+            return self._failure(state_data, result_str='no node list for primitive "run_task"')
+
+        result_list = {}
+
+        for node in state_data['nodes']:
+            task_id = self._submit_task(node, action, payload)
+            if task_id:
+                self.logger.debug('Submitted task %d on node %d' % (task_id, node))
+                result_list[node] = task_id
+            else:
+                self.logger.debug('Could not submit task on node %d' % (node,))
+
+                # take this node out of the run list
+                self._fail_node(state_data, node)
+
+        # wait for all the submitted tasks
+        self.logger.debug('Waiting for submitted tasks')
+
+        success_tasks, fail_tasks = self._wait_for_tasks(result_list, timeout, poll_interval)
+
+        for node in fail_tasks.keys():
+            self._fail_node(state_data, node)
+
+        # should append to the run log
+        if len(state_data['nodes']) > 0:
+            return self._success(state_data, result_str='task runner succeeded')
+
+        return self._failure(state_data, result_str='no successful task executions.')
+
+    def _success(self, state_data, result_str='success', result_data={}):
+        return self._result(state_data, 0, result_str, result_data)
+
+    def _failure(self, state_data, retcode=1, result_str='failure', result_data={}):
+        return self._result(state_data, result_code, result_str, result_data)
+
+    def _result(self, state_data, result_code, result_str, result_data):
+        return ({'result_code': result_code,
+                'result_str': result_str,
+                'result_data': result_data}, state_data)
+
+    def _fail_node(self, state_data, node):
+        state_data['nodes'].remove(node)
+        if not 'fails' in state_data:
+            state_data['fails'] = []
+        state_data['fails'].append(node)
 
     # submit a task and return the task ID
-    def submit_task(self, node, action, payload):
+    def _submit_task(self, node, action, payload):
         node_id = node
 
         new_task = self.endpoint.Task()
@@ -80,41 +122,52 @@ class OrchestratorTasks:
         self.logger.debug('submitting "%s" task as %d' % (action, new_task.id))
         return new_task.id
 
-    # given a list of tasks, wait for each task to
-    # complete, and return aggregate status (success/fail)
-    def wait_for_tasks(self, task_list, timeout, poll_interval = 2):
+    # given a dict of node/tasks, wait for each task to
+    # complete, and return results as two dicts: a dict of successful
+    # tasks and a dict of unsuccessful tasks in the following format:
+    #
+    # { node_id: { 'task': task_id,
+    #              'result': { result blob },
+    #   ....
+    # }
+    def _wait_for_tasks(self, task_list, timeout, poll_interval=5):
         start_time = time.time()
-        success = True
 
-        complete_tasks = []
+        success_tasks = {}
+        failed_tasks = {}
 
         while(len(task_list) > 0 and ((time.time() - start_time) < timeout)):
-            for task in task_list:
+            for node, task in task_list.items():
                 task_obj = self.endpoint.tasks[task]
                 # force a refresh
                 task_obj._request('get')
                 if task_obj.state != 'pending' and task_obj.state != 'running':
                     # task is done.
-                    task_list.remove(task)
-                    complete_tasks.append(task)
-
                     if task_obj.state in ['timeout', 'cancelled']:
-                        success = False
+                        # uh oh, that's bad.
+                        failed_tasks[node] = {'task': task,
+                                              'result': {'result_code': 1,
+                                                         'result_msg': 'Task aborted: %s' % task_obj.state,
+                                                         'result_data': {}}}
                     else:
                         # done
                         self.logger.debug('Task %d completed' % task)
                         result = json.loads(task_obj.result)
                         self.logger.debug('Task output: %s' % result)
-                        success = success and (result['result_code'] == 0)
-                        self.logger.debug('Success: %s' % success)
+
+                        result_entry = {'task': task,
+                                        'result': result }
+
+                        if result['result_code'] == 0:
+                            success_tasks[node] = result_entry
+                        else:
+                            failed_tasks[node] = result_entry
+
+                    del task_list[node]
 
             time.sleep(poll_interval)
 
-        if len(task_list) > 0 or not success:
-            return False
-
-        return True
-
+        return (success_tasks, failed_tasks)
 
 if __name__ == '__main__':
     pass
