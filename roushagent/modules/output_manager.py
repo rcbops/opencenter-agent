@@ -152,8 +152,7 @@ class OutputManager:
                 result = fn(input_data)
                 LOG.debug('Got result %s' % result)
                 if 'result_code' in result and result['result_code'] == 0:
-                    return result
-
+                    break
         else:
             LOG.warning('No dispatch for action "%s"' % action)
 
