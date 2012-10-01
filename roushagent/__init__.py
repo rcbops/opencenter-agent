@@ -10,7 +10,8 @@ import socket
 import sys
 import time
 import traceback
-import threading
+
+from multiprocessing import Process, Pool
 
 from ConfigParser import ConfigParser
 from logging.handlers import SysLogHandler
@@ -18,7 +19,7 @@ from logging.handlers import SysLogHandler
 from roushagent.modules import OutputManager
 from roushagent.modules import InputManager
 
-class RoushAgentDispatchThread(threading.Thread):
+class RoushAgentDispatchWorker(Process):
     def __init__(self, input_handler, output_handler, data):
         super(RoushAgentDispatchThread, self).__init__()
 
@@ -58,6 +59,10 @@ class RoushAgent():
         self.input_handler = None
         self.output_handler = None
         self.config = {config_section: {}}
+        self.pool = Pool(10, # 10 Workers by default
+                         signal.signal,
+                         [signal.SIGINT, signal.SIG_IGN], # Workers should ignore ^C
+                         maxtasksperchild=5) # Recycle workers every 5 tasks
 
         signal.signal(signal.SIGTERM, lambda a, b: self._exit())
 
@@ -93,6 +98,7 @@ class RoushAgent():
     def _cleanup(self):
         output_handler = self.output_handler
         input_handler = self.input_handler
+        pool = self.pool
         log = self.log
 
         if input_handler:
@@ -108,6 +114,9 @@ class RoushAgent():
                 output_handler.stop()
             except:
                 pass
+
+        pool.close()
+        pool.join()
 
     def _parse_opts(self, argv):
         background = debug = False
@@ -240,6 +249,7 @@ class RoushAgent():
     def dispatch(self):
         output_handler = self.output_handler
         input_handler = self.input_handler
+        pool = self.pool
         log = self.log
 
         # we'll assume non-blocking.  we should negotiate this
@@ -255,8 +265,8 @@ class RoushAgent():
                               result['plugin'])
                     log.debug('Data: %s' % result['input'])
 
-                    # likely this should be done in a thread pool or something,
-                    # or at least the threads should be tracked.
-                    RoushAgentDispatchThread(input_handler, output_handler, result).start()
+                    # Apply to the pool
+                    pool.apply_async(RoushAgentDispatchWorker,
+                                     [input_handler, output_handler, result])
         except:
             self._exit()
