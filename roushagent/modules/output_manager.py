@@ -72,18 +72,20 @@ class OutputManager:
                 self._load_file(p)
 
     def _load_file(self, path):
+        self.shortpath = shortpath = os.path.basename(path)
+
         # we can't really load this into the existing namespace --
         # we'll have registration collisions.
         ns = {'register_action': self.register_action,
               'global_config': self.config,
               'LOG': LOG}
 
-        LOG.debug('Loading plugin file %s' % path)
+        LOG.debug('Loading plugin file %s' % shortpath)
         try:
             try:
                 execfile(path, ns)
             except Exception as e:
-                LOG.warning("Unable to load %s: '%s'. Ignoring." % (path,
+                LOG.warning("Unable to load %s: '%s'. Ignoring." % (shortpath,
                                                                     e.message))
                 return
 
@@ -102,17 +104,18 @@ class OutputManager:
                 try:
                     ns['setup'](config)
                 except:
-                    LOG.debug("Failed to run setup on %s" % path)
+                    LOG.debug("Failed to run setup on %s" % shortpath)
                     del self.output_plugins[name]
             else:
-                LOG.warning('No setup function in %s. Ignoring.' % path)
+                LOG.warning('No setup function in %s. Ignoring.' % shortpath)
         except Exception as e:
             LOG.warning("An unexpected error occured in %s: %s" % (
-                path, e.message))
+                shortpath, e.message))
 
     def register_action(self, action, method):
-        LOG.debug('registering handler for action %s' % action)
+        LOG.debug('Registering handler for action %s' % action)
 
+        # First handler wins
         if action in self.dispatch_table:
             self.dispatch_table[action].append(method)
         else:
