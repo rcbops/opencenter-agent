@@ -119,9 +119,10 @@ class OutputManager:
 
         # First handler wins
         if action in self.dispatch_table:
-            self.dispatch_table[action].append(method)
+            _, path, name = self.dispatch_table[action]
+            raise NameError('Action %s already registered to %s:%s' % (action, path, name))
         else:
-            self.dispatch_table[action] = [method]
+            self.dispatch_table[action] = (method, self.shortpath, method.func_name if method.__class__ == "function" else method.im_func.func_name)
 
     def load(self, path):
         # Load a plugin by file name.  modules with
@@ -152,13 +153,11 @@ class OutputManager:
                   'result_data': ''}
 
         if action in self.dispatch_table:
-            LOG.debug('plugin_manager: dispatching action %s' % action)
-            for fn in self.dispatch_table[action]:
-                # FIXME(rp): handle exeptions
-                result = fn(input_data)
-                LOG.debug('Got result %s' % result)
-                if 'result_code' in result and result['result_code'] == 0:
-                    break
+            LOG.debug('Plugin_manager: dispatching action %s' % action)
+            fn, _, _ = self.dispatch_table[action]
+            # FIXME(rp): handle exceptions
+            result = fn(input_data)
+            LOG.debug('Got result %s' % result)
         else:
             LOG.warning('No dispatch for action "%s"' % action)
 
