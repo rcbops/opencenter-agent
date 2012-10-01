@@ -21,7 +21,7 @@ from roushagent.modules import InputManager
 
 class RoushAgentDispatchWorker(Process):
     def __init__(self, input_handler, output_handler, data):
-        super(RoushAgentDispatchThread, self).__init__()
+        super(RoushAgentDispatchWorker, self).__init__()
 
         self.data = data
         self.output_handler = output_handler
@@ -261,8 +261,7 @@ class RoushAgent():
                 if len(result) == 0:
                     time.sleep(5)
                 else:
-                    log.debug('Got input from input handler "%s"' %
-                              result['plugin'])
+                    log.debug('Got input from input handler "%s"' % result['plugin'])
                     log.debug('Data: %s' % result['input'])
 
                     # Apply to the pool
