@@ -103,6 +103,8 @@ class OutputManager:
             if 'setup' in ns:
                 try:
                     ns['setup'](config)
+                except NameError as e:
+                    LOG.warning("Failed to run setup on %s: %s" %(shortpath, e))
                 except:
                     LOG.debug("Failed to run setup on %s" % shortpath)
                     del self.output_plugins[name]
