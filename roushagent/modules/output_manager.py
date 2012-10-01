@@ -103,6 +103,7 @@ class OutputManager:
                     ns['setup'](config)
                 except:
                     LOG.debug("Failed to run setup on %s" % path)
+                    del self.output_plugins[name]
             else:
                 LOG.warning('No setup function in %s. Ignoring.' % path)
         except Exception as e:
