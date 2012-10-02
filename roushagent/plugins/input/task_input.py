@@ -5,7 +5,7 @@ import os
 import threading
 import time
 
-import requests
+from roushclient.client import RoushEndpoint
 
 name = 'taskerator'
 task_getter = None
@@ -16,77 +16,28 @@ class TaskThread(threading.Thread):
         # python, I hate you.
         super(TaskThread, self).__init__()
 
-        self.endpoint = endpoint
+        self.endpoint = RoushEndpoint(endpoint)
         self.producer_lock = threading.Lock()
         self.pending_tasks = []
         self.running_tasks = {}
+        self.host_id = None
 
         # try to find our host ID from the endpoint
         LOG.info('Fetching host ID')
-        rc, data = self._get('/nodes/')
-        if self._is_success(rc):
-            restructured = dict((x['hostname'], x) for x in data['nodes'])
-            if hostname in restructured.keys():
-                self.host_id = restructured[hostname]['id']
-                LOG.info('Found existing host ID %s' % self.host_id)
-            else:
-                # create an entry for this host.
-                rc, data = self._post('/nodes/', {'hostname': hostname})
 
-                if self._is_success(rc):
-                    self.host_id = data['node']['id']
-                    LOG.info('Created new host entry with ID %s' %
-                             self.host_id)
-                else:
-                    LOG.error('Error creating new node object.')
-                    raise RuntimeError
-        else:
-            LOG.error('Error getting nodes list')
-            raise RuntimeError
+        for node in self.endpoint.nodes.filter("hostname='%s'" % hostname):
+            self.host_id = node.id
 
-    def _is_success(self, retcode):
-        if retcode >= 200 and retcode <= 299:
-            return True
-        return False
+        if not self.host_id:
+            # make a new node entry for this host
+            LOG.info('Creating new host entry')
+            node = self.endpoint.nodes.new(hostname=hostname,
+                                           backend='unprovisioned',
+                                           backend_state='unknown')
+            node.save()
+            self.host_id = node.id
 
-    def _request(self, method, uri, data_dict=None, headers=None):
-        r = None
-
-        if method == 'GET':
-            r = requests.get(uri)
-        elif method == 'POST':
-            r = requests.post(uri, data=data_dict,
-                              headers={'content-type': 'application/json'})
-        elif method == 'PUT':
-            r = requests.put(uri, data=data_dict,
-                             headers={'content-type': 'application/json'})
-        else:
-            raise ValueError
-
-        text = None
-        try:
-            text = r.text
-        except AttributeError:
-            pass
-        finally:
-            if not text:
-                text = r.content
-
-        if self._is_success(r.status_code):
-            return (r.status_code, json.loads(text))
-
-        return (r.status_code, text)
-
-    def _get(self, partial_uri):
-        return self._request('GET', self.endpoint + partial_uri)
-
-    def _post(self, partial_uri, data_dict=None):
-        return self._request('POST', self.endpoint + partial_uri,
-                             json.dumps(data_dict))
-
-    def _put(self, partial_uri, data_dict=None):
-        return self._request('PUT', self.endpoint + partial_uri,
-                             json.dumps(data_dict))
+            LOG.info('New host ID: %d' % self.host_id)
 
     def stop(self):
         self.running = False
@@ -96,13 +47,12 @@ class TaskThread(threading.Thread):
 
         while self.running:
             # FIXME(rp): handle error cases
-            (rc, data) = self._get('/nodes/%s/tasks' % self.host_id)
-            if self._is_success(rc) and data['task']['state'] == 'pending':
-                # we have a new pending task.
+            task = self.endpoint.nodes[self.host_id].task
+            if task and task.state == 'pending':
                 self.producer_lock.acquire()
-                if data['task']['id'] not in [x['id'] for x in self.pending_tasks]:
-                    self.pending_tasks.append(data['task'])
-                    LOG.debug('Found new pending task with id %s' % data['task']['id'])
+                if task.id not in [x['id'] for x in self.pending_tasks]:
+                    self.pending_tasks.append(task.to_hash())
+                    LOG.debug('Found new pending task with id %s' % task.id)
                 self.producer_lock.release()
 
             time.sleep(15)
