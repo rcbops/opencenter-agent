@@ -60,8 +60,7 @@ class RoushAgent():
         self.output_handler = None
         self.config = {config_section: {}}
         self.pool = Pool(10, # 10 Workers by default
-                         signal.signal,
-                         [signal.SIGINT, signal.SIG_IGN], # Workers should ignore ^C
+                         self._worker_signals, # Setup signal handling
                          maxtasksperchild=5) # Recycle workers every 5 tasks
 
         signal.signal(signal.SIGTERM, lambda a, b: self._exit())
@@ -75,6 +74,10 @@ class RoushAgent():
             raise
         except:
             self._exit()
+
+    def _worker_signals(self):
+        signal.signal(signal.SIGTERM, signal.SIG_IGN) # Yay Upstart
+        signal.signal(signal.SIGINT, signal.SIG_IGN) # Workers should ignore ^C
 
     def _exit(self):
         log = self.log
