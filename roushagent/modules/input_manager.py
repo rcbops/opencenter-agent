@@ -100,8 +100,8 @@ class InputManager:
             if 'setup' in ns:
                 try:
                     ns['setup'](config)
-                except:
-                    LOG.debug("Failed to run setup on %s" % path)
+                except Exception as e:
+                    LOG.debug("Failed to run setup on %s: (%s)" % (path, str(e)))
                     del self.input_plugins[name]
             else:
                 LOG.warning('No setup function in %s. Ignoring.' % path)
