@@ -122,7 +122,7 @@ class OutputManager:
             _, path, name = self.dispatch_table[action]
             raise NameError('Action %s already registered to %s:%s' % (action, path, name))
         else:
-            self.dispatch_table[action] = (method, self.shortpath, method.func_name if method.__class__ == "function" else method.im_func.func_name)
+            self.dispatch_table[action] = (method, self.shortpath, method.func_name)
 
     def load(self, path):
         # Load a plugin by file name.  modules with
