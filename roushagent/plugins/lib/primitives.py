@@ -46,19 +46,20 @@ class OrchestratorTasks:
         result_data, end_state = sm.run_to_completion()
         return (result_data, end_state)
 
+    def primitive_set_backend(self, state_data, backend=None, backend_state=None):
+        for node in state_data['nodes']:
+            if backend:
+                self.endpoint.nodes[node].backend = backend
+            if backend_state:
+                self.endpoint.nodes[node].backend_state = backend_state
+
+            self.endpoint.nodes[node].save()
+        return self._success(state_data)
+
     def primitive_log(self, state_data, msg='default msg'):
         self.logger.debug(msg)
         self.logger.debug('state_data: %s' % state_data)
         return self._success(state_data)
-
-    def primitive_filter(self, state_data, criteria=None):
-        if criteria:
-            # do some real filtering here
-            self.logger.debug('popping a node')
-            state_data['nodes'].pop()
-            return self._success(state_data)
-        else:
-            return self._failure(state_data, result_str='no state filter criteria specified')
 
     def primitive_run_task(self, state_data, action, payload={}, timeout=3600, poll_interval=5):
         if not 'nodes' in state_data:
