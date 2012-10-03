@@ -61,8 +61,9 @@ def handle_adventurate(input_data):
     ns['result_str'] = 'fail'
     ns['result_code'] = 254
     ns['result_data'] = {}
-    ns['sm_description'] = json.dumps(adventure.dsl)
+    ns['sm_description'] = json.loads(adventure_obj.dsl)
 
+    LOG.debug("About to run the following dsl: %s" % adventure_obj.dsl)
     exec '(result_data, _) = tasks.sm_eval(sm_description, input_data)' in ns, ns
 
     output_data = {'result_code': 1,
