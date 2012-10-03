@@ -7,42 +7,45 @@ import os
 import random
 import time
 
+from roushclient.client import RoushEndpoint
 from state import StateMachine, StateMachineState
 from primitives import OrchestratorTasks
 
 name = 'adventurator'
-
+roush_endpoint = 'http://localhost:8080'
 
 def setup(config={}):
-    self.roush_endpoint = 'http://localhost:8080'
+    global roush_endpoint
+    roush_endpoint = 'http://localhost:8080'
 
     if 'roush_endpoint' in config:
-        self.roush_endpoint = config['roush_endpoint']
+        roush_endpoint = config['roush_endpoint']
 
     LOG.debug('doing setup for %s handler' % name)
     register_action('adventurate', handle_adventurate)
 
 def handle_adventurate(input_data):
+    global roush_endpoint
+
     action = input_data['action']
     payload = input_data['payload']
 
-    if not 'dsl' in payload:
-        return _retval(1, friendly_str='no dsl specified in request')
+    if not 'adventure' in payload:
+        return _retval(1, friendly_str='no adventure specified in request')
 
-    if not 'initial_state' in payload:
-        return _retval(1, friendly_str='no initial_state specified in request')
+    if not 'nodes' in payload:
+        return _retval(1, friendly_str='no "nodes" list in request')
 
-    dsl = base64.b64decode(payload['dsl'])
-    # see if this is json or python
-    dsl_type = 'python'
-    try:
-        dsl = json.loads(dsl)
-        dsl_type = 'json'
-    except Exception as e:
-        LOG.debug('apparently not json: %s' % str(e))
+    ep = RoushEndpoint(self.roush_endpoint)
 
+    adventure = payload['adventure']
+    input_data = payload['input_data']
 
-    # let the exception bubble up
+    adventure_obj = ep.adventures[int(adventure)]
+
+    if adventure_obj.language != 'json':
+        return _retval(1, friendly_str='language %s not currently supported' % adventure_obj.language)
+
     ns = {}
     ns['LOG'] = LOG
     ns['StateMachine'] = StateMachine
@@ -52,16 +55,9 @@ def handle_adventurate(input_data):
     ns['result_str'] = 'fail'
     ns['result_code'] = 254
     ns['result_data'] = {}
+    ns['sm_description'] = json.dumps(adventure.dsl)
 
-    if dsl_type == 'json':
-        ns['sm_description'] = dsl
-
-    ns['LOG'] = LOG
-
-    if dsl_type == 'json':
-        exec '(result_data, _) = tasks.sm_eval(sm_description, input_data)' in ns, ns
-    else:
-        exec base64.b64decode(dsl) in ns, ns
+    exec '(result_data, _) = tasks.sm_eval(sm_description, input_data)' in ns, ns
 
     output_data = {'result_code': 1,
                    'result_str': 'no return data from adventure',
