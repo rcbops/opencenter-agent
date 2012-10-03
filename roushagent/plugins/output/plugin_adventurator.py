@@ -39,7 +39,13 @@ def handle_adventurate(input_data):
     ep = RoushEndpoint(self.roush_endpoint)
 
     adventure = payload['adventure']
-    input_data = payload['input_data']
+    if 'initial_state' in payload:
+        initial_state = payload['initial_state']
+    else:
+        initial_state = {}
+
+    if not 'nodes' in initial_state:
+        initial_state['nodes'] = payload['nodes']
 
     adventure_obj = ep.adventures[int(adventure)]
 
@@ -51,7 +57,7 @@ def handle_adventurate(input_data):
     ns['StateMachine'] = StateMachine
     ns['StateMachineState'] = StateMachineState
     ns['tasks'] = OrchestratorTasks(endpoint=self.roush_endpoint)
-    ns['input_data'] = payload['initial_state']
+    ns['input_data'] = initial_state
     ns['result_str'] = 'fail'
     ns['result_code'] = 254
     ns['result_data'] = {}
