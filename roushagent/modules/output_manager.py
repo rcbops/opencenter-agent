@@ -61,9 +61,10 @@ class OutputManager:
         self.config = config
         self.load(path)
 
-        LOG.debug('Dispatch table: %s' % self.dispatch_table)
+        LOG.debug('Dispatch methods: %s' % self.dispatch_table.keys())
 
     def _load_directory(self, path):
+        LOG.debug('Preparing to load output modules in directory %s' % path)
         dirlist = os.listdir(path)
         for relpath in dirlist:
             p = os.path.join(path, relpath)
