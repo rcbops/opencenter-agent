@@ -73,7 +73,9 @@ class TaskThread(threading.Thread):
 
             LOG.debug('Marking task %s as running' % task['id'])
             # FIXME(rp): handle error
-            self._put('/tasks/%s' % task['id'], {'state': 'running'})
+            task = self.endpoint.tasks[task['id']]
+            task.state = 'running'
+            task.save()
 
             # throw it into the running list
             self.running_tasks[retval['id']] = retval
@@ -88,8 +90,11 @@ class TaskThread(threading.Thread):
 
             # update the db
             # FIXME(rp): handle errors
-            self._put('/tasks/%s' % txid, {'state': 'done',
-                                           'result': json.dumps(result)})
+            task = self.endpoint.tasks[txid]
+            task.state = 'done'
+            task.result = json.dumps(result)
+            task.save()
+
         self.producer_lock.release()
 
 
