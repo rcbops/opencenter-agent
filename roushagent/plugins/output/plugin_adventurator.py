@@ -36,7 +36,7 @@ def handle_adventurate(input_data):
     if not 'nodes' in payload:
         return _retval(1, friendly_str='no "nodes" list in request')
 
-    ep = RoushEndpoint(self.roush_endpoint)
+    ep = RoushEndpoint(roush_endpoint)
 
     adventure = payload['adventure']
     if 'initial_state' in payload:
@@ -56,7 +56,7 @@ def handle_adventurate(input_data):
     ns['LOG'] = LOG
     ns['StateMachine'] = StateMachine
     ns['StateMachineState'] = StateMachineState
-    ns['tasks'] = OrchestratorTasks(endpoint=self.roush_endpoint)
+    ns['tasks'] = OrchestratorTasks(endpoint=roush_endpoint)
     ns['input_data'] = initial_state
     ns['result_str'] = 'fail'
     ns['result_code'] = 254
