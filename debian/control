@@ -24,7 +24,8 @@ Description: Yet another pluggable host-based agent
 Package: roush-agent-input-task
 Architecture: all
 Section: python
-Depends: roush-agent (= ${binary:Version})
+Depends: roush-agent (= ${binary:Version}),
+ roush-client
 Provides: ${python:Provides}
 Description: the input task plug-in
 
