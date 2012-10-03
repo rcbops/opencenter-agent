@@ -11,7 +11,7 @@ import sys
 import time
 import traceback
 
-from multiprocessing import Process, Pool
+from threading import Thread
 
 from ConfigParser import ConfigParser
 from logging.handlers import SysLogHandler
@@ -19,7 +19,7 @@ from logging.handlers import SysLogHandler
 from roushagent.modules import OutputManager
 from roushagent.modules import InputManager
 
-class RoushAgentDispatchWorker(Process):
+class RoushAgentDispatchWorker(Thread):
     def __init__(self, input_handler, output_handler, data):
         super(RoushAgentDispatchWorker, self).__init__()
 
@@ -27,10 +27,16 @@ class RoushAgentDispatchWorker(Process):
         self.output_handler = output_handler
         self.input_handler = input_handler
 
+    def _worker_signals(self):
+        signal.signal(signal.SIGTERM, signal.SIG_IGN) # Yay Upstart
+        signal.signal(signal.SIGINT, signal.SIG_IGN) # Workers should ignore ^C
+
     def run(self):
         data = self.data
         input_handler = self.input_handler
         output_handler = self.output_handler
+
+        self._worker_signals()
 
         data['output'] = {'result_code': 255,
                           'result_str': 'unknown error',
@@ -59,9 +65,6 @@ class RoushAgent():
         self.input_handler = None
         self.output_handler = None
         self.config = {config_section: {}}
-        self.pool = Pool(10, # 10 Workers by default
-                         self._worker_signals, # Setup signal handling
-                         maxtasksperchild=5) # Recycle workers every 5 tasks
 
         signal.signal(signal.SIGTERM, lambda a, b: self._exit())
 
@@ -74,10 +77,6 @@ class RoushAgent():
             raise
         except:
             self._exit()
-
-    def _worker_signals(self):
-        signal.signal(signal.SIGTERM, signal.SIG_IGN) # Yay Upstart
-        signal.signal(signal.SIGINT, signal.SIG_IGN) # Workers should ignore ^C
 
     def _exit(self):
         log = self.log
@@ -101,7 +100,6 @@ class RoushAgent():
     def _cleanup(self):
         output_handler = self.output_handler
         input_handler = self.input_handler
-        pool = self.pool
         log = self.log
 
         if input_handler:
@@ -117,9 +115,6 @@ class RoushAgent():
                 output_handler.stop()
             except:
                 pass
-
-        pool.close()
-        pool.join()
 
     def _parse_opts(self, argv):
         background = debug = False
@@ -252,7 +247,6 @@ class RoushAgent():
     def dispatch(self):
         output_handler = self.output_handler
         input_handler = self.input_handler
-        pool = self.pool
         log = self.log
 
         # we'll assume non-blocking.  we should negotiate this
@@ -268,7 +262,6 @@ class RoushAgent():
                     log.debug('Data: %s' % result['input'])
 
                     # Apply to the pool
-                    pool.apply_async(RoushAgentDispatchWorker,
-                                     [input_handler, output_handler, result])
+                    RoushAgentDispatchWorker(input_handler, output_handler, result).start()
         except:
             self._exit()
