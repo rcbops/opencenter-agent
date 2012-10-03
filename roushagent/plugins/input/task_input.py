@@ -51,8 +51,9 @@ class TaskThread(threading.Thread):
             if task and task.state == 'pending':
                 self.producer_lock.acquire()
                 if task.id not in [x['id'] for x in self.pending_tasks]:
-                    self.pending_tasks.append(task.to_hash())
                     LOG.debug('Found new pending task with id %s' % task.id)
+                    self.pending_tasks.append(task.to_hash())
+                    LOG.debug('added task to work queue' % task.to_hash())
                 self.producer_lock.release()
 
             time.sleep(15)
@@ -64,9 +65,13 @@ class TaskThread(threading.Thread):
         # is under way, and we'll only return new pending tasks.
         retval = {}
 
+        LOG.debug("fetching new work item")
         self.producer_lock.acquire()
         if len(self.pending_tasks) > 0:
+            LOG.debug('Found %d queued tasks' % len(self.pending_tasks))
+
             task = self.pending_tasks.pop()
+            LOG.debug('Preparing to process task: %s' % task)
             retval = {'id': task['id'],
                       'action': task['action'],
                       'payload': json.loads(task['payload'])}

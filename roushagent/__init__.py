@@ -9,7 +9,6 @@ import signal
 import socket
 import sys
 import time
-import traceback
 
 from threading import Thread
 
@@ -18,6 +17,7 @@ from logging.handlers import SysLogHandler
 
 from roushagent.modules import OutputManager
 from roushagent.modules import InputManager
+from roushagent.utils import detailed_exception
 
 class RoushAgentDispatchWorker(Thread):
     def __init__(self, input_handler, output_handler, data):
@@ -26,6 +26,7 @@ class RoushAgentDispatchWorker(Thread):
         self.data = data
         self.output_handler = output_handler
         self.input_handler = input_handler
+        self.logger = getLogger('roush-agent.dispatch')
 
     def _worker_signals(self):
         signal.signal(signal.SIGTERM, signal.SIG_IGN) # Yay Upstart
@@ -43,18 +44,19 @@ class RoushAgentDispatchWorker(Thread):
                           'result_data': ''}
 
         try:
+            self.logger.debug('sending input data to output handler')
             data['output'] = output_handler.dispatch(data['input'])
+            self.logger.debug('got return from output handler')
         except Exception as e:
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            full_traceback = repr(
-                traceback.format_exception(
-                    exc_type, exc_value, exc_traceback))
-
+            etext = detailed_exception(e)
+            self.logger.debug('exception in output handler: %s' % etext)
             data['output'] = {'result_code': 254,
                               'result_str': 'dispatch error',
-                              'result_data': full_traceback}
+                              'result_data': etext}
 
+        self.logger.debug('passing output handler result back to input handler')
         input_handler.result(data)
+        self.logger.debug('dispatch handler terminating')
 
 
 class RoushAgent():
@@ -263,5 +265,8 @@ class RoushAgent():
 
                     # Apply to the pool
                     RoushAgentDispatchWorker(input_handler, output_handler, result).start()
-        except:
+        except KeyboardInterrupt:
             self._exit()
+
+        except Exception, e:
+            self.log.debug('Exception: %s' % detailed_exception(e))
