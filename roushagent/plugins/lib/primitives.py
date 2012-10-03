@@ -28,10 +28,10 @@ class OrchestratorTasks:
             sm.set_state(sm_dict['start_state'])
 
         for state, vals in sm_dict['states'].items():
-            action = vals['action']
+            action = vals['primitive']
             parameters = vals['parameters']
 
-            del vals['action']
+            del vals['primitive']
             del vals['parameters']
 
             if not hasattr(self, 'primitive_%s' % action):
@@ -41,6 +41,7 @@ class OrchestratorTasks:
                           'result_data': {}},{})
 
             fn = otask(getattr(self,'primitive_%s' % action), **parameters)
+
             sm.add_state(state, StateMachineState(advance=fn, **vals))
 
         result_data, end_state = sm.run_to_completion()
