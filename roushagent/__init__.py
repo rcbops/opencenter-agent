@@ -9,6 +9,7 @@ import signal
 import socket
 import sys
 import time
+import traceback
 
 from threading import Thread
 
@@ -26,18 +27,21 @@ class RoushAgentDispatchWorker(Thread):
         self.data = data
         self.output_handler = output_handler
         self.input_handler = input_handler
-        self.logger = getLogger('roush-agent.dispatch')
+        self.logger = logging.getLogger('roush-agent.dispatch')
 
-    def _worker_signals(self):
-        signal.signal(signal.SIGTERM, signal.SIG_IGN) # Yay Upstart
-        signal.signal(signal.SIGINT, signal.SIG_IGN) # Workers should ignore ^C
+    # apparently signals can only be set in python on the mainline thread.  apparently
+    # they are already blocked on theads and only handled in mainline.  interesting.
+    #
+    # def _worker_signals(self):
+    #     signal.signal(signal.SIGTERM, signal.SIG_IGN) # Yay Upstart
+    #     signal.signal(signal.SIGINT, signal.SIG_IGN) # Workers should ignore ^C
 
     def run(self):
         data = self.data
         input_handler = self.input_handler
         output_handler = self.output_handler
 
-        self._worker_signals()
+#        self._worker_signals()
 
         data['output'] = {'result_code': 255,
                           'result_str': 'unknown error',
@@ -47,6 +51,10 @@ class RoushAgentDispatchWorker(Thread):
             self.logger.debug('sending input data to output handler')
             data['output'] = output_handler.dispatch(data['input'])
             self.logger.debug('got return from output handler')
+
+        except KeyboardInterrupt:
+            raise KeyboardInterrupt
+
         except Exception as e:
             etext = detailed_exception(e)
             self.logger.debug('exception in output handler: %s' % etext)
@@ -86,6 +94,7 @@ class RoushAgent():
         self._cleanup()
 
         exc_info = sys.exc_info()
+        # wouldn't we rather have a full traceback?
         if hasattr(exc_info[0], '__name__'):
             exc_class, exc, tb = exc_info
             tb_path, tb_lineno, tb_func = traceback.extract_tb(tb)[-1][:3]
