@@ -1,6 +1,9 @@
 #! /bin/bash
 #Flagrantly stolen from rpedde (http://www.github.com/rpedde)
 
+exec 1>/tmp/out.log
+exec 2>&1
+
 set -e
 set -u
 export DEBIAN_FRONTEND=noninteractive
@@ -15,8 +18,8 @@ function get_sel() {
 
     local value=""
     if ( debconf-get-selections | grep -q ${1}); then
-	value=$(debconf-get-selections | grep ${1} | awk '{ print $4 }')
-	echo "Found existing debconf value for ${1}: ${value}" >&2
+        value=$(debconf-get-selections | grep ${1} | awk '{ print $4 }')
+        echo "Found existing debconf value for ${1}: ${value}" >&2
     fi
 
     echo ${value}
@@ -25,6 +28,9 @@ function get_sel() {
 locale-gen en_US.UTF-8
 
 apt-get install -y --force-yes debconf-utils pwgen wget lsb-release
+cp /etc/resolv.conf /tmp/rc
+apt-get remove --purge resolvconf
+cp /tmp/rc /etc/resolv.conf
 
 CHEF_URL=${CHEF_URL:-$(get_sel "chef/chef_server_url")}
 CHEF_AMQP_PASSWORD=${CHEF_AMQP_PASSWORD:-$(get_sel "chef-solr/amqp_password")}
