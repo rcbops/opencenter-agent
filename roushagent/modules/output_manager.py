@@ -150,7 +150,7 @@ class OutputManager:
         action = input_data['action']
 
         result = {'result_code': 253,
-                  'result_str': 'no dispatcher',
+                  'result_str': 'no dispatcher found for action "%s"' % action,
                   'result_data': ''}
 
         if action in self.dispatch_table:
