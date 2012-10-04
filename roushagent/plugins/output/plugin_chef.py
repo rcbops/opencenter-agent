@@ -2,7 +2,11 @@
 
 import sys
 import os
+
+import netifaces
+
 from bashscriptrunner import BashScriptRunner
+
 
 name = "chef"
 
@@ -17,7 +21,7 @@ def setup(config={}):
     register_action('install_chef', chef.install_chef)
     register_action('run_chef', chef.run_chef)
     register_action('install_chef_server', chef.install_chef_server)
-    register_action('get_validation_pem', chef.get_validation_pem)
+    register_action('get_chef_info', chef.get_chef_info)
 
 
 def get_environment(required, optional, payload):
@@ -71,9 +75,20 @@ class ChefThing(object):
             return env
         return self.script.run_env("install-chef-server.sh", env, "")
 
-    def get_validation_pem(self, input_data):
+    def get_chef_info(self, input_data):
+        pem = ""
+        ipaddr = ""
+
         try:
             with open("/etc/chef/validation.pem", "r") as f:
-                return success("Success", f.read())
+                pem = f.read()
         except IOError as e:
             return retval(e.errno, str(e), None)
+
+        try:
+            ipaddr = netifaces.ifaddresses("eth0")[netifaces.AF_INET][0]['addr']
+        except Exception a s e:
+            return retval(e.errno, str(e), None)
+
+        return retval(0, 'success', {'validation_pem': pem,
+                                     'chef_endpoint': ipaddr })
