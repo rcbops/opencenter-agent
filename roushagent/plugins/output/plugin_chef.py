@@ -12,7 +12,7 @@ def setup(config={}):
     if not 'script_path' in config:
         raise ValueError("Expecting script_path in configuration")
     script_path = [config["script_path"]]
-    script = BashScriptRunner(script_path=script_path)
+    script = BashScriptRunner(script_path=script_path,log=LOG)
     chef = ChefThing(script, config)
     register_action('install_chef', chef.install_chef)
     register_action('run_chef', chef.run_chef)
