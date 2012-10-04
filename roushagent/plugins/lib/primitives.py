@@ -112,8 +112,6 @@ class OrchestratorTasks:
                                        payload={'CHEF_SERVER': chef_endpoint,
                                                 'CHEF_VALIDATOR':  validation_pem})
 
-    def primitive_run_task(self, state_data, action, payload={}, timeout=3600, poll_interval=5):
-
     def _success(self, state_data, result_str='success', result_data={}):
         return self._result(state_data, 0, result_str, result_data)
 
