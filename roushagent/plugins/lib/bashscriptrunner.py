@@ -110,12 +110,12 @@ class BashScriptRunner(object):
                                   (stderr, "error", "error")):
                     try:
                         line = out.get(timeout=0.5)
-                        getattr(self.log, attr)(line)
+                        getattr(self.log, attr)(line.strip())
                         response['result_data'][name] += line
                     except Empty:
                         pass
-            response['result_code'] = c.retcode
-            response['result_str'] = os.strerror(c.retcode)
+            response['result_code'] = c.returncode
+            response['result_str'] = os.strerror(c.returncode)
 
 
 def enqueue_output(out, queue):
