@@ -87,7 +87,7 @@ class ChefThing(object):
 
         try:
             ipaddr = netifaces.ifaddresses("eth0")[netifaces.AF_INET][0]['addr']
-        except Exception a s e:
+        except Exception as e:
             return retval(e.errno, str(e), None)
 
         return retval(0, 'success', {'validation_pem': pem,
