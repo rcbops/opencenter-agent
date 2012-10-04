@@ -116,7 +116,7 @@ class BashScriptRunner(object):
                         pass
             response['result_code'] = c.returncode
             response['result_str'] = os.strerror(c.returncode)
-
+        return response
 
 def enqueue_output(out, queue):
     for line in out:
