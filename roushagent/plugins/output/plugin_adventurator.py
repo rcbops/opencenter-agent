@@ -49,8 +49,9 @@ def handle_adventurate(input_data):
 
     adventure_obj = ep.adventures[int(adventure)]
 
-    if adventure_obj.language != 'json':
-        return _retval(1, friendly_str='language %s not currently supported' % adventure_obj.language)
+    # we've removed this field..
+    # if adventure_obj.language != 'json':
+    #     return _retval(1, friendly_str='language %s not currently supported' % adventure_obj.language)
 
     ns = {}
     ns['LOG'] = LOG
@@ -61,7 +62,7 @@ def handle_adventurate(input_data):
     ns['result_str'] = 'fail'
     ns['result_code'] = 254
     ns['result_data'] = {}
-    ns['sm_description'] = json.loads(adventure_obj.dsl)
+    ns['sm_description'] = adventure_obj.dsl
 
     LOG.debug("About to run the following dsl: %s" % adventure_obj.dsl)
     exec '(result_data, _) = tasks.sm_eval(sm_description, input_data)' in ns, ns

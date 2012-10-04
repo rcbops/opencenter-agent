@@ -74,7 +74,7 @@ class TaskThread(threading.Thread):
             LOG.debug('Preparing to process task: %s' % task)
             retval = {'id': task['id'],
                       'action': task['action'],
-                      'payload': json.loads(task['payload'])}
+                      'payload': task['payload']}
 
             LOG.debug('Marking task %s as running' % task['id'])
             # FIXME(rp): handle error
@@ -97,7 +97,7 @@ class TaskThread(threading.Thread):
             # FIXME(rp): handle errors
             task = self.endpoint.tasks[txid]
             task.state = 'done'
-            task.result = json.dumps(result)
+            task.result = result
             task.save()
 
         self.producer_lock.release()
