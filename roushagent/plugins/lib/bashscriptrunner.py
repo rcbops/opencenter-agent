@@ -106,8 +106,8 @@ class BashScriptRunner(object):
             t1.start()
             t2.start()
             while c.poll() is None:
-                for out, name, attr in ((stdout, "output", "INFO"),
-                                  (stderr, "error", "ERROR")):
+                for out, name, attr in ((stdout, "output", "info"),
+                                  (stderr, "error", "error")):
                     try:
                         line = out.get(timeout=0.5)
                         getattr(self.log, attr)(line)
