@@ -29,7 +29,7 @@ locale-gen en_US.UTF-8
 
 apt-get install -y --force-yes debconf-utils pwgen wget lsb-release
 cp /etc/resolv.conf /tmp/rc
-apt-get remove --purge resolvconf
+apt-get remove --purge resolvconf -y --force-yes
 cp /tmp/rc /etc/resolv.conf
 
 CHEF_URL=${CHEF_URL:-$(get_sel "chef/chef_server_url")}
