@@ -110,7 +110,7 @@ class BashScriptRunner(object):
                                   (stderr, "error", "ERROR")):
                     try:
                         line = out.get(timeout=0.5)
-                        getattr(log, attr)(line)
+                        getattr(self.log, attr)(line)
                         response['result_data'][name] += line
                     except Empty:
                         pass
