@@ -93,6 +93,27 @@ class OrchestratorTasks:
 
         return self._failure(state_data, result_str='no successful task executions.')
 
+    def primitive_install_chef(state_data):
+        # strategy: find the chef server, run the "get_validation_pem" task, and then
+        # run the install_chef task on the nodes with the found validation pem
+        chef_server = self.endpoint.nodes.filter("backend='chef-server'").first()
+        if not chef_server:
+            return self._failure(state_data, result_str='cannot find a chef server')
+
+        task_result, _ = self.primitive_run_task({'nodes': chef_server.id}, action='get_chef_info')
+        if task_result['result_code'] != 0:
+            return self._failure(state_data, result_str='could not get chef info from server')
+
+        validation_pem = task_result['result_data']['validation_pem']
+        chef_endpoint = task_result['result_data']['chef_endpoint']
+
+        # now that we have the info we need, we'll go ahead and run the job
+        return self.primitive_run_task(state_data, 'install_chef',
+                                       payload={'CHEF_SERVER': chef_endpoint,
+                                                'CHEF_VALIDATOR':  validation_pem})
+
+    def primitive_run_task(self, state_data, action, payload={}, timeout=3600, poll_interval=5):
+
     def _success(self, state_data, result_str='success', result_data={}):
         return self._result(state_data, 0, result_str, result_data)
 
