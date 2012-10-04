@@ -96,7 +96,7 @@ class OrchestratorTasks:
     def _success(self, state_data, result_str='success', result_data={}):
         return self._result(state_data, 0, result_str, result_data)
 
-    def _failure(self, state_data, retcode=1, result_str='failure', result_data={}):
+    def _failure(self, state_data, result_code=1, result_str='failure', result_data={}):
         return self._result(state_data, result_code, result_str, result_data)
 
     def _result(self, state_data, result_code, result_str, result_data):
