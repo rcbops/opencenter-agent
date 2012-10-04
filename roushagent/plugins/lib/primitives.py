@@ -114,9 +114,9 @@ class OrchestratorTasks:
     def _submit_task(self, node, action, payload):
         node_id = node
 
-        new_task = self.endpoint.Task()
+        new_task = self.endpoint.tasks.create()
         new_task.action = action
-        new_task.payload = json.dumps(payload)
+        new_task.payload = payload
         new_task.node_id = node_id
         new_task.state = 'pending'
 
@@ -154,7 +154,7 @@ class OrchestratorTasks:
                     else:
                         # done
                         self.logger.debug('Task %d completed' % task)
-                        result = json.loads(task_obj.result)
+                        result = task_obj.result
                         self.logger.debug('Task output: %s' % result)
 
                         result_entry = {'task': task,
