@@ -99,11 +99,11 @@ class BashScriptRunner(object):
                                        "error": ""}
             stdout = Queue()
             stderr = Queue()
-            t1 = Thread(enqueue_output, c.stdout, stdout)
-            t2 = Thread(enqueue_output, c.stderr, stderr)
+            t1 = Thread(target=enqueue_output, args=(c.stdout, stdout))
+            t2 = Thread(target=enqueue_output, args=(c.stderr, stderr))
             t1.daemon = True
             t2.daemon = True
-            t1.start()
+            t1.start(
             t2.start()
             while c.poll() is None:
                 for out, name, attr in ((stdout, "output", "INFO"),
