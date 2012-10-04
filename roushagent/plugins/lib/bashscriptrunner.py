@@ -1,6 +1,8 @@
 import os
 import string
 import subprocess
+from threading import Thread
+from Queue import Queue, Empty
 
 
 def name_mangle(s, prefix=""):
@@ -45,10 +47,11 @@ def find_script(script, script_path):
 
 
 class BashScriptRunner(object):
-    def __init__(self, script_path=["scripts"], environment=None):
+    def __init__(self, script_path=["scripts"], environment=None, log=None):
         self.script_path = script_path
         self.environment = environment or {"PATH":
                                            "/usr/sbin:/usr/bin:/sbin:/bin"}
+        self.log = log
 
     def run(self, script, *args):
         return self.run_env(script, {}, "RCB", *args)
@@ -84,9 +87,38 @@ class BashScriptRunner(object):
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE,
                              env=env)
-        response['result_code'] = c.wait()
-        response['result_str'] = os.strerror(c.returncode)
-        response['result_data'] = {"script": path,
-                                   "output": c.stdout.read(),
-                                   "error": c.stderr.read()}
-        return response
+        if self.log is None:
+            response['result_code'] = c.wait()
+            response['result_str'] = os.strerror(c.returncode)
+            response['result_data'] = {"script": path,
+                                       "output": c.stdout.read(),
+                                       "error": c.stderr.read()}
+        else:
+            response['result_data'] = {"script": path,
+                                       "output": "",
+                                       "error": ""}
+            stdout = Queue()
+            stderr = Queue()
+            t1 = Thread(enqueue_output, args=(c.stdout, stdout))
+            t2 = Thread(enqueue_output, args=(c.stderr, stderr))
+            t1.daemon = True
+            t2.daemon = True
+            t1.start()
+            t2.start()
+            while c.poll() is None:
+                for out, name, attr in ((stdout, "output", "INFO"),
+                                  (stderr, "error", "ERROR")):
+                    try:
+                        line = out.get(timeout=0.5)
+                        getattr(log, attr)(line)
+                        response['result_data'][name] += line
+                    except Empty:
+                        pass
+            response['result_code'] = c.retcode
+            response['result_str'] = os.strerror(c.retcode)
+
+
+def enqueue_output(out, queue):
+    for line in iter(out, queue):
+        queue.put(line)
+    out.close()
