@@ -91,4 +91,4 @@ class ChefThing(object):
             return retval(e.errno, str(e), None)
 
         return retval(0, 'success', {'validation_pem': pem,
-                                     'chef_endpoint': ipaddr })
+                                     'chef_endpoint': 'http://%s:4000' % ipaddr })
