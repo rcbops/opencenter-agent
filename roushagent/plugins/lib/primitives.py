@@ -100,7 +100,7 @@ class OrchestratorTasks:
         if not chef_server:
             return self._failure(state_data, result_str='cannot find a chef server')
 
-        task_result, _ = self.primitive_run_task({'nodes': chef_server.id}, action='get_chef_info')
+        task_result, _ = self.primitive_run_task({'nodes': [chef_server.id]}, action='get_chef_info')
         if task_result['result_code'] != 0:
             return self._failure(state_data, result_str='could not get chef info from server')
 
