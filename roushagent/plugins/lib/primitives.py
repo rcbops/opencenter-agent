@@ -93,7 +93,7 @@ class OrchestratorTasks:
 
         return self._failure(state_data, result_str='no successful task executions.')
 
-    def primitive_install_chef(state_data):
+    def primitive_install_chef(self, state_data):
         # strategy: find the chef server, run the "get_validation_pem" task, and then
         # run the install_chef task on the nodes with the found validation pem
         chef_server = self.endpoint.nodes.filter("backend='chef-server'").first()
