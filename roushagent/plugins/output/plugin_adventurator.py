@@ -64,8 +64,8 @@ def handle_adventurate(input_data):
     ns['result_data'] = {}
     ns['sm_description'] = adventure_obj.dsl
 
-    LOG.debug("About to run the following dsl: %s" % adventure_obj.dsl)
-    exec '(result_data, _) = tasks.sm_eval(sm_description, input_data)' in ns, ns
+    LOG.debug('About to run the following dsl: %s' % adventure_obj.dsl)
+    exec '(result_data, state_data) = tasks.sm_eval(sm_description, input_data)' in ns, ns
 
     output_data = {'result_code': 1,
                    'result_str': 'no return data from adventure',
@@ -73,6 +73,10 @@ def handle_adventurate(input_data):
 
     if 'result_data' in ns:
         output_data = ns['result_data']
+
+    if 'state_data' in ns:
+        output_data['result_data']['history'] = ns['state_data']['history']
+
     return output_data
 
 def _retval(result_code, friendly_str=None, result_data={}):

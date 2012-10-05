@@ -1,22 +1,31 @@
 #!/usr/bin/env python
 
+import copy
 import logging
 
 
 class StateMachine:
     def __init__(self, state_data={}, logger = None):
-        self.states = {'success': StateMachineState(terminal=True, advance=lambda x: self._return(True, x)),
-                       'failure': StateMachineState(terminal=True, advance=lambda x: self._return(False, x))}
+        self.states = {'success': StateMachineState(terminal=True, advance=lambda x: self._return({'result_code': 0,
+                                                                                                   'result_str': 'adventure ran',
+                                                                                                   'result_data': {}}, x)),
+                       'failure': StateMachineState(terminal=True, advance=lambda x: self._return({'result_code': 1,
+                                                                                                   'result_str': 'adventure failed',
+                                                                                                   'result_data': {}}, x))}
         self.current_state = 'success'
         self.state_data = state_data
         self.result = True
+
+        if not 'history' in self.state_data:
+            self.state_data['history'] = []
 
         self.logger = logger
         if not logger:
             self.logger = logging.getLogger()
 
+
     def _return(self, result, state):
-        return (result, state, {})
+        return (result, state)
 
     def set_state(self, state):
         self.current_state = state
@@ -27,26 +36,28 @@ class StateMachine:
 
         self.states[name] = state
 
+    # this is a bit odd... it returns true if the state machine can continue,
+    # or false otherwise
     def advance(self):
         if not self.current_state in self.states.keys():
             raise ValueError('no state "%s" in state machine' % state)
 
         self.logger.debug('Running state %s' % self.current_state)
 
+        # run and go
+        self.result, self.state_data = self.states[self.current_state].advance(self.state_data)
+
         if self.states[self.current_state].terminal:
             return False
 
-        # run and go
-        self.result, self.state_data = self.states[self.current_state].advance(self.state_data)
+        # keep the old result data in history...
+        self.state_data['history'].insert(0, copy.deepcopy(self.result))
 
         # we've run out of nodes to act on... we've filtered out all of the
         # nodes, or else we've had task failures on individual nodes such
         # that none of them are remaining.
         if len(self.state_data['nodes']) == 0:
-
             self.current_state = self.states[self.current_state].on_failure
-
-
 
         if self.result['result_code'] == 0:
             self.current_state = self.states[self.current_state].on_success

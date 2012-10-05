@@ -49,12 +49,17 @@ class OrchestratorTasks:
 
     def primitive_set_backend(self, state_data, backend=None, backend_state=None):
         for node in state_data['nodes']:
-            if backend:
-                self.endpoint.nodes[node].backend = backend
-            if backend_state:
-                self.endpoint.nodes[node].backend_state = backend_state
+            self.logger.debug('Changing node %s backend to %s/%s' % (node, backend, backend_state))
+            node_obj = self.endpoint.nodes[node]
 
-            self.endpoint.nodes[node].save()
+            if backend:
+                self.logger.debug('changing backend')
+                node_obj.backend = backend
+            if backend_state:
+                self.logger.debug('changing backend state')
+                node_obj.backend_state = backend_state
+
+            node_obj.save()
         return self._success(state_data)
 
     def primitive_log(self, state_data, msg='default msg'):
@@ -67,6 +72,7 @@ class OrchestratorTasks:
             return self._failure(state_data, result_str='no node list for primitive "run_task"')
 
         result_list = {}
+        output_list = {}
 
         for node in state_data['nodes']:
             task_id = self._submit_task(node, action, payload)
@@ -75,6 +81,8 @@ class OrchestratorTasks:
                 result_list[node] = task_id
             else:
                 self.logger.debug('Could not submit task on node %d' % (node,))
+
+                output_list[node] = self._failure(0, result_str='could not submit task')
 
                 # take this node out of the run list
                 self._fail_node(state_data, node)
@@ -85,11 +93,15 @@ class OrchestratorTasks:
         success_tasks, fail_tasks = self._wait_for_tasks(result_list, timeout, poll_interval)
 
         for node in fail_tasks.keys():
+            output_list[node] = fail_tasks[node]['result']
             self._fail_node(state_data, node)
+
+        for node in success_tasks.keys():
+            output_list[node] = success_tasks[node]['result']
 
         # should append to the run log
         if len(state_data['nodes']) > 0:
-            return self._success(state_data, result_str='task runner succeeded')
+            return self._success(state_data, result_str='task runner succeeded', result_data=output_list)
 
         return self._failure(state_data, result_str='no successful task executions.')
 
@@ -104,8 +116,8 @@ class OrchestratorTasks:
         if task_result['result_code'] != 0:
             return self._failure(state_data, result_str='could not get chef info from server')
 
-        validation_pem = task_result['result_data']['validation_pem']
-        chef_endpoint = task_result['result_data']['chef_endpoint']
+        validation_pem = self.state_data['history'][0]['result_data']['validation_pem']
+        chef_endpoint = self.state_data['history'][0]['result_data']['chef_endpoint']
 
         # now that we have the info we need, we'll go ahead and run the job
         return self.primitive_run_task(state_data, 'install_chef',
