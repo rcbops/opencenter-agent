@@ -1,9 +1,6 @@
 #! /bin/bash
 #Flagrantly stolen from rpedde (http://www.github.com/rpedde)
 
-exec 1>/tmp/out.log
-exec 2>&1
-
 set -e
 set -u
 export DEBIAN_FRONTEND=noninteractive
@@ -73,6 +70,14 @@ chown -R ${CHEF_UNIX_USER}: ${HOMEDIR}/.chef
 if [[ -f ${HOMEDIR}/.chef/knife.rb ]]; then
     mv ${HOMEDIR}/.chef/knife.rb{,.old}
 fi
+
+/etc/init.d/couchdb restart
+sleep 10
+
+/etc/init.d/chef-server restart
+
+sleep 10
+
 
 if [[ -n "$CHEF_INSTALLED" ]]; then
 cat <<EOF | knife configure -i
