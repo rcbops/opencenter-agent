@@ -99,26 +99,26 @@ class BashScriptRunner(object):
                                        "error": ""}
             stdout = Queue()
             stderr = Queue()
-            t1 = Thread(enqueue_output, args=(c.stdout, stdout))
-            t2 = Thread(enqueue_output, args=(c.stderr, stderr))
+            t1 = Thread(target=enqueue_output, args=(c.stdout, stdout))
+            t2 = Thread(target=enqueue_output, args=(c.stderr, stderr))
             t1.daemon = True
             t2.daemon = True
             t1.start()
             t2.start()
             while c.poll() is None:
-                for out, name, attr in ((stdout, "output", "INFO"),
-                                  (stderr, "error", "ERROR")):
+                for out, name, attr in ((stdout, "output", "info"),
+                                  (stderr, "error", "error")):
                     try:
                         line = out.get(timeout=0.5)
-                        getattr(log, attr)(line)
+                        getattr(self.log, attr)(line.strip())
                         response['result_data'][name] += line
                     except Empty:
                         pass
-            response['result_code'] = c.retcode
-            response['result_str'] = os.strerror(c.retcode)
-
+            response['result_code'] = c.returncode
+            response['result_str'] = os.strerror(c.returncode)
+        return response
 
 def enqueue_output(out, queue):
-    for line in iter(out, queue):
+    for line in out:
         queue.put(line)
     out.close()
