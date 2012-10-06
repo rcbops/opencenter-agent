@@ -58,18 +58,12 @@ if ! dpkg -l chef-server &>/dev/null; then
     apt-get install -y --force-yes opscode-keyring
     sudo apt-get upgrade -y --force-yes
     sudo apt-get install -y --force-yes chef chef-server
-    CHEF_INSTALLED=1
 fi
 
 HOMEDIR=$(getent passwd ${CHEF_UNIX_USER} | cut -d: -f6)
 mkdir -p ${HOMEDIR}/.chef
 cp /etc/chef/validation.pem /etc/chef/webui.pem ${HOMEDIR}/.chef
 chown -R ${CHEF_UNIX_USER}: ${HOMEDIR}/.chef
-
-
-if [[ -f ${HOMEDIR}/.chef/knife.rb ]]; then
-    mv ${HOMEDIR}/.chef/knife.rb{,.old}
-fi
 
 /etc/init.d/couchdb restart
 sleep 10
@@ -78,8 +72,7 @@ sleep 10
 
 sleep 10
 
-
-if [[ -n "$CHEF_INSTALLED" ]]; then
+if [[ ! -e ${HOMEDIR}/.chef/knife.rb ]]; then
 cat <<EOF | knife configure -i
 ${HOMEDIR}/.chef/knife.rb
 ${CHEF_URL}
