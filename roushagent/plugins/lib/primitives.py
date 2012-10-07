@@ -116,8 +116,8 @@ class OrchestratorTasks:
         if task_result['result_code'] != 0:
             return self._failure(state_data, result_str='could not get chef info from server')
 
-        validation_pem = task_result['result_data'][chef_server.id]['validation_pem']
-        chef_endpoint = task_result['result_data'][chef_server.id]['chef_endpoint']
+        validation_pem = task_result['result_data'][chef_server.id]['result_data']['validation_pem']
+        chef_endpoint = task_result['result_data'][chef_server.id]['result_data']['chef_endpoint']
 
         # now that we have the info we need, we'll go ahead and run the job
         return self.primitive_run_task(state_data, 'install_chef',
