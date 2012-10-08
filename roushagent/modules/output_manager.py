@@ -3,7 +3,7 @@
 import os
 import logging
 
-LOG = logging.getLogger('output')
+LOG = logging.getLogger('roush.output')
 
 # output modules recieve an input action, and return an output
 # result.  Generally they take the form of actions to perform.
