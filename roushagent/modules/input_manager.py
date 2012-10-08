@@ -2,8 +2,7 @@
 
 import os
 import logging
-
-LOG = logging.getLogger('input')
+LOG = logging.getLogger('roush.input')
 
 # Input modules export a number of functions and attributes:
 #

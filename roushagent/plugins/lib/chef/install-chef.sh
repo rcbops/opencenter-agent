@@ -18,7 +18,7 @@ done
 
 CHEF_ENVIRONMENT=${CHEF_ENVIRONMENT:-_default}
 DEBIAN_FRONTEND=noninteractive apt-get install curl -y --force-yes
-curl -skS https://raw.github.com/opscode/omnibus/master/source/install.sh | bash
+curl -skS -L http://www.opscode.com/chef/install.sh | bash
 mkdir -p /etc/chef
 cat <<EOF >/etc/chef/client.rb
 chef_server_url "$CHEF_SERVER"
@@ -33,8 +33,8 @@ $CHEF_VALIDATOR
 EOF
 
 if [[ $DISTRO = "debian" ]]; then
-    cp /opt/chef/embedded/lib/ruby/gems/1.9.1/gems/chef-10.12.0/distro/debian/etc/default/chef-client /etc/default/chef-client
-    cp /opt/chef/embedded/lib/ruby/gems/1.9.1/gems/chef-10.12.0/distro/debian/etc/init.d/chef-client /etc/init.d/chef-client
+    cp /opt/chef/embedded/lib/ruby/gems/1.9.[0-9]/gems/chef-10.1[2-4].[0-9]/distro/debian/etc/default/chef-client /etc/default/chef-client
+    cp /opt/chef/embedded/lib/ruby/gems/1.9.[0-9]/gems/chef-10.1[2-4].[0-9]/distro/debian/etc/init.d/chef-client /etc/init.d/chef-client
 elif [[ $DISTRO = "redhat" ]]; then
     cp /opt/chef/embedded/./lib/ruby/gems/1.9.1/gems/chef-10.12.0.rc.1/distro/redhat/etc/init.d/chef-client /etc/init.d/chef-client
     chkconfig --add /etc/init.d/chef-client
