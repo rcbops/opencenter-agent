@@ -74,6 +74,7 @@ class RoushAgent():
         self.config_section = config_section
         self.input_handler = None
         self.output_handler = None
+
         self.config = {config_section: {}}
 
         signal.signal(signal.SIGTERM, lambda a, b: self._exit())
@@ -202,12 +203,16 @@ class RoushAgent():
             log.setLevel(logging.WARNING)
 
         if configfile:
-            config = self.config = self._read_config(configfile, defaults={'base_dir': self.base})
+            config = self.config = self._read_config(configfile, defaults=
+                                                     {'base_dir': self.base})
 
         if background:
             logdev = config[config_section].get('syslog_dev', '/dev/log')
-            log.addHandler(SysLogHandler(address=logdev))
-
+            formatter = logging.Formatter("%(asctime)s - %(name)s - " +
+                                          "%(levelname)s - %(message)s")
+            ch = SysLogHandler(address=logdev)
+            ch.setFormatter(formatter)
+            log.addHandler(ch)
             # daemonize
             if os.fork():
                 sys.exit(0)

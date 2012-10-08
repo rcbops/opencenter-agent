@@ -52,12 +52,14 @@ class OutputManager:
         # Load all available plugins, or those
         # specified by the config.
         self.output_plugins = {}
-
         # should all actions be named module.action?
         self.loaded_modules = ['modules']
-        self.dispatch_table = {'modules.list': [self.handle_modules],
-                               'modules.load': [self.handle_modules],
-                               'modules.reload': [self.handle_modules]}
+        self.dispatch_table = {'modules.list': [self.handle_modules,
+                                                "", "", ""],
+                               'modules.load': [self.handle_modules,
+                                                "", "", ""],
+                               'modules.reload': [self.handle_modules,
+                                                  "", "", ""]}
         self.config = config
         self.load(path)
 
@@ -77,10 +79,8 @@ class OutputManager:
 
         # we can't really load this into the existing namespace --
         # we'll have registration collisions.
-        ns = {'register_action': self.register_action,
-              'global_config': self.config,
+        ns = {'global_config': self.config,
               'LOG': LOG}
-
         LOG.debug('Loading plugin file %s' % shortpath)
         try:
             try:
@@ -89,18 +89,16 @@ class OutputManager:
                 LOG.warning("Unable to load %s: '%s'. Ignoring." % (shortpath,
                                                                     e.message))
                 return
-
             if not 'name' in ns:
                 LOG.warning('Plugin missing "name" value. Ignoring.')
                 return
-
             name = ns['name']
+            ns['LOG'] = ns['LOG'].getChild("output_%s" % name)
+            ns['register_action'] = lambda x,y: self.register_action(name, x, y)
             self.loaded_modules.append(name)
             self.output_plugins[name] = ns
             config = self.config.get(name, {})
-
             ns['module_config'] = config
-
             if 'setup' in ns:
                 try:
                     ns['setup'](config)
@@ -115,15 +113,17 @@ class OutputManager:
             LOG.warning("An unexpected error occured in %s: %s" % (
                 shortpath, e.message))
 
-    def register_action(self, action, method):
+    def register_action(self, plugin, action, method):
         LOG.debug('Registering handler for action %s' % action)
-
         # First handler wins
         if action in self.dispatch_table:
             _, path, name = self.dispatch_table[action]
-            raise NameError('Action %s already registered to %s:%s' % (action, path, name))
+            raise NameError('Action %s already registered to %s:%s' % (action,
+                                                                       path,
+                                                                       name))
         else:
-            self.dispatch_table[action] = (method, self.shortpath, method.func_name)
+            self.dispatch_table[action] = (method, self.shortpath,
+                                           method.func_name, plugin)
 
     def load(self, path):
         # Load a plugin by file name.  modules with
@@ -148,31 +148,31 @@ class OutputManager:
         # punt and just pass to the first successful.
         #
         action = input_data['action']
-
         result = {'result_code': 253,
                   'result_str': 'no dispatcher found for action "%s"' % action,
                   'result_data': ''}
-
         if action in self.dispatch_table:
             LOG.debug('Plugin_manager: dispatching action %s' % action)
-            fn, _, _ = self.dispatch_table[action]
+            fn, path, _, plugin = self.dispatch_table[action]
+            t_LOG = self.output_plugins[plugin]['LOG']
+            if 'id' in input_data:
+                self.output_plugins[plugin]['LOG'] = self.output_plugins[
+                    plugin]['LOG'].getChild("trans_%s" % input_data['id'])
             # FIXME(rp): handle exceptions
             result = fn(input_data)
+            self.output_plugins[plugin]['LOG'] = t_LOG
             LOG.debug('Got result %s' % result)
         else:
             LOG.warning('No dispatch for action "%s"' % action)
-
         return result
 
     # some internal methods to provide some agent introspection
     def handle_modules(self, input_data):
         action = input_data['action']
         payload = input_data['payload']
-
         result_code = 1
         result_str = 'failed to perform action'
         result_data = ''
-
         if action == 'modules.list':
             result_code = 0
             result_str = 'success'
@@ -185,10 +185,8 @@ class OutputManager:
             else:
                 # any exceptions we'll bubble up from the manager
                 self.loadfile(payload['path'])
-
         elif action == 'modules.reload':
             pass
-
         return {'result_code': result_code,
                 'result_str': result_str,
                 'result_data': result_data}
