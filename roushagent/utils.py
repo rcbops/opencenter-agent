@@ -24,7 +24,7 @@ class SplitFileHandler(logging.StreamHandler):
         self.stream = None
         logging.Handler.__init__(self)
 
-    def emit(record):
+    def emit(self, record):
         parts = record.name.split(".")
         dirs, f = parts[0:-1], parts[-1]
         path = ""
