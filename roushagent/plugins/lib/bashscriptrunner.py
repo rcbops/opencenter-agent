@@ -86,7 +86,7 @@ class BashScriptRunner(object):
         streams = ((logging.INFO, c.stdout), (logging.ERROR, c.stderr))
         threads = []
         for level, stream in streams:
-            t = Thread(target=log_output, args=(level,stream))
+            t = Thread(target=log_output, args=(self.log, level, stream))
             t.start()
             threads.append(t)
         while True:
@@ -99,6 +99,6 @@ class BashScriptRunner(object):
         response['result_str'] = os.strerror(c.returncode)
         return response
 
-def log_output(level, stream):
+def log_output(log, level, stream):
     for line in stream:
-        logger.log(level, line.strip())
+        log.log(level, line.strip())
