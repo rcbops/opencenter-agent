@@ -19,7 +19,7 @@ from logging.handlers import SysLogHandler
 from roushagent.modules import OutputManager
 from roushagent.modules import InputManager
 from roushagent.utils import detailed_exception
-
+from roushagent.utils import SplitFileHandler
 class RoushAgentDispatchWorker(Thread):
     def __init__(self, input_handler, output_handler, data):
         super(RoushAgentDispatchWorker, self).__init__()
@@ -212,6 +212,10 @@ class RoushAgent():
                                           "%(levelname)s - %(message)s")
             ch = SysLogHandler(address=logdev)
             ch.setFormatter(formatter)
+            log.addHandler(ch)
+            split_handler = SplitFileHandler(path="/tmp")
+            split_handler.setFormatter(formatter)
+            split_handler.addFilter(logging.Filter(name="roush"))
             log.addHandler(ch)
             # daemonize
             if os.fork():
