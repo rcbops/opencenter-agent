@@ -155,6 +155,7 @@ class OutputManager:
             LOG.debug('Plugin_manager: dispatching action %s' % action)
             fn, path, _, plugin = self.dispatch_table[action]
             t_LOG = self.output_plugins[plugin]['LOG']
+            LOG.debug("Received input_data %s" % (input_data))
             if 'id' in input_data:
                 self.output_plugins[plugin]['LOG'] = self.output_plugins[
                     plugin]['LOG'].getChild("trans_%s" % input_data['id'])
