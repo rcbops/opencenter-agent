@@ -18,7 +18,7 @@ done
 
 CHEF_ENVIRONMENT=${CHEF_ENVIRONMENT:-_default}
 DEBIAN_FRONTEND=noninteractive apt-get install curl -y --force-yes
-curl -skS https://raw.github.com/opscode/omnibus/master/source/install.sh | bash
+curl -skS -L http://www.opscode.com/chef/install.sh | bash
 mkdir -p /etc/chef
 cat <<EOF >/etc/chef/client.rb
 chef_server_url "$CHEF_SERVER"
