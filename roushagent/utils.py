@@ -32,7 +32,7 @@ class SplitFileHandler(logging.StreamHandler):
             path = os.path.join(path, d)
             if not os.path.exists(path):
                 os.mkdir(path)
-        f = os.path.join(path, f)
+        f = os.path.join(path, f, ".log")
         self.stream = open(f, "a")
         logging.StreamHandler.emit(self, record)
         self.stream.close()
