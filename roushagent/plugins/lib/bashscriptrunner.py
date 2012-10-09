@@ -3,7 +3,7 @@ import string
 import subprocess
 import logging
 from threading import Thread
-from Queue import Queue, Empty
+import time
 
 
 def name_mangle(s, prefix=""):
@@ -82,39 +82,23 @@ class BashScriptRunner(object):
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE,
                              env=env)
-        if self.log is None:
-            response['result_code'] = c.wait()
-            response['result_str'] = os.strerror(c.returncode)
-            response['result_data'] = {"script": path}
-        else:
-            response['result_data'] = {"script": path}
-            stdout = Queue()
-            stderr = Queue()
-            stdout_thread = enqueue_output(c.stdout, stdout)
-            stderr_thread = enqueue_output(c.stderr, stderr)
-            loggers = ((stdout, logging.INFO), (stderr, logging.ERROR))
-            while c.poll() is None:
-                for out, level in loggers:
-                    try:
-                        line = out.get(timeout=0.5)
-                        self.log.log(level, line.strip())
-                    except Empty:
-                        pass
-            response['result_code'] = c.returncode
-            response['result_str'] = os.strerror(c.returncode)
-            stdout_thread.join()
-            stderr_thread.join()
-            for out, level in loggers:
-                while not out.empty():
-                    line = out.get()
-                    self.log.log(level, line.strip())
+        response['result_data'] = {"script": path}
+        streams = ((logging.INFO, c.stdout), (logging.ERROR, c.stderr))
+        threads = []
+        for level, stream in streams:
+            t = Thread(target=log_output, args=(level,stream))
+            t.start()
+            threads.append(t)
+        while True:
+            time.sleep(0.1)
+            if c.poll() is not None:
+                break
+        for t in threads:
+            t.join()
+        response['result_code'] = c.returncode
+        response['result_str'] = os.strerror(c.returncode)
         return response
 
-def enqueue_output(out, queue):
-    def f():
-        for line in out:
-            queue.put(line)
-            out.close()
-    t = Thread(target=f)
-    t.start()
-    return t
+def log_output(level, stream):
+    for line in stream:
+        logger.log(level, line.strip())
