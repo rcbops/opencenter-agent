@@ -57,6 +57,7 @@ if ! dpkg -l chef-server &>/dev/null; then
     apt-get update
     apt-get install -y --force-yes opscode-keyring
     sudo apt-get upgrade -y --force-yes
+    sudo apt-get install -y --force-yes chef chef-server || /bin/true
     sudo apt-get install -y --force-yes chef chef-server
 fi
 
