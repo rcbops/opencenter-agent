@@ -152,15 +152,18 @@ class OutputManager:
                   'result_str': 'no dispatcher found for action "%s"' % action,
                   'result_data': ''}
         if action in self.dispatch_table:
-            LOG.debug('Plugin_manager: dispatching action %s' % action)
             fn, path, _, plugin = self.dispatch_table[action]
-            t_LOG = self.output_plugins[plugin]['LOG']
+            LOG.debug('Plugin_manager: dispatching action %s from plugin %s' %
+                      (action, plugin))
+            LOG.debug("Received input_data %s" % (input_data))
+            ns = self.output_plugins[plugin]
+            t_LOG = ns['LOG']
             if 'id' in input_data:
-                self.output_plugins[plugin]['LOG'] = self.output_plugins[
-                    plugin]['LOG'].getChild("trans_%s" % input_data['id'])
+                ns['LOG'] = logging.getLogger(
+                    "roush.output.trans_%s" % input_data['id'])
             # FIXME(rp): handle exceptions
             result = fn(input_data)
-            self.output_plugins[plugin]['LOG'] = t_LOG
+            ns['LOG'] = t_LOG
             LOG.debug('Got result %s' % result)
         else:
             LOG.warning('No dispatch for action "%s"' % action)

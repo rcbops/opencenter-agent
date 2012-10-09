@@ -21,9 +21,10 @@ class SplitFileHandler(logging.StreamHandler):
         if not os.access(path, os.W_OK):
             raise OSError(13, "Specified path '%s' is not writable.")
         self.path = path
+        self.stream = None
         logging.Handler.__init__(self)
 
-    def emit(record):
+    def emit(self, record):
         parts = record.name.split(".")
         dirs, f = parts[0:-1], parts[-1]
         path = ""
@@ -32,7 +33,7 @@ class SplitFileHandler(logging.StreamHandler):
             path = os.path.join(path, d)
             if not os.path.exists(path):
                 os.mkdir(path)
-        f = os.path.join(path, f, ".log")
+        f = os.path.join(path, f + ".log")
         self.stream = open(f, "a")
         logging.StreamHandler.emit(self, record)
         self.stream.close()

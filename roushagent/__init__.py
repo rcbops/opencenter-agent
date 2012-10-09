@@ -216,7 +216,7 @@ class RoushAgent():
             split_handler = SplitFileHandler(path="/tmp")
             split_handler.setFormatter(formatter)
             split_handler.addFilter(logging.Filter(name="roush"))
-            log.addHandler(ch)
+            log.addHandler(split_handler)
             # daemonize
             if os.fork():
                 sys.exit(0)

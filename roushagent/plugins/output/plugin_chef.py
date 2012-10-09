@@ -16,7 +16,7 @@ def setup(config={}):
     if not 'script_path' in config:
         raise ValueError("Expecting script_path in configuration")
     script_path = [config["script_path"]]
-    script = BashScriptRunner(script_path=script_path,log=LOG)
+    script = BashScriptRunner(script_path=script_path, log=LOG)
     chef = ChefThing(script, config)
     register_action('install_chef', chef.install_chef)
     register_action('run_chef', chef.run_chef)
@@ -50,6 +50,13 @@ class ChefThing(object):
         self.script = script
         self.config = config
 
+    def __getattribute__(self, name):
+        #cheesy hack to update the bashscriptrunner logger on dispatch
+        r = self.__getattr__(self, name)
+        if callable(r):
+            self.script.log = log
+        return r
+
     def install_chef(self, input_data):
         payload = input_data['payload']
         action = input_data['action']
@@ -61,6 +68,7 @@ class ChefThing(object):
         return self.script.run_env("install-chef.sh", env, "")
 
     def run_chef(self, input_data):
+        LOG.info("Running chef")
         payload = input_data['payload']
         action = input_data['action']
         return self.script.run("run-chef.sh")
@@ -86,9 +94,11 @@ class ChefThing(object):
             return retval(e.errno, str(e), None)
 
         try:
-            ipaddr = netifaces.ifaddresses("eth0")[netifaces.AF_INET][0]['addr']
+            ipaddr = netifaces.ifaddresses("eth0")[
+                netifaces.AF_INET][0]['addr']
         except Exception as e:
             return retval(e.errno, str(e), None)
 
-        return retval(0, 'success', {'validation_pem': pem,
-                                     'chef_endpoint': 'http://%s:4000' % ipaddr })
+        return retval(0, 'success',
+                      {'validation_pem': pem,
+                       'chef_endpoint': 'http://%s:4000' % ipaddr })
