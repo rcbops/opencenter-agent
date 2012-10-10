@@ -12,16 +12,16 @@ name = "chef"
 
 
 def setup(config={}):
-    LOG.debug('Doing setup in test.py')
+    LOG.debug('Doing setup in plugin_chef.py')
     if not 'script_path' in config:
         raise ValueError("Expecting script_path in configuration")
     script_path = [config["script_path"]]
-    script = BashScriptRunner(script_path=script_path,log=LOG)
+    script = BashScriptRunner(script_path=script_path, log=LOG)
     chef = ChefThing(script, config)
-    register_action('install_chef', chef.install_chef)
-    register_action('run_chef', chef.run_chef)
-    register_action('install_chef_server', chef.install_chef_server)
-    register_action('get_chef_info', chef.get_chef_info)
+    register_action('install_chef', chef.dispatch)
+    register_action('run_chef', chef.dispatch)
+    register_action('install_chef_server', chef.dispatch)
+    register_action('get_chef_info', chef.dispatch)
 
 
 def get_environment(required, optional, payload):
@@ -61,6 +61,7 @@ class ChefThing(object):
         return self.script.run_env("install-chef.sh", env, "")
 
     def run_chef(self, input_data):
+        LOG.info("Running chef")
         payload = input_data['payload']
         action = input_data['action']
         return self.script.run("run-chef.sh")
@@ -86,9 +87,17 @@ class ChefThing(object):
             return retval(e.errno, str(e), None)
 
         try:
-            ipaddr = netifaces.ifaddresses("eth0")[netifaces.AF_INET][0]['addr']
+            ipaddr = netifaces.ifaddresses("eth0")[
+                netifaces.AF_INET][0]['addr']
         except Exception as e:
             return retval(e.errno, str(e), None)
 
-        return retval(0, 'success', {'validation_pem': pem,
-                                     'chef_endpoint': 'http://%s:4000' % ipaddr })
+        return retval(0, 'success',
+                      {'validation_pem': pem,
+                       'chef_endpoint': 'http://%s:4000' % ipaddr })
+
+    def dispatch(self, input_data):
+        self.script.log = LOG
+        f = getattr(self, input_data['action'])
+        if callable(f):
+            return f(input_data)

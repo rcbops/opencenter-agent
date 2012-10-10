@@ -1,8 +1,9 @@
 import os
 import string
 import subprocess
+import logging
 from threading import Thread
-from Queue import Queue, Empty
+import time
 
 
 def name_mangle(s, prefix=""):
@@ -32,18 +33,14 @@ def posix_escape(s):
 
 
 def find_script(script, script_path):
-    path = None
-    found = False
     for path in script_path:
         filename = os.path.join(path, script)
+        #allow directory to be a symlink, but not scripts
         if os.path.exists(filename) and \
-                os.path.dirname(os.path.realpath(filename)) == \
-                os.path.realpath(path):
-            found = True
-            break
-    if not found:
-        return None
-    return filename
+           os.path.dirname(os.path.realpath(filename)) == \
+           os.path.realpath(path):
+           return filename
+    return None
 
 
 class BashScriptRunner(object):
@@ -75,9 +72,7 @@ class BashScriptRunner(object):
             response['result_code'] = 127
             response['result_str'] = "%s not found in %s" % (
                 script, ":".join(self.script_path))
-            response['result_data'] = {"script": script,
-                                       "output": "",
-                                       "error": ""}
+            response['result_data'] = {"script": script}
             return response
 
         to_run = [path] + list(args)
@@ -87,38 +82,23 @@ class BashScriptRunner(object):
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE,
                              env=env)
-        if self.log is None:
-            response['result_code'] = c.wait()
-            response['result_str'] = os.strerror(c.returncode)
-            response['result_data'] = {"script": path,
-                                       "output": c.stdout.read(),
-                                       "error": c.stderr.read()}
-        else:
-            response['result_data'] = {"script": path,
-                                       "output": "",
-                                       "error": ""}
-            stdout = Queue()
-            stderr = Queue()
-            t1 = Thread(target=enqueue_output, args=(c.stdout, stdout))
-            t2 = Thread(target=enqueue_output, args=(c.stderr, stderr))
-            t1.daemon = True
-            t2.daemon = True
-            t1.start()
-            t2.start()
-            while c.poll() is None:
-                for out, name, attr in ((stdout, "output", "info"),
-                                  (stderr, "error", "error")):
-                    try:
-                        line = out.get(timeout=0.5)
-                        getattr(self.log, attr)(line.strip())
-                        response['result_data'][name] += line
-                    except Empty:
-                        pass
-            response['result_code'] = c.returncode
-            response['result_str'] = os.strerror(c.returncode)
+        response['result_data'] = {"script": path}
+        streams = ((logging.INFO, c.stdout), (logging.ERROR, c.stderr))
+        threads = []
+        for level, stream in streams:
+            t = Thread(target=log_output, args=(self.log, level, stream))
+            t.start()
+            threads.append(t)
+        while True:
+            time.sleep(0.1)
+            if c.poll() is not None:
+                break
+        for t in threads:
+            t.join()
+        response['result_code'] = c.returncode
+        response['result_str'] = os.strerror(c.returncode)
         return response
 
-def enqueue_output(out, queue):
-    for line in out:
-        queue.put(line)
-    out.close()
+def log_output(log, level, stream):
+    for line in stream:
+        log.log(level, line.strip())

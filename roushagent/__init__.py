@@ -19,6 +19,8 @@ from logging.handlers import SysLogHandler
 from roushagent.modules import OutputManager
 from roushagent.modules import InputManager
 from roushagent.utils import detailed_exception
+from roushagent.utils import SplitFileHandler
+from roushagent.utils import RoushTransLogFilter
 
 class RoushAgentDispatchWorker(Thread):
     def __init__(self, input_handler, output_handler, data):
@@ -74,6 +76,7 @@ class RoushAgent():
         self.config_section = config_section
         self.input_handler = None
         self.output_handler = None
+
         self.config = {config_section: {}}
 
         signal.signal(signal.SIGTERM, lambda a, b: self._exit())
@@ -202,12 +205,23 @@ class RoushAgent():
             log.setLevel(logging.WARNING)
 
         if configfile:
-            config = self.config = self._read_config(configfile, defaults={'base_dir': self.base})
+            config = self.config = self._read_config(configfile, defaults=
+                                                     {'base_dir': self.base})
 
         if background:
             logdev = config[config_section].get('syslog_dev', '/dev/log')
-            log.addHandler(SysLogHandler(address=logdev))
-
+            trans_log_dir = config[config_section].get('trans_log_dir',
+                                                        '/var/log/roush')
+            formatter = logging.Formatter("%(asctime)s - %(name)s - " +
+                                          "%(levelname)s - %(message)s")
+            ch = SysLogHandler(address=logdev)
+            ch.setFormatter(formatter)
+            log.addHandler(ch)
+            split_handler = SplitFileHandler(path=trans_log_dir)
+            split_handler.setFormatter(formatter)
+            split_handler.addFilter(logging.Filter(name="roush"))
+            split_handler.addFilter(RoushTransLogFilter(name="trans_"))
+            log.addHandler(split_handler)
             # daemonize
             if os.fork():
                 sys.exit(0)
