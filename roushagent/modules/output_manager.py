@@ -154,15 +154,15 @@ class OutputManager:
         if action in self.dispatch_table:
             LOG.debug('Plugin_manager: dispatching action %s' % action)
             fn, path, _, plugin = self.dispatch_table[action]
-            t_LOG = self.output_plugins[plugin]['LOG']
+            ns = self.output_plugins[plugin]
+            t_LOG = ns['LOG']
             LOG.debug("Received input_data %s" % (input_data))
             if 'id' in input_data:
-                LOG.debug("Changing logger to trans_%s" % input_data['id'])
-                self.output_plugins[plugin]['LOG'] = logging.getLogger(
+                ns['LOG'] = logging.getLogger(
                     "roush.output.trans_%s" % input_data['id'])
             # FIXME(rp): handle exceptions
             result = fn(input_data)
-            self.output_plugins[plugin]['LOG'] = t_LOG
+            ns['LOG'] = t_LOG
             LOG.debug('Got result %s' % result)
         else:
             LOG.warning('No dispatch for action "%s"' % action)
