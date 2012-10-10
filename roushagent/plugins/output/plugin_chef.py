@@ -50,13 +50,6 @@ class ChefThing(object):
         self.script = script
         self.config = config
 
-    def __getattribute__(self, name):
-        #cheesy hack to update the bashscriptrunner logger on dispatch
-        r = object.__getattribute__(self, name)
-        if callable(r):
-            self.script.log = LOG
-        return r
-
     def install_chef(self, input_data):
         payload = input_data['payload']
         action = input_data['action']
@@ -103,8 +96,8 @@ class ChefThing(object):
                       {'validation_pem': pem,
                        'chef_endpoint': 'http://%s:4000' % ipaddr })
 
-        def dispatch(self, input_data):
-            self.script.log = LOG
-            f = getattr(self, input_data['action'])
-            if callable(f):
-                return f(input_data)
+    def dispatch(self, input_data):
+        self.script.log = LOG
+        f = getattr(self, input_data['action'])
+        if callable(f):
+            return f(input_data)
