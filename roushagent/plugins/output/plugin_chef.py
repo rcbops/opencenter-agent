@@ -12,7 +12,7 @@ name = "chef"
 
 
 def setup(config={}):
-    LOG.debug('Doing setup in test.py')
+    LOG.debug('Doing setup in plugin_chef.py')
     if not 'script_path' in config:
         raise ValueError("Expecting script_path in configuration")
     script_path = [config["script_path"]]
@@ -52,7 +52,7 @@ class ChefThing(object):
 
     def __getattribute__(self, name):
         #cheesy hack to update the bashscriptrunner logger on dispatch
-        r = self.__getattr__(self, name)
+        r = self.__getattr__(name)
         if callable(r):
             self.script.log = log
         return r
