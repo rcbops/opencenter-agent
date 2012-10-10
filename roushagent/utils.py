@@ -38,3 +38,16 @@ class SplitFileHandler(logging.StreamHandler):
         logging.StreamHandler.emit(self, record)
         self.stream.close()
         self.stream = None
+
+class RoushTransLogFilter(logging.Filter):
+    def __init__(self, name=""):
+        self.name = name
+        logging.Filter.__init__(self, name=name)
+    def filter(record):
+        idx = record.name.find("%s" % self.name)
+        if idx == 0:
+            return True
+        elif idx > 0:
+            if record.name[idx - 1] == ".":
+                return True
+        return False
