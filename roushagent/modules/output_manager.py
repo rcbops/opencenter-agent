@@ -152,11 +152,12 @@ class OutputManager:
                   'result_str': 'no dispatcher found for action "%s"' % action,
                   'result_data': ''}
         if action in self.dispatch_table:
-            LOG.debug('Plugin_manager: dispatching action %s' % action)
             fn, path, _, plugin = self.dispatch_table[action]
+            LOG.debug('Plugin_manager: dispatching action %s from plugin %s' %
+                      (action, plugin))
+            LOG.debug("Received input_data %s" % (input_data))
             ns = self.output_plugins[plugin]
             t_LOG = ns['LOG']
-            LOG.debug("Received input_data %s" % (input_data))
             if 'id' in input_data:
                 ns['LOG'] = logging.getLogger(
                     "roush.output.trans_%s" % input_data['id'])
