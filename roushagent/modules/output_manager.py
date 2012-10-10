@@ -158,8 +158,8 @@ class OutputManager:
             LOG.debug("Received input_data %s" % (input_data))
             if 'id' in input_data:
                 LOG.debug("Changing logger to trans_%s" % input_data['id'])
-                self.output_plugins[plugin]['LOG'] = self.output_plugins[
-                    plugin]['LOG'].getChild("trans_%s" % input_data['id'])
+                self.output_plugins[plugin]['LOG'] = logging.getLogger(
+                    "roush.output.trans_%s" % input_data['id'])
             # FIXME(rp): handle exceptions
             result = fn(input_data)
             self.output_plugins[plugin]['LOG'] = t_LOG
