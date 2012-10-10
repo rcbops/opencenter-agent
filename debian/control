@@ -58,3 +58,10 @@ Section: python
 Depends: roush-agent(= ${binary:Version})
 Provides: ${python:Provides}
 Description: an output plugin to run adventures
+
+Package: roush-agent-output-service
+Architecture: all
+Section: python
+Depends: roush-agent(= ${binary:Version})
+Provides: ${python:Provides}
+Description: an output plugin to start/stop/restart services
