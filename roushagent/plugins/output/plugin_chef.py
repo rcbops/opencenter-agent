@@ -61,8 +61,11 @@ class ChefThing(object):
         return self.script.run_env("install-chef.sh", env, "")
 
     def run_chef(self, input_data):
+        LOG.info("Running chef")
         payload = input_data['payload']
         action = input_data['action']
+        if self.script.log != LOG:
+            self.script.log = LOG
         return self.script.run("run-chef.sh")
 
     def install_chef_server(self, input_data):
