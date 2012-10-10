@@ -57,8 +57,12 @@ if ! dpkg -l chef-server &>/dev/null; then
     apt-get update
     apt-get install -y --force-yes opscode-keyring
     sudo apt-get upgrade -y --force-yes
+    set +e
+    # something janky about the opscode packages
     sudo apt-get install -y --force-yes chef chef-server || /bin/true
+    sudo apt-get install -f -y
     sudo apt-get install -y --force-yes chef chef-server
+    set -e
 fi
 
 HOMEDIR=$(getent passwd ${CHEF_UNIX_USER} | cut -d: -f6)
