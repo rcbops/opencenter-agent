@@ -54,7 +54,7 @@ class ChefThing(object):
         #cheesy hack to update the bashscriptrunner logger on dispatch
         r = object.__getattribute__(self, name)
         if callable(r):
-            self.script.log = log
+            self.script.log = LOG
         return r
 
     def install_chef(self, input_data):
