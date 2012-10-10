@@ -43,7 +43,7 @@ class RoushTransLogFilter(logging.Filter):
     def __init__(self, name=""):
         self.name = name
         logging.Filter.__init__(self, name=name)
-    def filter(record):
+    def filter(self, record):
         idx = record.name.find("%s" % self.name)
         if idx == 0:
             return True
