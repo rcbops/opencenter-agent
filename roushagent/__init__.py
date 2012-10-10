@@ -20,6 +20,8 @@ from roushagent.modules import OutputManager
 from roushagent.modules import InputManager
 from roushagent.utils import detailed_exception
 from roushagent.utils import SplitFileHandler
+from roushagent.utils import RoushTransLogFilter
+
 class RoushAgentDispatchWorker(Thread):
     def __init__(self, input_handler, output_handler, data):
         super(RoushAgentDispatchWorker, self).__init__()
@@ -216,6 +218,7 @@ class RoushAgent():
             split_handler = SplitFileHandler(path="/tmp")
             split_handler.setFormatter(formatter)
             split_handler.addFilter(logging.Filter(name="roush"))
+            split_handler.addFilter(RoushTransLogFilter(name="trans_"))
             log.addHandler(split_handler)
             # daemonize
             if os.fork():
