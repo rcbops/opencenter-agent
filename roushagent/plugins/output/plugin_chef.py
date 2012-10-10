@@ -52,7 +52,7 @@ class ChefThing(object):
 
     def __getattribute__(self, name):
         #cheesy hack to update the bashscriptrunner logger on dispatch
-        r = self.__getattr__(name)
+        r = object.__getattr__(self, name)
         if callable(r):
             self.script.log = log
         return r
