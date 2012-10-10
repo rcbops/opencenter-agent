@@ -18,10 +18,10 @@ def setup(config={}):
     script_path = [config["script_path"]]
     script = BashScriptRunner(script_path=script_path, log=LOG)
     chef = ChefThing(script, config)
-    register_action('install_chef', chef.install_chef)
-    register_action('run_chef', chef.run_chef)
-    register_action('install_chef_server', chef.install_chef_server)
-    register_action('get_chef_info', chef.get_chef_info)
+    register_action('install_chef', chef.dispatch)
+    register_action('run_chef', chef.dispatch)
+    register_action('install_chef_server', chef.dispatch)
+    register_action('get_chef_info', chef.dispatch)
 
 
 def get_environment(required, optional, payload):
@@ -49,13 +49,6 @@ class ChefThing(object):
     def __init__(self, script, config):
         self.script = script
         self.config = config
-
-    def __getattribute__(self, name):
-        #cheesy hack to update the bashscriptrunner logger on dispatch
-        r = object.__getattribute__(self, name)
-        if callable(r):
-            self.script.log = LOG
-        return r
 
     def install_chef(self, input_data):
         payload = input_data['payload']
@@ -102,3 +95,9 @@ class ChefThing(object):
         return retval(0, 'success',
                       {'validation_pem': pem,
                        'chef_endpoint': 'http://%s:4000' % ipaddr })
+
+    def dispatch(self, input_data):
+        self.script.log = LOG
+        f = getattr(self, input_data['action'])
+        if callable(f):
+            return f(input_data)
