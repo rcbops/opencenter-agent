@@ -16,8 +16,8 @@ def detailed_exception(e):
 class SplitFileHandler(logging.StreamHandler):
     def __init__(self, path, encoding=None, delay=0):
         if not os.path.isdir(path):
-            raise OSError(2, "Specified path '%s' does not exist or is" + \
-                             "not a directory." % (path))
+            raise OSError(2, "Specified path '%s' " % (path) +
+                          "does not exist or is not a directory.")
         if not os.access(path, os.W_OK):
             raise OSError(13, "Specified path '%s' is not writable.")
         self.path = path
