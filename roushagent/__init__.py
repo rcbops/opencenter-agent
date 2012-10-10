@@ -210,12 +210,14 @@ class RoushAgent():
 
         if background:
             logdev = config[config_section].get('syslog_dev', '/dev/log')
+            trans_log_dir = config[config_section].get('trans_log_dir',
+                                                        '/var/log/roush')
             formatter = logging.Formatter("%(asctime)s - %(name)s - " +
                                           "%(levelname)s - %(message)s")
             ch = SysLogHandler(address=logdev)
             ch.setFormatter(formatter)
             log.addHandler(ch)
-            split_handler = SplitFileHandler(path="/tmp")
+            split_handler = SplitFileHandler(path=trans_log_dir)
             split_handler.setFormatter(formatter)
             split_handler.addFilter(logging.Filter(name="roush"))
             split_handler.addFilter(RoushTransLogFilter(name="trans_"))
