@@ -3,6 +3,7 @@
 import os
 import subprocess
 import sys
+import time
 
 name = 'service'
 
@@ -19,8 +20,14 @@ def service_action(input_data):
     payload = input_data['payload']
     action = input_data['action']
 
+    full_restart = False
+    sleep = 0
+
     if not 'service' in payload:
         return _return(1, 'no "service" in payload')
+
+    if 'sleep' in payload:
+        sleep = payload['sleep']
 
     service = payload['service']
     service_action = action.split('_')[1]
@@ -29,6 +36,10 @@ def service_action(input_data):
     LOG.debug('preparing to run service command: "%s"' % (' ').join(command))
 
     result = subprocess.call(command, shell=True)
+
+    if sleep:
+        time.sleep(int(sleep))
+
     return _return(result, os.strerror(result))
 
 

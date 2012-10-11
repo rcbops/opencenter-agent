@@ -2,6 +2,7 @@
 
 import copy
 import logging
+import time
 
 
 class StateMachine:
@@ -59,6 +60,9 @@ class StateMachine:
         if len(self.state_data['nodes']) == 0:
             self.current_state = self.states[self.current_state].on_failure
 
+        if self.states[self.current_state].sleep:
+            time.sleep(self.states[self.current_state].sleep)
+
         if self.result['result_code'] == 0:
             self.current_state = self.states[self.current_state].on_success
         else:
@@ -78,6 +82,7 @@ class StateMachineState:
     def __init__(self, **kwargs):
         self.params = {'on_success': 'success',
                        'on_failure': 'failure',
+                       'sleep': 0,
                        'advance': self.not_implemented,
                        'terminal': False}
         self.params.update(kwargs)
