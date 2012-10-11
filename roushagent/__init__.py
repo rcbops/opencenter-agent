@@ -79,7 +79,10 @@ class RoushAgent():
 
         self.config = {config_section: {}}
 
-        signal.signal(signal.SIGTERM, lambda a, b: self._exit())
+        # something really screwy with sigint and threading...
+
+        # signal.signal(signal.SIGTERM, lambda a, b: self._exit())
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
 
         try:
             self._setup_scaffolding(argv)
@@ -93,6 +96,8 @@ class RoushAgent():
 
     def _exit(self):
         log = self.log
+
+        log.debug('exiting...')
 
         self._cleanup()
 
@@ -279,6 +284,7 @@ class RoushAgent():
         do_quit = False
         try:
             while not do_quit:
+                log.debug('FETCH')
                 result = input_handler.fetch()
                 if len(result) == 0:
                     time.sleep(5)
@@ -287,9 +293,15 @@ class RoushAgent():
                     log.debug('Data: %s' % result['input'])
 
                     # Apply to the pool
-                    RoushAgentDispatchWorker(input_handler, output_handler, result).start()
+                    worker = RoushAgentDispatchWorker(input_handler, output_handler, result)
+                    worker.isDaemon(True)
+                    worker.start()
         except KeyboardInterrupt:
+            log.debug('Got keyboard interrupt.')
             self._exit()
 
         except Exception, e:
-            self.log.debug('Exception: %s' % detailed_exception(e))
+            log.debug('Exception: %s' % detailed_exception(e))
+
+        log.debug("falling out of dispatch loop")
+        self._exit()
