@@ -60,7 +60,7 @@ if ! dpkg -l chef-server &>/dev/null; then
     set +e
     # something janky about the opscode packages
     sudo apt-get install -y --force-yes chef chef-server || /bin/true
-    sudo apt-get install -f -y
+    # sudo apt-get install -f -y
     sudo apt-get install -y --force-yes chef chef-server
     set -e
 fi
