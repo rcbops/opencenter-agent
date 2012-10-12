@@ -294,7 +294,7 @@ class RoushAgent():
 
                     # Apply to the pool
                     worker = RoushAgentDispatchWorker(input_handler, output_handler, result)
-                    worker.isDaemon(True)
+                    worker.setDaemon(True)
                     worker.start()
         except KeyboardInterrupt:
             log.debug('Got keyboard interrupt.')
