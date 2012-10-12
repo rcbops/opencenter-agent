@@ -171,8 +171,8 @@ class OutputManager:
             if 'id' in input_data:
                 ns['LOG'] = logging.getLogger(
                     "roush.output.trans_%s" % input_data['id'])
-                h = logging.FileHandler(path=os.path.join(base, "trans_%s.log" %
-                                                          input_data['id']))
+                h = logging.FileHandler(os.path.join(base, "trans_%s.log" %
+                                                     input_data['id']))
                 ns['LOG'].addHandler(h)
 
             # FIXME(rp): handle exceptions
