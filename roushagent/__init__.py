@@ -217,7 +217,7 @@ class RoushAgent():
         split_handler = SplitFileHandler(path=trans_log_dir)
         split_handler.setFormatter(formatter)
         split_handler.addFilter(logging.Filter(name="roush"))
-        split_handler.addFilter(RoushTransLogFilter(name="trans_"))
+#        split_handler.addFilter(RoushTransLogFilter(name="trans_"))
         log.addHandler(split_handler)
 
         if background:
