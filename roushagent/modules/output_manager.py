@@ -156,13 +156,25 @@ class OutputManager:
             LOG.debug('Plugin_manager: dispatching action %s from plugin %s' %
                       (action, plugin))
             LOG.debug("Received input_data %s" % (input_data))
+            base = self.config.get('trans_log_dir', '/var/log/roush')
+            if not os.path.isdir(path):
+                if not os.path.isdir(path):
+                    raise OSError(2, "Specified path '%s' " % (path) +
+                                  "does not exist or is not a directory.")
+                    if not os.access(path, os.W_OK):
+                        raise OSError(13, "Specified path '%s' is not writable.")
             ns = self.output_plugins[plugin]
             t_LOG = ns['LOG']
             if 'id' in input_data:
                 ns['LOG'] = logging.getLogger(
                     "roush.output.trans_%s" % input_data['id'])
+                h = logging.FileHandler(path=os.path.join(base, "trans_%s.log" %
+                                                          input_data['id']))
+                ns['LOG'].addHandler(h)
+
             # FIXME(rp): handle exceptions
             result = fn(input_data)
+            ns['LOG'].close()
             ns['LOG'] = t_LOG
             LOG.debug('Got result %s' % result)
         else:

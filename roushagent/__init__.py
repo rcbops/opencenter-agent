@@ -19,8 +19,6 @@ from logging.handlers import SysLogHandler
 from roushagent.modules import OutputManager
 from roushagent.modules import InputManager
 from roushagent.utils import detailed_exception
-from roushagent.utils import SplitFileHandler
-from roushagent.utils import RoushTransLogFilter
 
 class RoushAgentDispatchWorker(Thread):
     def __init__(self, input_handler, output_handler, data):
@@ -212,16 +210,8 @@ class RoushAgent():
         if configfile:
             config = self.config = self._read_config(configfile, defaults=
                                                      {'base_dir': self.base})
-        trans_log_dir = config[config_section].get('trans_log_dir',
-                                                   '/var/log/roush')
         formatter = logging.Formatter("%(asctime)s - %(name)s - " +
                                       "%(levelname)s - %(message)s")
-
-        split_handler = SplitFileHandler(path=trans_log_dir)
-        split_handler.setFormatter(formatter)
-        split_handler.addFilter(logging.Filter(name="roush"))
-#        split_handler.addFilter(RoushTransLogFilter(name="trans_"))
-        log.addHandler(split_handler)
 
         if background:
             logdev = config[config_section].get('syslog_dev', '/dev/log')
