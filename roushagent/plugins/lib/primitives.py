@@ -67,6 +67,21 @@ class OrchestratorTasks:
         self.logger.debug('state_data: %s' % state_data)
         return self._success(state_data)
 
+    # FIXME(rp): how does save() fail?  exception?
+    def primitive_set_cluster(self, state_data, cluster_id):
+        for node in state_data['nodes']:
+            node_obj = self.endpoint.nodes[node]
+            node_obj.cluster_id = cluster_id
+            node_obj.save()
+        return self._success(state_data)
+
+    def primitive_set_role(self, state_data, role):
+        for node in state_data['nodes']:
+            node_obj = self.endpoint.nodes[node]
+            node_obj.role = role
+            node_obj.save()
+        return self._success(state_data)
+
     def primitive_run_task(self, state_data, action, payload={}, timeout=3600, poll_interval=5):
         if not 'nodes' in state_data:
             return self._failure(state_data, result_str='no node list for primitive "run_task"')
