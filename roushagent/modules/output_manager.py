@@ -157,12 +157,15 @@ class OutputManager:
                       (action, plugin))
             LOG.debug("Received input_data %s" % (input_data))
             base = self.config.get('trans_log_dir', '/var/log/roush')
-            if not os.path.isdir(path):
-                if not os.path.isdir(path):
-                    raise OSError(2, "Specified path '%s' " % (path) +
+
+            if not os.path.isdir(base):
+                if not os.path.isdir(base):
+                    raise OSError(2, "Specified path '%s' " % (base) +
                                   "does not exist or is not a directory.")
-                    if not os.access(path, os.W_OK):
-                        raise OSError(13, "Specified path '%s' is not writable.")
+                    if not os.access(base, os.W_OK):
+                        raise OSError(13,
+                                      "Specified path '%s' is not writable." %
+                                      base)
             ns = self.output_plugins[plugin]
             t_LOG = ns['LOG']
             if 'id' in input_data:
