@@ -205,15 +205,18 @@ class RoushAgent():
         log = self.log
 
         if debug:
-            log.setLevel(logging.DEBUG)
+            logging.basicConfig(level=logging.DEBUG)
         else:
-            log.setLevel(logging.WARNING)
+            logging.basicConfig(level=logging.WARNING)
 
         if configfile:
             config = self.config = self._read_config(configfile, defaults=
                                                      {'base_dir': self.base})
         trans_log_dir = config[config_section].get('trans_log_dir',
                                                    '/var/log/roush')
+        formatter = logging.Formatter("%(asctime)s - %(name)s - " +
+                                      "%(levelname)s - %(message)s")
+
         split_handler = SplitFileHandler(path=trans_log_dir)
         split_handler.setFormatter(formatter)
         split_handler.addFilter(logging.Filter(name="roush"))
@@ -222,8 +225,6 @@ class RoushAgent():
 
         if background:
             logdev = config[config_section].get('syslog_dev', '/dev/log')
-            formatter = logging.Formatter("%(asctime)s - %(name)s - " +
-                                          "%(levelname)s - %(message)s")
             ch = SysLogHandler(address=logdev)
             ch.setFormatter(formatter)
             log.addHandler(ch)
