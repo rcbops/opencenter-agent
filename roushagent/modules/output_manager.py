@@ -177,7 +177,6 @@ class OutputManager:
 
             # FIXME(rp): handle exceptions
             result = fn(input_data)
-            ns['LOG'].close()
             ns['LOG'] = t_LOG
             LOG.debug('Got result %s' % result)
         else:
