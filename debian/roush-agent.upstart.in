@@ -13,6 +13,7 @@ umask 022
 script
     DAEMON_ARGS="-c /etc/roush-agent.conf"
     [ -e /etc/default/roush-agent ] && . /etc/default/roush-agent
+    mkdir -p /var/log/roush
 
     /usr/bin/roush-agent.py ${DAEMON_ARGS}
 end script

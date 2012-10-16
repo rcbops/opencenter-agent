@@ -19,8 +19,6 @@ from logging.handlers import SysLogHandler
 from roushagent.modules import OutputManager
 from roushagent.modules import InputManager
 from roushagent.utils import detailed_exception
-from roushagent.utils import SplitFileHandler
-from roushagent.utils import RoushTransLogFilter
 
 class RoushAgentDispatchWorker(Thread):
     def __init__(self, input_handler, output_handler, data):
@@ -79,7 +77,10 @@ class RoushAgent():
 
         self.config = {config_section: {}}
 
-        signal.signal(signal.SIGTERM, lambda a, b: self._exit())
+        # something really screwy with sigint and threading...
+
+        # signal.signal(signal.SIGTERM, lambda a, b: self._exit())
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
 
         try:
             self._setup_scaffolding(argv)
@@ -93,6 +94,8 @@ class RoushAgent():
 
     def _exit(self):
         log = self.log
+
+        log.debug('exiting...')
 
         self._cleanup()
 
@@ -191,6 +194,8 @@ class RoushAgent():
             else:
                 defaults[section] = config[section]
 
+        # pass logging config off to logger
+        logging.config.fileConfig(configfile)
         return defaults
 
     def _setup_scaffolding(self, argv):
@@ -199,29 +204,14 @@ class RoushAgent():
         config = self.config
         log = self.log
 
-        if debug:
-            log.setLevel(logging.DEBUG)
-        else:
-            log.setLevel(logging.WARNING)
-
         if configfile:
             config = self.config = self._read_config(configfile, defaults=
                                                      {'base_dir': self.base})
+        if debug:
+            for h in log.handlers:
+                h.setLevel(logging.DEBUG)
 
         if background:
-            logdev = config[config_section].get('syslog_dev', '/dev/log')
-            trans_log_dir = config[config_section].get('trans_log_dir',
-                                                        '/var/log/roush')
-            formatter = logging.Formatter("%(asctime)s - %(name)s - " +
-                                          "%(levelname)s - %(message)s")
-            ch = SysLogHandler(address=logdev)
-            ch.setFormatter(formatter)
-            log.addHandler(ch)
-            split_handler = SplitFileHandler(path=trans_log_dir)
-            split_handler.setFormatter(formatter)
-            split_handler.addFilter(logging.Filter(name="roush"))
-            split_handler.addFilter(RoushTransLogFilter(name="trans_"))
-            log.addHandler(split_handler)
             # daemonize
             if os.fork():
                 sys.exit(0)
@@ -279,6 +269,7 @@ class RoushAgent():
         do_quit = False
         try:
             while not do_quit:
+                log.debug('FETCH')
                 result = input_handler.fetch()
                 if len(result) == 0:
                     time.sleep(5)
@@ -287,9 +278,15 @@ class RoushAgent():
                     log.debug('Data: %s' % result['input'])
 
                     # Apply to the pool
-                    RoushAgentDispatchWorker(input_handler, output_handler, result).start()
+                    worker = RoushAgentDispatchWorker(input_handler, output_handler, result)
+                    worker.setDaemon(True)
+                    worker.start()
         except KeyboardInterrupt:
+            log.debug('Got keyboard interrupt.')
             self._exit()
 
         except Exception, e:
-            self.log.debug('Exception: %s' % detailed_exception(e))
+            log.debug('Exception: %s' % detailed_exception(e))
+
+        log.debug("falling out of dispatch loop")
+        self._exit()

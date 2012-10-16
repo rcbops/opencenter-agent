@@ -10,10 +10,7 @@ input_handlers = %(plugin_dir)s/input/task_input.py
 # comma separated list of files or dirs
 output_handlers = %(plugin_dir)s/output
 
-# path to the syslog pipe.  defaults to /dev/log
-# should be /dev/log on linuxen, /var/run/log on most bsds,
-# except osx, which is probably /var/run/syslog
-syslog_dev = /var/run/syslog
+trans_log_dir = %(base_dir)s/trans_logs
 
 # pidfile.  Only gets dropped if run as daemon, and with
 # no pidfile specified, no pidfile will be generated
@@ -30,3 +27,37 @@ endpoint = http://localhost:8080
 [chef]
 #plugin_dir from main is not accessible here
 script_path = roushagent/plugins/lib/chef
+
+[loggers]
+keys=root
+
+[handlers]
+keys=stdout,syslog,file
+
+[formatters]
+keys=default
+
+[logger_root]
+level=DEBUG # could be DEBUG, INFO, WARNING, ERROR, CRITICAL, or NOTSET
+handlers=stdout # could be syslog or file
+
+[handler_stdout]
+class=StreamHandler
+level=NOTSET
+formatter=default
+args=(sys.stdout,)
+
+[handler_syslog]
+class=handlers.SysLogHandler
+level=NOTSET
+formatter=default
+args=("/dev/log",) #linux.  Use ('host', SYSLOG_UDP_PORT) instead for remote log
+
+[handler_file]
+class=FileHandler
+level=NOTSET
+formatter=default
+args=('roush-agent.log')
+[formatter_default]
+format=%(asctime)s - %(name)s - %(levelname)s - %(message)s
+class=logging.Formatters

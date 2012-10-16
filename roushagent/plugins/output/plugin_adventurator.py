@@ -49,10 +49,6 @@ def handle_adventurate(input_data):
 
     adventure_obj = ep.adventures[int(adventure)]
 
-    # we've removed this field..
-    # if adventure_obj.language != 'json':
-    #     return _retval(1, friendly_str='language %s not currently supported' % adventure_obj.language)
-
     ns = {}
     ns['LOG'] = LOG
     ns['StateMachine'] = StateMachine

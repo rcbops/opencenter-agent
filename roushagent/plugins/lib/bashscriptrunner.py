@@ -76,29 +76,18 @@ class BashScriptRunner(object):
             return response
 
         to_run = [path] + list(args)
+        try:
+            fh = [ h for h in self.log.handlers if hasattr(h, "stream") and h.stream.fileno() > 2 ][0].stream.fileno()
+        except IndexError:
+            fh = 2
         #first pass, never use bash to run things
         c = subprocess.Popen(to_run,
                              stdin=open("/dev/null", "r"),
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE,
+                             stdout=fh,
+                             stderr=fh,
                              env=env)
         response['result_data'] = {"script": path}
-        streams = ((logging.INFO, c.stdout), (logging.ERROR, c.stderr))
-        threads = []
-        for level, stream in streams:
-            t = Thread(target=log_output, args=(self.log, level, stream))
-            t.start()
-            threads.append(t)
-        while True:
-            time.sleep(0.1)
-            if c.poll() is not None:
-                break
-        for t in threads:
-            t.join()
+        c.wait()
         response['result_code'] = c.returncode
         response['result_str'] = os.strerror(c.returncode)
         return response
-
-def log_output(log, level, stream):
-    for line in stream:
-        log.log(level, line.strip())
