@@ -35,7 +35,7 @@ def service_action(input_data):
 
     LOG.debug('preparing to run service command: "%s"' % (' ').join(command))
 
-    result = subprocess.call(command, shell=True)
+    result = subprocess.call(command, shell=False)
 
     if sleep:
         time.sleep(int(sleep))
