@@ -194,6 +194,8 @@ class RoushAgent():
             else:
                 defaults[section] = config[section]
 
+        # pass logging config off to logger
+        logging.config.fileConfig(configfile)
         return defaults
 
     def _setup_scaffolding(self, argv):
@@ -202,22 +204,14 @@ class RoushAgent():
         config = self.config
         log = self.log
 
-        if debug:
-            logging.basicConfig(level=logging.DEBUG)
-        else:
-            logging.basicConfig(level=logging.WARNING)
-
         if configfile:
             config = self.config = self._read_config(configfile, defaults=
                                                      {'base_dir': self.base})
-        formatter = logging.Formatter("%(asctime)s - %(name)s - " +
-                                      "%(levelname)s - %(message)s")
+        if debug:
+            for h in log.handlers:
+                h.setLevel(logging.DEBUG)
 
         if background:
-            logdev = config[config_section].get('syslog_dev', '/dev/log')
-            ch = SysLogHandler(address=logdev)
-            ch.setFormatter(formatter)
-            log.addHandler(ch)
             # daemonize
             if os.fork():
                 sys.exit(0)
