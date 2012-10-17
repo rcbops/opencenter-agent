@@ -22,6 +22,7 @@ def setup(config={}):
     register_action('run_chef', chef.dispatch)
     register_action('install_chef_server', chef.dispatch)
     register_action('get_chef_info', chef.dispatch)
+    register_action('download_cookbooks', chef.dispatch)
 
 
 def get_environment(required, optional, payload):
@@ -75,6 +76,18 @@ class ChefThing(object):
         if not good:
             return env
         return self.script.run_env("install-chef-server.sh", env, "")
+
+    def download_cookbooks(self, input_data):
+        payload = input_data['payload']
+        action = input_data['action']
+        good, env = get_environment([],
+                                    ["CHEF_REPO_DIR", "CHEF_REPO",
+                                     "CHEF_REPO_BRANCH"],
+                                    payload)
+
+        if not good:
+            return env
+        return self.script.run_env("cookbook-download.sh", env, "")
 
     def get_chef_info(self, input_data):
         pem = ""
