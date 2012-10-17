@@ -70,7 +70,9 @@ mkdir -p ${HOMEDIR}/.chef
 cp /etc/chef/validation.pem /etc/chef/webui.pem ${HOMEDIR}/.chef
 chown -R ${CHEF_UNIX_USER}: ${HOMEDIR}/.chef
 
-/etc/init.d/couchdb restart
+/etc/init.d/couchdb stop || /bin/true
+sleep 10
+/etc/init.d/coudhdb stat || /bin/true
 sleep 10
 
 /etc/init.d/chef-server restart
