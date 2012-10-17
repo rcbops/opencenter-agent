@@ -12,6 +12,8 @@ output_handlers = %(plugin_dir)s/output
 
 trans_log_dir = %(base_dir)s/trans_logs
 
+log_config = %(base_dir)s/log.cfg
+
 # pidfile.  Only gets dropped if run as daemon, and with
 # no pidfile specified, no pidfile will be generated
 #
@@ -22,42 +24,9 @@ bind_address = 0.0.0.0
 bind_port = 8000
 
 [taskerator]
-endpoint = http://localhost:8080
+endpoint = http://127.0.0.1:8080
 
 [chef]
 #plugin_dir from main is not accessible here
 script_path = roushagent/plugins/lib/chef
 
-[loggers]
-keys=root
-
-[handlers]
-keys=stdout,syslog,file
-
-[formatters]
-keys=default
-
-[logger_root]
-level=DEBUG # could be DEBUG, INFO, WARNING, ERROR, CRITICAL, or NOTSET
-handlers=stdout # could be syslog or file
-
-[handler_stdout]
-class=StreamHandler
-level=NOTSET
-formatter=default
-args=(sys.stdout,)
-
-[handler_syslog]
-class=handlers.SysLogHandler
-level=NOTSET
-formatter=default
-args=("/dev/log",) #linux.  Use ('host', SYSLOG_UDP_PORT) instead for remote log
-
-[handler_file]
-class=FileHandler
-level=NOTSET
-formatter=default
-args=('roush-agent.log')
-[formatter_default]
-format=%(asctime)s - %(name)s - %(levelname)s - %(message)s
-class=logging.Formatters

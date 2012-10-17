@@ -70,11 +70,11 @@ class RoushAgentDispatchWorker(Thread):
 class RoushAgent():
     def __init__(self, argv, config_section='main'):
         self.base = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-        log = self.log = logging.getLogger()
         self.config_section = config_section
         self.input_handler = None
         self.output_handler = None
-
+        self.log = logging.getLogger()
+        self.log.addHandler(logging.StreamHandler(sys.stderr))
         self.config = {config_section: {}}
 
         # something really screwy with sigint and threading...
@@ -157,6 +157,18 @@ class RoushAgent():
 
         return background, debug, configfile
 
+    def _configure_logs(self, configfile):
+        if configfile:
+            import logging.config
+            phandlers = self.log.handlers
+            try:
+                self.log.handlers = []
+                logging.config.fileConfig(configfile)
+            except:
+                self.log.handlers = phandlers
+                self.log.error("Unable to configure logging")
+        self.log = logging.getLogger()
+
     def _read_config(self, configfile, defaults={}):
         cp = ConfigParser(defaults=defaults)
         cp.read(configfile)
@@ -171,9 +183,7 @@ class RoushAgent():
                         'file %s: include directive %s is not a file' % (
                             configfile,
                             config[config_section]['include'],))
-
                 config = self.config = self._read_config(config[config_section]['include'])
-
             if 'include_dir' in config[config_section]:
                 # import and merge a whole directory
                 if not os.path.isdir(config[config_section]['include_dir']):
@@ -186,7 +196,6 @@ class RoushAgent():
                     if f.endswith('.conf'):
                         import_file = os.path.join(config[config_section]['include_dir'], f)
                         config = self.config = self._read_config(import_file, config)
-
         # merge in the read config into the exisiting config
         for section in config:
             if section in defaults:
@@ -195,19 +204,19 @@ class RoushAgent():
                 defaults[section] = config[section]
 
         # pass logging config off to logger
-        logging.config.fileConfig(configfile)
         return defaults
 
     def _setup_scaffolding(self, argv):
         background, debug, configfile = self._parse_opts(argv)
         config_section = self.config_section
         config = self.config
-        log = self.log
-
         if configfile:
             config = self.config = self._read_config(configfile, defaults=
                                                      {'base_dir': self.base})
+            self._configure_logs(config[config_section]['log_config'])
+        log = self.log
         if debug:
+            self.log.addHandler(logging.StreamHandler(sys.stderr))
             for h in log.handlers:
                 h.setLevel(logging.DEBUG)
 
@@ -232,8 +241,6 @@ class RoushAgent():
                     pidfile.truncate()
                     pidfile.write(str(os.getpid()))
                     pidfile.flush()
-        else:
-            log.addHandler(logging.StreamHandler(sys.stderr))
 
     def _setup_handlers(self):
         config = self.config
