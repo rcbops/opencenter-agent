@@ -16,6 +16,27 @@ class OrchestratorTasks:
         if not logger:
             self.logger = logging.getLogger()
 
+    def add_rollback_step(self, node_id, input_state, state_value):
+        if not 'rollback_plan' in input_state:
+            input_state['rollback_plan'] = {}
+
+        if not node_id in input_state['rollback_plan']:
+            input_state['rollback_plan'][node_id] = {'start_state': 'state_1',
+                                                     'states': {'state_1':
+                                                                {'primitive': 'noop',
+                                                                 'parameters': {}}}}
+        # we have a rollback plan already
+        plan = input_state['rollback_plan'][node_id]
+
+        old_start = plan['start_state']
+        state_value['on_success'] = old_start
+        state = 'state_%d' % max(map(lambda x: int(x.split('_')[1]),
+                                     plan['states'].keys()))
+        plan['states'][state] = state_value
+        input_state['rollback_plan'][node_id] = plan
+
+        return input_state
+
     def sm_eval(self, sm_dict, input_state):
         def otask(fn, *args, **kwargs):
             def outer(input_state, **outer_args):
@@ -52,6 +73,9 @@ class OrchestratorTasks:
             self.logger.debug('Changing node %s backend to %s/%s' % (node, backend, backend_state))
             node_obj = self.endpoint.nodes[node]
 
+            old_backend = node_obj.backend
+            old_backend_state = node_obj.backend_state
+
             if backend:
                 self.logger.debug('changing backend')
                 node_obj.backend = backend
@@ -60,6 +84,11 @@ class OrchestratorTasks:
                 node_obj.backend_state = backend_state
 
             node_obj.save()
+
+            state_data = self.add_rollback_step(node, state_data,
+                                                {'primitive': 'set_backend',
+                                                 'parameters': {'backend': old_backend,
+                                                                'backend_state': old_backend_state}})
         return self._success(state_data)
 
     def primitive_log(self, state_data, msg='default msg'):
@@ -71,15 +100,41 @@ class OrchestratorTasks:
     def primitive_set_cluster(self, state_data, cluster_id):
         for node in state_data['nodes']:
             node_obj = self.endpoint.nodes[node]
+            old_cluster_id = node_obj.cluster_id
             node_obj.cluster_id = cluster_id
             node_obj.save()
+
+            state_data = self.add_rollback_step(node, state_data,
+                                                {'primitive': 'set_cluster',
+                                                 'parameters': {'cluster_id': old_cluster_id}})
+
         return self._success(state_data)
 
     def primitive_set_role(self, state_data, role):
         for node in state_data['nodes']:
             node_obj = self.endpoint.nodes[node]
+            old_role = node_obj.role
             node_obj.role = role
             node_obj.save()
+
+            state_data = self.add_rollback_step(node, state_data,
+                                                {'primitive': 'set_role',
+                                                 'parameters': {'role': old_role}})
+
+        return self._success(state_data)
+
+    def primitive_set_fact(self, state_data, fact, value):
+        for node in state_data['nodes']:
+            node_obj = self.endpoint.nodes[node]
+            old_value = node_obj.config[fact]
+            node_obj.config[fact] = value
+            node_obj.save()
+
+            state_data = self.add_rollback_step(node, state_data,
+                                                {'primitive': 'set_fact',
+                                                 'parameters': {'fact': fact,
+                                                                'value': old_value}})
+
         return self._success(state_data)
 
     def primitive_run_task(self, state_data, action, payload={}, timeout=3600, poll_interval=5):
