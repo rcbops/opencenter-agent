@@ -155,7 +155,7 @@ class OutputManager:
             fn, path, _, plugin = self.dispatch_table[action]
             LOG.debug('Plugin_manager: dispatching action %s from plugin %s' %
                       (action, plugin))
-            LOG.debug("Received input_data %s" % (input_data))
+            LOG.debug('Received input_data %s' % (input_data))
             base = self.config['main'].get('trans_log_dir', '/var/log/roush')
 
             if not os.path.isdir(base):

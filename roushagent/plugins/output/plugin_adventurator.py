@@ -73,6 +73,24 @@ def handle_adventurate(input_data):
     if 'state_data' in ns:
         output_data['result_data']['history'] = ns['state_data']['history']
 
+    # clean up any failed tasks.
+    LOG.debug('Adventure terminated with state: %s' % ns['state_data'])
+
+    state_data = ns['state_data']
+
+    if 'fails' in state_data:
+        # we need to walk through all the failed nodes.
+        for node in map(lambda x: int(x), state_data['fails']):
+            if 'rollback_plan' in state_data and node in state_data['rollback_plan']:
+
+                LOG.debug('Running rollback plan for node %d' % node)
+                ns['sm_description'] = state_data['rollback_plan'][node]
+                ns['input_data'] = { 'nodes': [node] }
+
+                exec 'tasks.sm_eval(sm_description, input_data)' in ns, ns
+            else:
+                LOG.debug('No rollback plan for failed node %d' % node)
+
     return output_data
 
 def _retval(result_code, friendly_str=None, result_data={}):

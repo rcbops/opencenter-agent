@@ -30,11 +30,16 @@ class OrchestratorTasks:
 
         old_start = plan['start_state']
         state_value['on_success'] = old_start
-        state = 'state_%d' % max(map(lambda x: int(x.split('_')[1]),
-                                     plan['states'].keys()))
+
+        # yeah, pep-8, you are right.  this is WAY more readable.
+        state = 'state_%d' % (int(max(map(lambda x: int(
+                            x.split('_')[1]), plan['states'].keys()))) + 1)
+
+        plan['start_state'] = state
         plan['states'][state] = state_value
         input_state['rollback_plan'][node_id] = plan
 
+        self.logger.debug('new rollback plan for node %s: %s' % (node_id, plan))
         return input_state
 
     def sm_eval(self, sm_dict, input_state):
@@ -67,6 +72,9 @@ class OrchestratorTasks:
 
         result_data, end_state = sm.run_to_completion()
         return (result_data, end_state)
+
+    def primitive_noop(self, state_data):
+        return self._success(state_data)
 
     def primitive_set_backend(self, state_data, backend=None, backend_state=None):
         for node in state_data['nodes']:
@@ -126,7 +134,11 @@ class OrchestratorTasks:
     def primitive_set_fact(self, state_data, fact, value):
         for node in state_data['nodes']:
             node_obj = self.endpoint.nodes[node]
-            old_value = node_obj.config[fact]
+
+            old_value = None
+            if fact in node_obj.config:
+                old_value = node_obj.config[fact]
+
             node_obj.config[fact] = value
             node_obj.save()
 
