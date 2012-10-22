@@ -216,7 +216,10 @@ class RoushAgent():
             self._configure_logs(config[config_section]['log_config'])
         log = self.log
         if debug:
-            self.log.addHandler(logging.StreamHandler(sys.stderr))
+            streams = len([ h for h in log.handlers 
+                            if type(h) == logging.StreamHandler ])
+            if streams == 0:
+                self.log.addHandler(logging.StreamHandler(sys.stderr))
             for h in log.handlers:
                 h.setLevel(logging.DEBUG)
 
