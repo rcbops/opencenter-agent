@@ -158,7 +158,7 @@ class OrchestratorTasks:
         output_list = {}
 
         for node in state_data['nodes']:
-            task_id = self._submit_task(node, action, payload)
+            task_id = self._submit_task(state_data, node, action, payload)
             if task_id:
                 self.logger.debug('Submitted task %d on node %d' % (task_id, node))
                 result_list[node] = task_id
@@ -225,7 +225,7 @@ class OrchestratorTasks:
         state_data['fails'].append(node)
 
     # submit a task and return the task ID
-    def _submit_task(self, node, action, payload):
+    def _submit_task(self, state_data, node, action, payload):
         node_id = node
 
         new_task = self.endpoint.tasks.create()
@@ -233,7 +233,11 @@ class OrchestratorTasks:
         new_task.payload = payload
         new_task.node_id = node_id
         new_task.parent_id = self.parent_task_id
-        new_task.state = 'pending'
+
+        state_data = self.add_rollback_step(node_id, state_data,
+                                            {'primitive': 'run_task',
+                                             'parameters': {'action': 'rollback_%s' % action,
+                                                            'payload': payload}})
 
         new_task.save()
         self.logger.debug('submitting "%s" task as %d' % (action, new_task.id))
@@ -258,7 +262,7 @@ class OrchestratorTasks:
                 task_obj = self.endpoint.tasks[task]
                 # force a refresh
                 task_obj._request('get')
-                if task_obj.state != 'pending' and task_obj.state != 'delivered' and task_obj.state != 'running':
+                if task_obj.state not in ['pending', 'delivered', 'running']:
                     # task is done.
                     if task_obj.state in ['timeout', 'cancelled']:
                         # uh oh, that's bad.

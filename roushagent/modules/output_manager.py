@@ -180,7 +180,12 @@ class OutputManager:
             ns['LOG'] = t_LOG
             LOG.debug('Got result %s' % result)
         else:
-            LOG.warning('No dispatch for action "%s"' % action)
+            if action.startswith('rollback_'):
+                result = {'result_code': 0,
+                          'result_str': 'no rollback action for %s' % action,
+                          'result_data': {}}
+            else:
+                LOG.warning('No dispatch for action "%s"' % action)
         return result
 
     # some internal methods to provide some agent introspection
