@@ -10,9 +10,10 @@ from state import StateMachine, StateMachineState
 
 # primitive functions for orchestration.
 class OrchestratorTasks:
-    def __init__(self, endpoint='http://localhost:8080', logger=None):
+    def __init__(self, endpoint='http://localhost:8080', logger=None, parent_task_id=None):
         self.endpoint = RoushEndpoint(endpoint)
         self.logger = logger
+        self.parent_task_id = parent_task_id
         if not logger:
             self.logger = logging.getLogger()
 
@@ -231,6 +232,7 @@ class OrchestratorTasks:
         new_task.action = action
         new_task.payload = payload
         new_task.node_id = node_id
+        new_task.parent_id = self.parent_task_id
         new_task.state = 'pending'
 
         new_task.save()
@@ -256,7 +258,7 @@ class OrchestratorTasks:
                 task_obj = self.endpoint.tasks[task]
                 # force a refresh
                 task_obj._request('get')
-                if task_obj.state != 'pending' and task_obj.state != 'running':
+                if task_obj.state != 'pending' and task_obj.state != 'delivered' and task_obj.state != 'running':
                     # task is done.
                     if task_obj.state in ['timeout', 'cancelled']:
                         # uh oh, that's bad.

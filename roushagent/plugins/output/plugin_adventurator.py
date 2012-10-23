@@ -27,6 +27,7 @@ def setup(config={}):
 def handle_adventurate(input_data):
     global roush_endpoint
 
+    parent_id = input_data['id']
     action = input_data['action']
     payload = input_data['payload']
 
@@ -53,7 +54,8 @@ def handle_adventurate(input_data):
     ns['LOG'] = LOG
     ns['StateMachine'] = StateMachine
     ns['StateMachineState'] = StateMachineState
-    ns['tasks'] = OrchestratorTasks(endpoint=roush_endpoint)
+    ns['tasks'] = OrchestratorTasks(endpoint=roush_endpoint,
+                                    parent_task_id=parent_id)
     ns['input_data'] = initial_state
     ns['result_str'] = 'fail'
     ns['result_code'] = 254

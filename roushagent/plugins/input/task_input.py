@@ -81,7 +81,7 @@ class TaskThread(threading.Thread):
             except KeyboardInterrupt:
                 raise
 
-            if task and task.state == 'pending':
+            if task:
                 self.producer_lock.acquire()
                 if task.id not in [x['id'] for x in self.pending_tasks]:
                     LOG.debug('Found new pending task with id %s' % task.id)
