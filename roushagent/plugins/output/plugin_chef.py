@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-import sys
-import os
-
 import netifaces
 
 from bashscriptrunner import BashScriptRunner
@@ -115,7 +112,7 @@ class ChefThing(object):
 
         return retval(0, 'success',
                       {'validation_pem': pem,
-                       'chef_endpoint': 'http://%s:4000' % ipaddr })
+                       'chef_endpoint': 'http://%s:4000' % ipaddr})
 
     def dispatch(self, input_data):
         self.script.log = LOG
