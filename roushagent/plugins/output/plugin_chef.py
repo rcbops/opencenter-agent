@@ -23,6 +23,8 @@ def setup(config={}):
     register_action('install_chef_server', chef.dispatch)
     register_action('get_chef_info', chef.dispatch)
     register_action('download_cookbooks', chef.dispatch)
+    register_action('uninstall_chef', chef.dispatch)
+    register_action('rollback_install_chef', chef.dispatch)
 
 
 def get_environment(required, optional, payload):
