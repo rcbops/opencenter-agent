@@ -94,7 +94,8 @@ class OutputManager:
                 return
             name = ns['name']
             ns['LOG'] = ns['LOG'].getChild("output_%s" % name)
-            ns['register_action'] = lambda x,y: self.register_action(name, x, y)
+            ns['register_action'] = lambda x, y: self.register_action(
+                name, x, y)
             self.loaded_modules.append(name)
             self.output_plugins[name] = ns
             config = self.config.get(name, {})
@@ -103,7 +104,8 @@ class OutputManager:
                 try:
                     ns['setup'](config)
                 except NameError as e:
-                    LOG.warning("Failed to run setup on %s: %s" %(shortpath, e))
+                    LOG.warning("Failed to run setup on %s: %s" % (
+                        shortpath, e))
                 except:
                     LOG.debug("Failed to run setup on %s" % shortpath)
                     del self.output_plugins[name]
