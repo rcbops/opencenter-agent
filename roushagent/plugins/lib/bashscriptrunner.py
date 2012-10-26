@@ -39,7 +39,7 @@ def find_script(script, script_path):
         if os.path.exists(filename) and \
            os.path.dirname(os.path.realpath(filename)) == \
            os.path.realpath(path):
-           return filename
+            return filename
     return None
 
 
@@ -77,7 +77,8 @@ class BashScriptRunner(object):
 
         to_run = [path] + list(args)
         try:
-            fh = [ h for h in self.log.handlers if hasattr(h, "stream") and h.stream.fileno() > 2 ][0].stream.fileno()
+            fh = [h for h in self.log.handlers if hasattr(h, "stream") and
+                   h.stream.fileno() > 2][0].stream.fileno()
         except IndexError:
             fh = 2
         #first pass, never use bash to run things
