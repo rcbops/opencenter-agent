@@ -18,7 +18,6 @@ class RestishHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         action = self.path.split("/")[1]
         retval = {'action': action, 'id': id(action)}
 
-
         if self.headers.getheader('content-type') == 'application/json':
             payload_len = self.headers.getheader('content-length')
 
@@ -108,5 +107,7 @@ def fetch():
 
     return result
 
+
 def result(input_data, output_data):
-    LOG.debug('Got finish callback for id %s: %s\n' % (input_data['id'], output_data))
+    LOG.debug('Got finish callback for id %s: %s\n' % (input_data['id'],
+                                                       output_data))

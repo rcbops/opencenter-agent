@@ -44,7 +44,8 @@ class TaskThread(threading.Thread):
             # try to find our host ID from the endpoint
             LOG.info('Initial connection: fetching host ID')
 
-            for node in self.endpoint.nodes.filter("hostname='%s'" % self.hostname):
+            for node in self.endpoint.nodes.filter("hostname='%s'" % (
+                    self.hostname)):
                 self.host_id = node.id
 
             if not self.host_id:
@@ -168,7 +169,6 @@ class TaskGetter:
         self.server_thread.stop()
         self.server_thread.join(5)
         self.server_thread.terminate()
-
 
     def fetch(self):
         return self.server_thread.fetch()
