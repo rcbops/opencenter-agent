@@ -61,6 +61,12 @@ class ChefThing(object):
             return env
         return self.script.run_env("install-chef.sh", env, "")
 
+    def rollback_install_chef(self, input_data):
+        return self.uninstall_chef(input_data)
+
+    def uninstall_chef(self, input_data):
+        return self.script.run("uninstall-chef.sh")
+
     def run_chef(self, input_data):
         LOG.info("Running chef")
         payload = input_data['payload']
