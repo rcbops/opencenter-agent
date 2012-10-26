@@ -20,6 +20,7 @@ from roushagent.modules import OutputManager
 from roushagent.modules import InputManager
 from roushagent.utils import detailed_exception
 
+
 class RoushAgentDispatchWorker(Thread):
     def __init__(self, input_handler, output_handler, data):
         super(RoushAgentDispatchWorker, self).__init__()
@@ -29,12 +30,12 @@ class RoushAgentDispatchWorker(Thread):
         self.input_handler = input_handler
         self.logger = logging.getLogger('roush-agent.dispatch')
 
-    # apparently signals can only be set in python on the mainline thread.  apparently
-    # they are already blocked on theads and only handled in mainline.  interesting.
+    # apparently signals can only be set in python on the mainline thread.
+    # they are already blocked on threads and only handled in mainline.
     #
     # def _worker_signals(self):
     #     signal.signal(signal.SIGTERM, signal.SIG_IGN) # Yay Upstart
-    #     signal.signal(signal.SIGINT, signal.SIG_IGN) # Workers should ignore ^C
+    #     signal.signal(signal.SIGINT, signal.SIG_IGN) # Workers should ignore
 
     def run(self):
         data = self.data
@@ -62,14 +63,16 @@ class RoushAgentDispatchWorker(Thread):
                               'result_str': 'dispatch error',
                               'result_data': etext}
 
-        self.logger.debug('passing output handler result back to input handler')
+        self.logger.debug('passing output handler result back to input handler'
+        )
         input_handler.result(data)
         self.logger.debug('dispatch handler terminating')
 
 
 class RoushAgent():
     def __init__(self, argv, config_section='main'):
-        self.base = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
+        self.base = os.path.realpath(os.path.join(os.path.dirname(__file__),
+                                                  '..'))
         self.config_section = config_section
         self.input_handler = None
         self.output_handler = None
@@ -172,7 +175,8 @@ class RoushAgent():
     def _read_config(self, configfile, defaults={}):
         cp = ConfigParser(defaults=defaults)
         cp.read(configfile)
-        config = self.config = dict([[s, dict(cp.items(s))] for s in cp.sections()])
+        config = self.config = dict([[s, dict(cp.items(s))]
+                                     for s in cp.sections()])
         config_section = self.config_section
 
         if config_section in config:
@@ -183,7 +187,8 @@ class RoushAgent():
                         'file %s: include directive %s is not a file' % (
                             configfile,
                             config[config_section]['include'],))
-                config = self.config = self._read_config(config[config_section]['include'])
+                config = self.config = self._read_config(
+                    config[config_section]['include'])
             if 'include_dir' in config[config_section]:
                 # import and merge a whole directory
                 if not os.path.isdir(config[config_section]['include_dir']):
@@ -192,10 +197,14 @@ class RoushAgent():
                             configfile,
                             config[config_section]['include_dir'],))
 
-                for f in sorted(os.listdir(config[config_section]['include_dir'])):
+                for f in sorted(os.listdir(
+                        config[config_section]['include_dir'])):
                     if f.endswith('.conf'):
-                        import_file = os.path.join(config[config_section]['include_dir'], f)
-                        config = self.config = self._read_config(import_file, config)
+                        import_file = os.path.join(
+                            config[config_section]['include_dir'],
+                            f)
+                        config = self.config = self._read_config(import_file,
+                                                                 config)
         # merge in the read config into the exisiting config
         for section in config:
             if section in defaults:
@@ -211,13 +220,13 @@ class RoushAgent():
         config_section = self.config_section
         config = self.config
         if configfile:
-            config = self.config = self._read_config(configfile, defaults=
-                                                     {'base_dir': self.base})
+            config = self.config = self._read_config(configfile, defaults={
+                'base_dir': self.base})
             self._configure_logs(config[config_section]['log_config'])
         log = self.log
         if debug:
-            streams = len([ h for h in log.handlers 
-                            if type(h) == logging.StreamHandler ])
+            streams = len([h for h in log.handlers
+                           if type(h) == logging.StreamHandler])
             if streams == 0:
                 self.log.addHandler(logging.StreamHandler(sys.stderr))
             for h in log.handlers:
@@ -237,7 +246,8 @@ class RoushAgent():
             if 'pidfile' in config[config_section]:
                 pidfile = open(config[config_section]['pidfile'], 'a+')
                 try:
-                    fcntl.flock(pidfile.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    fcntl.flock(pidfile.fileno(), fcntl.LOCK_EX |
+                                fcntl.LOCK_NB)
                 except IOError:
                     log.error('Lock exists on pidfile: already running')
                     pidfile.seek(0)
@@ -253,16 +263,19 @@ class RoushAgent():
         base_dir = config[config_section].get('base_dir', self.base)
 
         plugin_dir = config[config_section].get('plugin_dir',
-                                                os.path.join(base_dir,
-                                                             'roushagent/plugins'))
+                                                os.path.join(
+                                                    base_dir,
+                                                    'roushagent/plugins'))
         sys.path.append(os.path.join(plugin_dir, 'lib'))
 
         # find input and output handlers to load
         default_out = os.path.join(plugin_dir, 'output/plugin_files.py')
         default_in = os.path.join(plugin_dir, 'input/task_input.py')
 
-        output_handlers = config[config_section].get('output_handlers', default_out)
-        input_handlers = config[config_section].get('input_handlers', default_in)
+        output_handlers = config[config_section].get('output_handlers',
+                                                     default_out)
+        input_handlers = config[config_section].get('input_handlers',
+                                                    default_in)
 
         self.output_handler = OutputManager(
             [x.strip() for x in output_handlers.split(',')], config)
@@ -284,11 +297,14 @@ class RoushAgent():
                 if len(result) == 0:
                     time.sleep(5)
                 else:
-                    log.debug('Got input from input handler "%s"' % result['plugin'])
+                    log.debug('Got input from input handler "%s"' % (
+                        result['plugin']))
                     log.debug('Data: %s' % result['input'])
 
                     # Apply to the pool
-                    worker = RoushAgentDispatchWorker(input_handler, output_handler, result)
+                    worker = RoushAgentDispatchWorker(input_handler,
+                                                      output_handler,
+                                                      result)
                     worker.setDaemon(True)
                     worker.start()
         except KeyboardInterrupt:
