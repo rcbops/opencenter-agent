@@ -13,7 +13,7 @@ task_getter = None
 
 
 class TaskThread(threading.Thread):
-    def __init__(self, endpoint, hostname):
+    def __init__(self, endpoint, hostname, cert=None, roush_ca=None):
         # python, I hate you.
         super(TaskThread, self).__init__()
 
@@ -25,6 +25,8 @@ class TaskThread(threading.Thread):
         self.pending_tasks = []
         self.running_tasks = {}
         self.host_id = None
+        self.cert = cert
+        self.roush_ca = roush_ca
         self._maybe_init()
 
     def _maybe_init(self):
@@ -34,7 +36,9 @@ class TaskThread(threading.Thread):
             LOG.info('Connecting to endpoint')
 
             try:
-                self.endpoint = RoushEndpoint(self.endpoint_uri)
+                self.endpoint = RoushEndpoint(self.endpoint_uri,
+                                              self.cert,
+                                              self.roush_ca)
             except ConnectionError:
                 return False
             except KeyboardInterrupt:
@@ -149,17 +153,22 @@ class TaskThread(threading.Thread):
 
 
 class TaskGetter:
-    def __init__(self, endpoint, hostname):
+    def __init__(self, endpoint, hostname, cert=None, roush_ca=None):
         self.endpoint = endpoint
         self.hostname = hostname
         self.running = False
         self.server_thread = None
+        self.cert = cert
+        self.roush_ca = roush_ca
 
     def run(self):
         if self.running:
             raise RuntimeError
 
-        self.server_thread = TaskThread(self.endpoint, self.hostname)
+        self.server_thread = TaskThread(self.endpoint,
+                                        self.hostname,
+                                        self.cert,
+                                        self.roush_ca)
         self.server_thread.setDaemon(True)
         self.server_thread.start()
         self.running = True
@@ -182,8 +191,9 @@ def setup(config={}):
 
     hostname = config.get('hostname', os.popen('hostname -f').read().strip())
     endpoint = config.get('endpoint', 'http://localhost:8080')
-
-    task_getter = TaskGetter(endpoint, hostname)
+    cert = (config.get('cert', None), config.get('cert_key', None))
+    roush_ca = config.get('roush_ca', None)
+    task_getter = TaskGetter(endpoint, hostname, cert, roush_ca)
     task_getter.run()
 
 

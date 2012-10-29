@@ -25,6 +25,9 @@ bind_port = 8000
 
 [taskerator]
 endpoint = http://127.0.0.1:8080
+# For client certificate authentication:
+# cert = /etc/roush-agent/cert.pem
+# cert_key = /etc/roush-agent/cert.key
 
 [chef]
 #plugin_dir from main is not accessible here
