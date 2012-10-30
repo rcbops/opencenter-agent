@@ -13,13 +13,13 @@ task_getter = None
 
 
 class TaskThread(threading.Thread):
-    def __init__(self, endpoint, hostname):
+    def __init__(self, endpoint, name):
         # python, I hate you.
         super(TaskThread, self).__init__()
 
         self.endpoint = None
         self.endpoint_uri = endpoint
-        self.hostname = hostname
+        self.name = name
         self.producer_lock = threading.Lock()
         self.producer_condition = threading.Condition(self.producer_lock)
         self.pending_tasks = []
@@ -44,14 +44,14 @@ class TaskThread(threading.Thread):
             # try to find our host ID from the endpoint
             LOG.info('Initial connection: fetching host ID')
 
-            for node in self.endpoint.nodes.filter("hostname='%s'" % (
-                    self.hostname)):
+            for node in self.endpoint.nodes.filter("name='%s'" % (
+                    self.name)):
                 self.host_id = node.id
 
             if not self.host_id:
                 # make a new node entry for this host
                 LOG.info('Creating new host entry')
-                node = self.endpoint.nodes.new(hostname=self.hostname,
+                node = self.endpoint.nodes.new(name=self.name,
                                                backend='unprovisioned',
                                                backend_state='unknown')
                 node.save()
@@ -149,9 +149,9 @@ class TaskThread(threading.Thread):
 
 
 class TaskGetter:
-    def __init__(self, endpoint, hostname):
+    def __init__(self, endpoint, name):
         self.endpoint = endpoint
-        self.hostname = hostname
+        self.name = name
         self.running = False
         self.server_thread = None
 
@@ -159,7 +159,7 @@ class TaskGetter:
         if self.running:
             raise RuntimeError
 
-        self.server_thread = TaskThread(self.endpoint, self.hostname)
+        self.server_thread = TaskThread(self.endpoint, self.name)
         self.server_thread.setDaemon(True)
         self.server_thread.start()
         self.running = True
@@ -180,10 +180,10 @@ class TaskGetter:
 def setup(config={}):
     global task_getter
 
-    hostname = config.get('hostname', os.popen('hostname -f').read().strip())
+    name = config.get('hostname', os.popen('hostname -f').read().strip())
     endpoint = config.get('endpoint', 'http://localhost:8080')
 
-    task_getter = TaskGetter(endpoint, hostname)
+    task_getter = TaskGetter(endpoint, name)
     task_getter.run()
 
 

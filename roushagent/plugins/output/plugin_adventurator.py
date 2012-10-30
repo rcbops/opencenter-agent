@@ -7,6 +7,7 @@ import os
 import random
 import time
 
+from utils import detailed_exception
 from roushclient.client import RoushEndpoint
 from state import StateMachine, StateMachineState
 from primitives import OrchestratorTasks
@@ -65,8 +66,25 @@ def handle_adventurate(input_data):
     ns['sm_description'] = adventure_obj.dsl
 
     LOG.debug('About to run the following dsl: %s' % adventure_obj.dsl)
-    exec '(result_data, state_data) = ' \
-        'tasks.sm_eval(sm_description, input_data)' in ns, ns
+
+    node_list = []
+    # let's mark all the nodes as running adventure...
+    for node in initial_state['nodes']:
+        node_list.append(node)
+        node_obj = ep.nodes[node]
+        node_obj.adventure_id = payload['adventure']
+        node_obj.save()
+
+    try:
+        exec '(result_data, state_data) = ' \
+            'tasks.sm_eval(sm_description, input_data)' in ns, ns
+    except Exception as e:
+        for node in node_list:
+            node_obj._request_get()
+            node_obj.adventure_id = None
+            node_obj.save()
+
+        return _retval(1, result_data=detailed_exception(e))
 
     output_data = {'result_code': 1,
                    'result_str': 'no return data from adventure',
@@ -93,9 +111,18 @@ def handle_adventurate(input_data):
                 ns['sm_description'] = state_data['rollback_plan'][node]
                 ns['input_data'] = {'nodes': [node]}
 
-                exec 'tasks.sm_eval(sm_description, input_data)' in ns, ns
+                try:
+                    exec 'tasks.sm_eval(sm_description, input_data)' in ns, ns
+                except Exception as e:
+                    pass
             else:
                 LOG.debug('No rollback plan for failed node %d' % node)
+
+    for node in node_list:
+        node_obj = ep.nodes[node]
+        node_obj._request_get()  # force a refresh - need to set up partial puts
+        node_obj.adventure_id = None
+        node_obj.save()
 
     return output_data
 
