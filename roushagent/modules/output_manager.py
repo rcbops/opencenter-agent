@@ -168,18 +168,25 @@ class OutputManager:
                         raise OSError(13,
                                       "Specified path '%s' is not writable." %
                                       base)
-            ns = self.output_plugins[plugin]
-            t_LOG = ns['LOG']
-            if 'id' in input_data:
-                ns['LOG'] = logging.getLogger(
-                    "roush.output.trans_%s" % input_data['id'])
-                h = logging.FileHandler(os.path.join(base, "trans_%s.log" %
-                                                     input_data['id']))
-                ns['LOG'].addHandler(h)
+
+            # we won't log from built-in functions
+            ns = None
+            if plugin in self.output_plugins:
+                ns = self.output_plugins[plugin]
+                t_LOG = ns['LOG']
+                if 'id' in input_data:
+                    ns['LOG'] = logging.getLogger(
+                        "roush.output.trans_%s" % input_data['id'])
+                    h = logging.FileHandler(os.path.join(base, "trans_%s.log" %
+                                                         input_data['id']))
+                    ns['LOG'].addHandler(h)
 
             # FIXME(rp): handle exceptions
             result = fn(input_data)
-            ns['LOG'] = t_LOG
+
+            if ns is not None:
+                ns['LOG'] = t_LOG
+
             LOG.debug('Got result %s' % result)
         else:
             if action.startswith('rollback_'):

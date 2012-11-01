@@ -59,6 +59,16 @@ class TaskThread(threading.Thread):
 
                 LOG.info('New host ID: %d' % self.host_id)
 
+        # update the module list
+        self.producer_lock.acquire()
+        task = {'action': 'modules.list',
+                'payload': {},
+                'id': -1}
+        self.pending_tasks.append(task)
+        self.producer_condition.notify()
+        LOG.debug('added module_list task to work queue')
+        self.producer_lock.release()
+
         return True
 
     def stop(self):
@@ -132,12 +142,22 @@ class TaskThread(threading.Thread):
         self.producer_lock.acquire()
         if txid in self.running_tasks.keys():
             try:
-                # update the db
-                task = self.endpoint.tasks[txid]
-                task.state = 'done'
-                task.result = result
-                task.save()
-                del self.running_tasks[txid]
+                if txid > 0:
+                    # update the db
+                    task = self.endpoint.tasks[txid]
+                    task.state = 'done'
+                    task.result = result
+                    task.save()
+                    del self.running_tasks[txid]
+                elif txid == -1:
+                    # module list?
+                    if result['result_code'] == 0:
+                        newfact = self.endpoint.facts.new(
+                            node_id=self.host_id,
+                            key='roush-agent-output-modules',
+                            value=result['result_data'])
+                        newfact.save()
+
             except ConnectionError:
                 # FIXME(rp):
                 # we should enqueue the task into a "retry update" list
