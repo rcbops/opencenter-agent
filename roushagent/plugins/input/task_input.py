@@ -154,7 +154,7 @@ class TaskThread(threading.Thread):
                     if result['result_code'] == 0:
                         newfact = self.endpoint.facts.new(
                             node_id=self.host_id,
-                            key='roush-agent-output-modules',
+                            key='roush_agent_output_modules',
                             value=result['result_data'])
                         newfact.save()
 
