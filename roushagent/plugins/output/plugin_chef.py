@@ -96,7 +96,7 @@ class ChefThing(object):
         return self.script.run_env("cookbook-download.sh", env, "")
 
     def update_cookbooks(self, input_data):
-        return download_cookbooks(input_data)
+        return self.download_cookbooks(input_data)
 
     def get_chef_info(self, input_data):
         pem = ""
