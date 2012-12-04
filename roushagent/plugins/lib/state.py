@@ -13,12 +13,12 @@ class StateMachine:
                 {'result_code': 0,
                  'result_str': 'adventure ran',
                  'result_data': {}}, x)),
-                       'failure': StateMachineState(
-                           terminal=True,
-                           advance=lambda x: self._return(
-                               {'result_code': 1,
-                                'result_str': 'adventure failed',
-                                'result_data': {}}, x))}
+            'failure': StateMachineState(
+                terminal=True,
+                advance=lambda x: self._return(
+                    {'result_code': 1,
+                     'result_str': 'adventure failed',
+                     'result_data': {}}, x))}
         self.current_state = 'success'
         self.state_data = state_data
         self.result = True

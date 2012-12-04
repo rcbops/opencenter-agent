@@ -63,8 +63,8 @@ class RoushAgentDispatchWorker(Thread):
                               'result_str': 'dispatch error',
                               'result_data': etext}
 
-        self.logger.debug('passing output handler result back to input handler'
-        )
+        self.logger.debug(
+            'passing output handler result back to input handler')
         input_handler.result(data)
         self.logger.debug('dispatch handler terminating')
 

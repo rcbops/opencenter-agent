@@ -120,7 +120,8 @@ def handle_adventurate(input_data):
 
     for node in node_list:
         node_obj = ep.nodes[node]
-        node_obj._request_get()  # force a refresh - need to set up partial puts
+        # force a refresh - need to set up partial puts
+        node_obj._request_get()
         node_obj.adventure_id = None
         node_obj.save()
 

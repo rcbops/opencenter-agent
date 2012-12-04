@@ -29,8 +29,7 @@ def handle_sleep(input_data):
 
     result_str = ['success!', 'fail!'][result_code]
     return {'result_code': result_code,
-             'result_str': result_str,
-             'result_data':
-                 {'sleep_interval': sleep_time,
-                   'success_percentage': success_percentage,
-                   'random': result}}
+            'result_str': result_str,
+            'result_data': {'sleep_interval': sleep_time,
+                            'success_percentage': success_percentage,
+                            'random': result}}

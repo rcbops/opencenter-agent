@@ -12,9 +12,9 @@ host = sys.argv[1]
 action = sys.argv[2]
 parms = sys.argv[3]
 
-data_dict={ "node_id": host,
-            "action": action,
-            "payload": parms }
+data_dict = {"node_id": host,
+             "action": action,
+             "payload": parms}
 
 r = requests.post(endpoint, data=json.dumps(data_dict),
                   headers={'content-type': 'application/json'})

@@ -37,7 +37,7 @@ class OrchestratorTasks:
 
         # yeah, pep-8, you are right.  this is WAY more readable.
         state = 'state_%d' % (int(max(map(lambda x: int(
-                            x.split('_')[1]), plan['states'].keys()))) + 1)
+                              x.split('_')[1]), plan['states'].keys()))) + 1)
 
         plan['start_state'] = state
         plan['states'][state] = state_value
@@ -68,8 +68,8 @@ class OrchestratorTasks:
             if not hasattr(self, 'primitive_%s' % action):
                 self.logger.debug('cannot find primitive "%s"' % action)
                 return ({'result_code': 1,
-                          'result_str': 'cannot find primitive "%s"' % action,
-                          'result_data': {}}, {})
+                         'result_str': 'cannot find primitive "%s"' % action,
+                         'result_data': {}}, {})
 
             fn = otask(getattr(self, 'primitive_%s' % action), **parameters)
 
