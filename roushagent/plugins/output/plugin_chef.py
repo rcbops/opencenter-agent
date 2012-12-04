@@ -22,6 +22,7 @@ def setup(config={}):
     register_action('download_cookbooks', chef.dispatch)
     register_action('uninstall_chef', chef.dispatch)
     register_action('rollback_install_chef', chef.dispatch)
+    register_action('update_cookbooks', chef.dispatch)
 
 
 def get_environment(required, optional, payload):
@@ -93,6 +94,9 @@ class ChefThing(object):
         if not good:
             return env
         return self.script.run_env("cookbook-download.sh", env, "")
+
+    def update_cookbooks(self, input_data):
+        return download_cookbooks(input_data)
 
     def get_chef_info(self, input_data):
         pem = ""
