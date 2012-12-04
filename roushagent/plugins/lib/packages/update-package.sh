@@ -17,7 +17,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 function do_single_package() {
     if [[ $DISTRO = "debian" ]]; then
-        apt-get install ${PACKAGE_NAME}
+        apt-get -o Dpkg::Options::='--force-confold' -o Dpkg::Options::='--force-confdef' -y install ${PACKAGE_NAME}
         RETVAL=$?
     else
         yum -y install ${PACKAGE_NAME}
@@ -27,7 +27,7 @@ function do_single_package() {
 
 function do_update() {
     if [[ $DISTRO = "debian" ]]; then
-        apt-get upgrade
+        apt-get -o Dpkg::Options::='--force-confold' -o Dpkg::Options::='--force-confdef' -y upgrade
         RETVAL=$?
     else
         yum -y upgrade
