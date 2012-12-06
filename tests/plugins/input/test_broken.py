@@ -2,6 +2,7 @@
 
 name = 'input'
 
+
 class State():
     def __init__(self):
         self.input_setup_called = False
@@ -10,14 +11,16 @@ class State():
 
 state = State()
 
+
 def setup(config={}):
     state.input_setup_called = True
+
 
 def teardown():
     state.input_teardown_called = True
 
-def fetch():
-    result = { 'foo': 'bar' }
 
+def fetch():
+    result = {'foo': 'bar'}
     state.input_fetch_called = True
     return result

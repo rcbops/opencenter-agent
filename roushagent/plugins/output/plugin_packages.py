@@ -7,15 +7,17 @@ from bashscriptrunner import BashScriptRunner
 
 name = 'packages'
 
+
 def setup(config={}):
     LOG.debug('doing setup for sleep handler')
     if not 'script_path' in config:
         raise ValueError("Expecting script_path in configuration")
     script_path = [config["script_path"]]
     script = BashScriptRunner(script_path=script_path, log=LOG)
-    packages = PackageThing(script,config)
+    packages = PackageThing(script, config)
     register_action('get_updates', packages.dispatch)
     register_action('do_updates', packages.dispatch)
+
 
 def get_environment(required, optional, payload):
     env = dict([(k, v) for k, v in payload.iteritems()
@@ -27,17 +29,19 @@ def get_environment(required, optional, payload):
                            'result_data': None}
     return True, env
 
+
 def retval(result_code, result_str, result_data):
     return {'result_code': result_code,
             'result_str': result_str,
             'result_data': result_data}
 
-class PackageThing(object):
-    def __init__(self,script,config):
-        self.script=script
-        self.config=config
 
-    def do_updates(self,input_data):
+class PackageThing(object):
+    def __init__(self, script, config):
+        self.script = script
+        self.config = config
+
+    def do_updates(self, input_data):
         payload = input_data['payload']
         action = input_data['action']
         required = []
@@ -47,17 +51,15 @@ class PackageThing(object):
             return env
         return self.script.run_env("update-package.sh", env, "")
 
-
-    def get_updates(self,input_data):
+    def get_updates(self, input_data):
         action = input_data['action']
-        upgrade_list=[]
-        skipped_list=[]
-        upgrade_count=0
-        skipped_count=0
-
+        upgrade_list = []
+        skipped_list = []
+        upgrade_count = 0
+        skipped_count = 0
 
         apt_pkg.init()
-        cache=apt_pkg.GetCache(None)
+        cache = apt_pkg.GetCache(None)
 
         depcache = apt_pkg.GetDepCache(cache)
         depcache.ReadPinFile()
@@ -68,18 +70,18 @@ class PackageThing(object):
                 if depcache.is_upgradable(i):
                     if depcache.marked_keep(i):
                         skipped_list.append(i.name)
-                        skipped_count+=1
+                        skipped_count += 1
                     else:
                         upgrade_list.append(i.name)
-                        upgrade_count+=1
+                        upgrade_count += 1
                         print "can upgrade %s %d" % (i.name, i.inst_state)
         return {'result_code': 0,
                 'result_str': 'Package Update List',
                 'result_data': {'AvailablePackages': cache.PackageCount,
                                 'UpgradablePackageCount': upgrade_count,
                                 'SkippedPackageCount': skipped_count},
-                                'UpgradablePackages': upgrade_list,
-                                'SkippedPackageList': skipped_list }
+                'UpgradablePackages': upgrade_list,
+                'SkippedPackageList': skipped_list}
 
     def dispatch(self, input_data):
         self.script.log = LOG
