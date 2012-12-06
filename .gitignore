@@ -1,2 +1,6 @@
 *.pyc
 dist
+coverage.xml
+nosetests.xml
+.venv
+.coverage
