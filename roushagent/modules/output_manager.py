@@ -95,7 +95,8 @@ class OutputManager:
             name = ns['name']
             # getChild is only available on python2.7
             # ns['LOG'] = ns['LOG'].getChild("output_%s" % name)
-            ns['LOG'] = logging.getLogger('%s.%s' % (ns['LOG'], "output_%s" % name))
+            ns['LOG'] = logging.getLogger('%s.%s' % (ns['LOG'],
+                                                     'output_%s' % name))
             ns['register_action'] = lambda x, y: self.register_action(
                 name, x, y)
             self.loaded_modules.append(name)
