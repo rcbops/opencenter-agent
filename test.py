@@ -9,13 +9,16 @@ from roushagent import RoushAgent
 LOG = logging.getLogger('output')
 LOG.setLevel(logging.ERROR)
 
+
 class TestRoushAgentWorking(unittest.TestCase):
     def setUp(self):
-        self.agent = RoushAgent(['-c', 'tests/roush-agent-test-working.conf'], 'test')
+        self.agent = RoushAgent(['-c', 'tests/roush-agent-test-working.conf'],
+                                'test')
         self.output_handler = self.agent.output_handler
         self.input_handler = self.agent.input_handler
         self.result = self.agent.input_handler.fetch()
-        self.result['output'] = self.output_handler.dispatch(self.result['input'])
+        self.result['output'] = self.output_handler.dispatch(
+            self.result['input'])
         self.agent.input_handler.result(self.result)
         self.input_state = self.agent.input_handler.input_plugins['input']['state']
         self.output_state = self.agent.output_handler.output_plugins['output']['state']
@@ -30,7 +33,9 @@ class TestRoushAgentWorking(unittest.TestCase):
         self.assertTrue(self.input_state.input_fetch_called)
 
     def test_input_result(self):
-        self.assertEqual(self.result['input'], {'action': 'test', 'id': 'test', 'payload': {}})
+        self.assertEqual(self.result['input'], {'action': 'test',
+                                                'id': 'test',
+                                                'payload': {}})
 
     def test_input_teardown(self):
         # Stop it so teardown occurs
@@ -44,23 +49,29 @@ class TestRoushAgentWorking(unittest.TestCase):
         self.assertTrue(self.output_state.output_handler_called)
 
     def test_output_result(self):
-        self.assertEqual(self.result['output'], {'result_code': 0, 'result_data': None, 'result_str': 'success'})
+        self.assertEqual(self.result['output'], {'result_code': 0,
+                                                 'result_data': None,
+                                                 'result_str': 'success'})
 
     def test_output_teardown(self):
         # Stop it so teardown occurs
         self.agent.output_handler.stop()
         self.assertTrue(self.output_state.output_teardown_called)
 
+
 class TestRoushAgentInputBroken(unittest.TestCase):
     def setUp(self):
-        self.agent = RoushAgent(['-c', 'tests/roush-agent-test-input-broken.conf'], 'test')
+        self.agent = RoushAgent(['-c',
+                                 'tests/roush-agent-test-input-broken.conf'],
+                                'test')
         self.output_handler = self.agent.output_handler
         self.input_handler = self.agent.input_handler
         self.result = self.agent.input_handler.fetch()
 
         # TODO: Make not suck plz
         try:
-            self.result['output'] = self.output_handler.dispatch(self.result['input'])
+            self.result['output'] = self.output_handler.dispatch(
+                self.result['input'])
             self.agent.input_handler.result(self.result)
         except KeyError:
             self.key_error = True
@@ -101,13 +112,17 @@ class TestRoushAgentInputBroken(unittest.TestCase):
         self.agent.output_handler.stop()
         self.assertTrue(self.output_state.output_teardown_called)
 
+
 class TestRoushAgentOutputBroken(unittest.TestCase):
     def setUp(self):
-        self.agent = RoushAgent(['-c', 'tests/roush-agent-test-output-broken.conf'], 'test')
+        self.agent = RoushAgent(['-c',
+                                 'tests/roush-agent-test-output-broken.conf'],
+                                'test')
         self.output_handler = self.agent.output_handler
         self.input_handler = self.agent.input_handler
         self.result = self.agent.input_handler.fetch()
-        self.result['output'] = self.output_handler.dispatch(self.result['input'])
+        self.result['output'] = self.output_handler.dispatch(
+            self.result['input'])
         self.agent.input_handler.result(self.result)
         self.input_state = self.agent.input_handler.input_plugins['input']['state']
         self.output_state = self.agent.output_handler.output_plugins['output']['state']
@@ -122,7 +137,9 @@ class TestRoushAgentOutputBroken(unittest.TestCase):
         self.assertTrue(self.input_state.input_fetch_called)
 
     def test_input_result(self):
-        self.assertEqual(self.result['input'], {'action': 'test', 'id': 'test', 'payload': {}})
+        self.assertEqual(self.result['input'], {'action': 'test',
+                                                'id': 'test',
+                                                'payload': {}})
 
     def test_input_teardown(self):
         # Stop it so teardown occurs
@@ -136,7 +153,9 @@ class TestRoushAgentOutputBroken(unittest.TestCase):
         self.assertFalse(self.output_state.output_handler_called)
 
     def test_output_result(self):
-        self.assertEqual(self.result['output'], {'result_code': 253, 'result_data': '', 'result_str': 'no dispatcher'})
+        self.assertEqual(self.result['output'],
+                         {'result_code': 253, 'result_data': '',
+                          'result_str': 'no dispatcher'})
 
     def test_output_teardown(self):
         # Stop it so teardown occurs
