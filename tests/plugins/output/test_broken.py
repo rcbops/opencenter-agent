@@ -2,6 +2,7 @@
 
 name = 'output'
 
+
 class State():
     def __init__(self):
         self.output_setup_called = False
@@ -10,12 +11,15 @@ class State():
 
 state = State()
 
+
 def setup(config={}):
     state.output_setup_called = True
+
 
 # TODO: This isn't currently called
 def teardown():
     state.output_teardown_called = True
+
 
 # This won't get called
 def handler(input_data):
