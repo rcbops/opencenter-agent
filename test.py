@@ -161,7 +161,8 @@ class TestRoushAgentOutputBroken(unittest.TestCase):
     def test_output_result(self):
         self.assertEqual(self.result['output'],
                          {'result_code': 253, 'result_data': '',
-                          'result_str': 'no dispatcher'})
+                          'result_str':
+                          'no dispatcher found for action "test"'})
 
     def test_output_teardown(self):
         # Stop it so teardown occurs
