@@ -30,6 +30,7 @@ def get_environment(required, optional, payload):
 
 
 def retval(result_code, result_str, result_data):
+    print "retval: returning %d %s %s" % (result_code, result_str, result_data)
     return {'result_code': result_code,
             'result_str': result_str,
             'result_data': result_data}
@@ -57,20 +58,20 @@ class PackageThing(object):
 		"redhat" : "/etc/redhat-release",
 	}
         local_distro=None
-        for name,location in DISTROS:
+        for name in DISTROS:
             try:
-                distroFile=open(location,"r")
+                distroFile=open(DISTROS[name],"r")
                 if distroFile:
                     local_distro=name
             except IOError:
                 pass
             
         if (local_distro=='debian' or local_distro=='ubuntu'):
-            self.get_updatesApt(input_data)
+             return self.get_updatesApt(input_data)
         elif (local_distro=='redhat'):
-            self.get_updatesYum(input_data)
+             return self.get_updatesYum(input_data)
         else:
-            retval(254,"Package action not supported on this OS","")
+            return retval(254,"Package action not supported on this OS","")
 
     def get_updatesYum(sef,input_data):
         import yum
@@ -83,16 +84,18 @@ class PackageThing(object):
 
         yb=yum.YumBase()
         package_count=len(yb.doPackageLists('all').available)
+        print "package_count = %d" % package_count
         
         for i in yb.doPackageLists('updates'):
+             print "update package %s" % i
              upgrade_count+=1
              upgrade_list.append(i.name)
-        retval(0,"Package Update List",
+        return(retval(0,"Package Update List",
                {'AvailablePackages': package_count,
                 'UpgradablePackageCount': upgrade_count,
                 'SkippedPackageCount': skipped_count,
                 'UpgradablePackages': upgrade_list,
-                'SkippedPackageList': skipped_list })
+                'SkippedPackageList': skipped_list }))
 
     def get_updatesApt(self,input_data):
         import apt_pkg
@@ -118,12 +121,12 @@ class PackageThing(object):
                     else:
                         upgrade_list.append(i.name)
                         upgrade_count+=1
-        retval(0,"Package Update List",
+        return(retval(0,"Package Update List",
                {'AvailablePackages': cache.PackageCount,
                 'UpgradablePackageCount': upgrade_count,
                 'SkippedPackageCount': skipped_count,
                 'UpgradablePackages': upgrade_list,
-                'SkippedPackageList': skipped_list })
+                'SkippedPackageList': skipped_list }))
 
     def dispatch(self, input_data):
         self.script.log = LOG
