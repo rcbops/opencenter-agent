@@ -10,7 +10,7 @@ branch=${CHEF_REPO_BRANCH:-master}
 knife_file=${CHEF_KNIFE_FILE:-/root/.chef/knife.rb}
 
 # Include the cookbook-functions.sh file
-source cookbook-functions.sh
+source roushagent/plugins/lib/chef/cookbook-functions.sh
 
 get_prereqs
 checkout_master "${destdir}" "${repo}" "${branch}"
