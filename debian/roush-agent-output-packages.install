@@ -1,0 +1,3 @@
+usr/share/roush-agent/plugins/lib/packages/*
+usr/share/roush-agent/plugins/output/plugin_packages.py
+debian/roush-agent-packages.conf etc/roush-agent.d
