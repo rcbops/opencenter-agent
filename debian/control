@@ -38,6 +38,15 @@ Depends: roush-agent (= ${binary:Version}),
 Provides: ${python:Provides}
 Description: an output plugin to run chef tasks
 
+Package: roush-agent-output-packages
+rchitecture: all
+Section: python
+Depends: roush-agent (= ${binary:Version}),
+ roush-agent-lib-bash (= ${binary:Version}),
+ python-netifaces
+Provides: ${python:Provides}
+Description: an output plugin to run chef tasks
+
 Package: roush-agent-lib-bash
 Architecture: all
 Section: python
