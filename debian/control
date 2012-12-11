@@ -39,7 +39,7 @@ Provides: ${python:Provides}
 Description: an output plugin to run chef tasks
 
 Package: roush-agent-output-packages
-rchitecture: all
+Architecture: all
 Section: python
 Depends: roush-agent (= ${binary:Version}),
  roush-agent-lib-bash (= ${binary:Version})
