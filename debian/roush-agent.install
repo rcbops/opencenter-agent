@@ -1,7 +1,7 @@
 usr/lib/python*/dist-packages/*
 usr/share/roush-agent/plugins/output/plugin_example.py
 usr/share/roush-agent/plugins/input/input_example.py
-usr/share/log.cfg etc/roush
+debian/log.cfg etc/roush
 usr/bin/*
 debian/roush-agent.conf etc/roush
 debian/conf.d.readme etc/roush/agent.conf.d
