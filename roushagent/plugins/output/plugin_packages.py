@@ -104,7 +104,7 @@ class PackageThing(object):
         skipped_list = []
         upgrade_count = 0
         skipped_count = 0
- 
+
         apt_pkg.init()
 
         if os.path.exists("/etc/apt/apt.conf"):
