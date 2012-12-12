@@ -1,2 +1,2 @@
-With the include_dir directive in the main roush-agent conf (/etc/roush-agent.conf),
+With the include_dir directive in the main roush-agent conf (/etc/roush/roush-agent.conf),
 this directory will be read and merged in lexically sorted order.
