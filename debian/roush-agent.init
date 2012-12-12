@@ -18,7 +18,7 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="host-based modular python agent"
 NAME=roush-agent
 DAEMON=/usr/bin/$NAME.py
-DAEMON_ARGS="-c /etc/roush-agent.conf -d"
+DAEMON_ARGS="-c /etc/roush/roush-agent.conf -d"
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 
