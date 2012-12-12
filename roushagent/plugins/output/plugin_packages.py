@@ -104,8 +104,17 @@ class PackageThing(object):
         skipped_list = []
         upgrade_count = 0
         skipped_count = 0
-
+ 
         apt_pkg.init()
+
+        if os.path.exists("/etc/apt/apt.conf"):
+            apt_pkg.read_config_file(apt_pkg.config,
+                                     "/etc/apt/apt.conf")
+        if os.path.isdir("/etc/apt/apt.conf.d"):
+            apt_pkg.read_config_dir(apt_pkg.config,
+                                    "/etc/apt/apt.conf.d")
+        apt_pkg.init_system()
+
         cache = apt_pkg.GetCache(None)
 
         depcache = apt_pkg.GetDepCache(cache)
