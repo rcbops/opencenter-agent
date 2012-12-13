@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
-import json
 import time
-import threading
 import logging
 
 from roushclient.client import RoushEndpoint
@@ -10,6 +8,7 @@ from state import StateMachine, StateMachineState
 
 import roush.backends
 from roush.db import api as db_api
+
 
 # primitive functions for orchestration.
 class OrchestratorTasks:
@@ -124,13 +123,15 @@ class OrchestratorTasks:
                 fn = be_task(action, backend_fn, self.api, **parameters)
             else:
                 if not hasattr(self, 'primitive_%s' % action):
-                    self.logger.debug('cannot find primitive "%s"' % action)
+                    msg = 'cannot find primitive "%s"' % action
+
+                    self.logger.debug(msg)
                     return ({'result_code': 1,
-                             'result_str': 'cannot find primitive "%s"' % (
-                                    action,),
+                             'result_str': msg,
                              'result_data': {}}, {})
 
-                fn = otask(getattr(self, 'primitive_%s' % action), **parameters)
+                fn = otask(getattr(self, 'primitive_%s' % action),
+                           **parameters)
 
             sm.add_state(state, StateMachineState(advance=fn, **vals))
 
