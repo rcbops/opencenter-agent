@@ -34,15 +34,26 @@ def handle_adventurate(input_data):
     action = input_data['action']
     payload = input_data['payload']
 
-    if not 'adventure' in payload:
-        return _retval(1, friendly_str='no adventure specified in request')
+    adventure_dsl = None
+    adventure_id = None
+
+    ep = RoushEndpoint(roush_endpoint)
+
+    if 'adventure' in payload:
+        adventure_obj = ep.adventures[int(payload['adventure'])]
+        adventure_dsl = adventure_obj.dsl
+        adventure_id = payload['adventure']
+    elif 'adventure_dsl' in payload:
+        adventure_dsl = payload['adventure_dsl']
+        adventure_id = 0
+
+    if not adventure_dsl:
+        return _retval(1,
+                       friendly_str='must specify adventure or adventure_dsl')
 
     if not 'nodes' in payload:
         return _retval(1, friendly_str='no "nodes" list in request')
 
-    ep = RoushEndpoint(roush_endpoint)
-
-    adventure = payload['adventure']
     if 'initial_state' in payload:
         initial_state = payload['initial_state']
     else:
@@ -50,8 +61,6 @@ def handle_adventurate(input_data):
 
     if not 'nodes' in initial_state:
         initial_state['nodes'] = payload['nodes']
-
-    adventure_obj = ep.adventures[int(adventure)]
 
     ns = {}
     ns['LOG'] = LOG
@@ -63,16 +72,16 @@ def handle_adventurate(input_data):
     ns['result_str'] = 'fail'
     ns['result_code'] = 254
     ns['result_data'] = {}
-    ns['sm_description'] = adventure_obj.dsl
+    ns['sm_description'] = adventure_dsl
 
-    LOG.debug('About to run the following dsl: %s' % adventure_obj.dsl)
+    LOG.debug('About to run the following dsl: %s' % adventure_dsl)
 
     node_list = []
     # let's mark all the nodes as running adventure...
     for node in initial_state['nodes']:
         node_list.append(node)
         node_obj = ep.nodes[node]
-        node_obj.adventure_id = payload['adventure']
+        node_obj.adventure_id = adventure_id
         node_obj.save()
 
     try:
@@ -93,7 +102,8 @@ def handle_adventurate(input_data):
     if 'result_data' in ns:
         output_data = ns['result_data']
 
-    if 'state_data' in ns:
+    if 'state_data' in ns and \
+            'history' in ns['state_data']:
         output_data['result_data']['history'] = ns['state_data']['history']
 
     # clean up any failed tasks.
