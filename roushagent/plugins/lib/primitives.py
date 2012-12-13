@@ -8,6 +8,8 @@ import logging
 from roushclient.client import RoushEndpoint
 from state import StateMachine, StateMachineState
 
+import roush.backends
+from roush.db import api as db_api
 
 # primitive functions for orchestration.
 class OrchestratorTasks:
@@ -16,8 +18,13 @@ class OrchestratorTasks:
         self.endpoint = RoushEndpoint(endpoint)
         self.logger = logger
         self.parent_task_id = parent_task_id
+
+        self.api = db_api.api_from_endpoint(endpoint)
+
         if not logger:
             self.logger = logging.getLogger()
+
+        roush.backends.load()
 
     def add_rollback_step(self, node_id, input_state, state_value):
         if not 'rollback_plan' in input_state:
@@ -47,6 +54,35 @@ class OrchestratorTasks:
                                                                  plan))
         return input_state
 
+    def backend_wrapper(self, state_data, prim_name, fn, api, *args, **kwargs):
+        """
+        this runs the passed backend primitive function on all the nodes
+        in the input state node list.  Failed nodes are dropped into the
+        fail bucket to be rolled back.
+
+        Right now, this runs all the backend functions in series.
+        Probably it should be doing this in parallel.
+        """
+
+        nodelist_length = len(state_data['nodes'])
+
+        for node in state_data['nodes']:
+            result = fn(api, node, *args, **kwargs)
+            if not result:
+                self._fail_node(state_data, node)
+
+        log_entry = 'ran primitive %s: %d/%d completed successfully' % (
+            prim_name, len(state_data['nodes']), nodelist_length)
+
+        if len(state_data['nodes']) > 0:
+            return self._success(state_data,
+                                 result_str=log_entry,
+                                 result_data={})
+        else:
+            return self._success(state_data,
+                                 result_str=log_entry,
+                                 result_data={})
+
     def sm_eval(self, sm_dict, input_state):
         def otask(fn, *args, **kwargs):
             def outer(input_state, **outer_args):
@@ -54,6 +90,14 @@ class OrchestratorTasks:
                 return fn(input_state, *args, **kwargs)
             return outer
 
+        def be_task(prim_name, fn, api, **kwargs):
+            def wrapped(input_state, **outer_args):
+                kwargs.update(outer_args)
+                return self.backend_wrapper(input_state, prim_name,
+                                            fn, api, **kwargs)
+            return wrapped
+
+        self.logger.info('building state machine for %s' % sm_dict)
         sm = StateMachine(input_state)
         if 'start_state' in sm_dict:
             sm.set_state(sm_dict['start_state'])
@@ -65,13 +109,28 @@ class OrchestratorTasks:
             del vals['primitive']
             del vals['parameters']
 
-            if not hasattr(self, 'primitive_%s' % action):
-                self.logger.debug('cannot find primitive "%s"' % action)
-                return ({'result_code': 1,
-                         'result_str': 'cannot find primitive "%s"' % action,
-                         'result_data': {}}, {})
+            self.logger.debug('Wrapping %s actino' % action)
 
-            fn = otask(getattr(self, 'primitive_%s' % action), **parameters)
+            if '.' in action:  # it is a backend primitive
+                backend_fn = roush.backends.primitive_by_name(action)
+                if not backend_fn:
+                    msg = 'cannot find backend primitive "%s"' % action
+                    self.logger.debug(msg)
+                    return({'result_code': 1,
+                            'result_str': msg,
+                            'result_data': {}})
+
+                # we have the backend fn, now wrap it up.
+                fn = be_task(action, backend_fn, self.api, **parameters)
+            else:
+                if not hasattr(self, 'primitive_%s' % action):
+                    self.logger.debug('cannot find primitive "%s"' % action)
+                    return ({'result_code': 1,
+                             'result_str': 'cannot find primitive "%s"' % (
+                                    action,),
+                             'result_data': {}}, {})
+
+                fn = otask(getattr(self, 'primitive_%s' % action), **parameters)
 
             sm.add_state(state, StateMachineState(advance=fn, **vals))
 
