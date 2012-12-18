@@ -152,7 +152,7 @@ class TaskThread(threading.Thread):
                 elif txid == -1:
                     # module list?
                     if result['result_code'] == 0:
-                        newfact = self.endpoint.facts.new(
+                        newattr = self.endpoint.attrs.new(
                             node_id=self.host_id,
                             key='roush_agent_output_modules',
                             value=result['result_data'])
