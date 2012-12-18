@@ -156,7 +156,7 @@ class TaskThread(threading.Thread):
                             node_id=self.host_id,
                             key='roush_agent_output_modules',
                             value=result['result_data'])
-                        newfact.save()
+                        newattr.save()
 
             except ConnectionError:
                 # FIXME(rp):
