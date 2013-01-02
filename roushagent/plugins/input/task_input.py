@@ -51,9 +51,7 @@ class TaskThread(threading.Thread):
             if not self.host_id:
                 # make a new node entry for this host
                 LOG.info('Creating new host entry')
-                node = self.endpoint.nodes.new(name=self.name,
-                                               backend='unprovisioned',
-                                               backend_state='unknown')
+                node = self.endpoint.nodes.new(name=self.name)
                 node.save()
                 self.host_id = node.id
 
