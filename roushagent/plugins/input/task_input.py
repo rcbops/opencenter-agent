@@ -66,6 +66,14 @@ class TaskThread(threading.Thread):
         self.producer_condition.notify()
         LOG.debug('added module_list task to work queue')
         self.producer_lock.release()
+        self.producer_lock.acquire()
+        task = {'action': 'modules.actions',
+                'payload': {},
+                'id': -1}
+        self.pending_tasks.append(task)
+        self.producer_condition.notify()
+        LOG.debug('added module_list task to work queue')
+        self.producer_lock.release()
 
         return True
 
@@ -152,8 +160,8 @@ class TaskThread(threading.Thread):
                     if result['result_code'] == 0:
                         newattr = self.endpoint.attrs.new(
                             node_id=self.host_id,
-                            key='roush_agent_output_modules',
-                            value=result['result_data'])
+                            key=result['result_data']['name'],
+                            value=result['result_data']['value'])
                         newattr.save()
 
             except ConnectionError:
