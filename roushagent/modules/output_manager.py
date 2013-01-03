@@ -56,13 +56,13 @@ class OutputManager:
         # should all actions be named module.action?
         self.loaded_modules = ['modules']
         self.dispatch_table = {'modules.list': [self.handle_modules,
-                                                "", "", ""],
+                                                "", "", "", "", ""],
                                'modules.load': [self.handle_modules,
-                                                "", "", ""],
+                                                "", "", "", "", ""],
                                'modules.actions': [self.handle_modules,
-                                                   "", "", ""],
+                                                   "", "", "", "", ""],
                                'modules.reload': [self.handle_modules,
-                                                  "", "", ""]}
+                                                  "", "", "", "", ""]}
         self.config = config
         self.load(path)
 
