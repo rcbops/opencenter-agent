@@ -77,7 +77,6 @@ class BashScriptRunner(object):
             fh = 2
         #first pass, never use bash to run things
         c = BashExec(to_run,
-                     stdin=open("/dev/null", "r"),
                      stdout=fh,
                      stderr=fh,
                      env=env)
