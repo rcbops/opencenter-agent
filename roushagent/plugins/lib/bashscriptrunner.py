@@ -101,7 +101,7 @@ class BashExec(object):
         else:
             # child process
             os.close(self.pipe_read)
-            if stdin = None:
+            if stdin is None:
                 f = open("/dev/null", "r")
                 stdin = f.fileno()
             os.dup2(stdin, os.sys.stdin.fileno())
