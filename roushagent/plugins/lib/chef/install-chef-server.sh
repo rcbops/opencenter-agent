@@ -72,7 +72,7 @@ chown -R ${CHEF_UNIX_USER}: ${HOMEDIR}/.chef
 
 /etc/init.d/couchdb stop || /bin/true
 sleep 10
-/etc/init.d/coudhdb stat || /bin/true
+/etc/init.d/couchdb start || /bin/true
 sleep 10
 
 /etc/init.d/chef-server restart

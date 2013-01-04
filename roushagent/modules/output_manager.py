@@ -2,6 +2,7 @@
 
 import os
 import logging
+from functools import partial
 
 LOG = logging.getLogger('roush.output')
 
@@ -54,12 +55,19 @@ class OutputManager:
         self.output_plugins = {}
         # should all actions be named module.action?
         self.loaded_modules = ['modules']
-        self.dispatch_table = {'modules.list': [self.handle_modules,
-                                                "", "", ""],
-                               'modules.load': [self.handle_modules,
-                                                "", "", ""],
-                               'modules.reload': [self.handle_modules,
-                                                  "", "", ""]}
+        self.dispatch_table = {
+            'modules.list': [
+                self.handle_modules,
+                "modules", "modules", "modules", [], []],
+            'modules.load': [
+                self.handle_modules,
+                "modules", "modules", "modules", [], []],
+            'modules.actions': [
+                self.handle_modules,
+                "modules", "modules", "modules", [], []],
+            'modules.reload': [
+                self.handle_modules,
+                "modules", "modules", "modules", [], []]}
         self.config = config
         self.load(path)
 
@@ -97,8 +105,8 @@ class OutputManager:
             # ns['LOG'] = ns['LOG'].getChild("output_%s" % name)
             ns['LOG'] = logging.getLogger('%s.%s' % (ns['LOG'],
                                                      'output_%s' % name))
-            ns['register_action'] = lambda x, y: self.register_action(
-                name, x, y)
+            ns['register_action'] = partial(self.register_action, name)
+
             self.loaded_modules.append(name)
             self.output_plugins[name] = ns
             config = self.config.get(name, {})
@@ -118,7 +126,9 @@ class OutputManager:
             LOG.warning("An unexpected error occured in %s: %s" % (
                 shortpath, e.message))
 
-    def register_action(self, plugin, action, method):
+    def register_action(self, plugin, action, method,
+                        constraints=[],
+                        consequences=[]):
         LOG.debug('Registering handler for action %s' % action)
         # First handler wins
         if action in self.dispatch_table:
@@ -128,7 +138,18 @@ class OutputManager:
                                                                        name))
         else:
             self.dispatch_table[action] = (method, self.shortpath,
-                                           method.func_name, plugin)
+                                           method.func_name,
+                                           plugin,
+                                           constraints,
+                                           consequences)
+
+    def actions(self):
+        d = {}
+        for k, v in self.dispatch_table.items():
+            d[k] = {"plugin": v[3],
+                    "constraints": v[4],
+                    "consequences": v[5]}
+        return d
 
     def load(self, path):
         # Load a plugin by file name.  modules with
@@ -157,7 +178,7 @@ class OutputManager:
                   'result_str': 'no dispatcher found for action "%s"' % action,
                   'result_data': ''}
         if action in self.dispatch_table:
-            fn, path, _, plugin = self.dispatch_table[action]
+            fn, path, _, plugin, _, _ = self.dispatch_table[action]
             LOG.debug('Plugin_manager: dispatching action %s from plugin %s' %
                       (action, plugin))
             LOG.debug('Received input_data %s' % (input_data))
@@ -210,7 +231,13 @@ class OutputManager:
         if action == 'modules.list':
             result_code = 0
             result_str = 'success'
-            result_data = self.loaded_modules
+            result_data = {"name": "roush_agent_output_modules",
+                           "value": self.loaded_modules}
+        elif action == 'modules.actions':
+            result_code = 0
+            result_str = 'success'
+            result_data = {"name": "roush_agent_actions",
+                           "value": self.actions()}
         elif action == 'modules.load':
             if not 'path' in payload:
                 result_str = 'no "path" specified in payload'

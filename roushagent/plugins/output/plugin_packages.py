@@ -8,7 +8,7 @@ name = 'packages'
 
 
 def setup(config={}):
-    LOG.debug('doing setup for sleep handler')
+    LOG.debug('doing setup for packages handler')
     if not 'script_path' in config:
         raise ValueError("Expecting script_path in configuration")
     script_path = [config["script_path"]]
