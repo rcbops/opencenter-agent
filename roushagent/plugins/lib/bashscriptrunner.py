@@ -83,7 +83,7 @@ class BashScriptRunner(object):
         response['result_data'] = {"script": path}
         ret_code, outputs = c.wait()
         response['result_data'].update(outputs)
-        response['result_code'] = c.returncode
+        response['result_code'] = ret_code
         response['result_str'] = os.strerror(c.returncode)
         return response
 
