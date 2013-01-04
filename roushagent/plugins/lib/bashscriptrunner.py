@@ -84,7 +84,7 @@ class BashScriptRunner(object):
         ret_code, outputs = c.wait()
         response['result_data'].update(outputs)
         response['result_code'] = ret_code
-        response['result_str'] = os.strerror(c.returncode)
+        response['result_str'] = os.strerror(ret_code)
         return response
 
 
