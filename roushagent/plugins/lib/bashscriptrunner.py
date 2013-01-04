@@ -27,8 +27,8 @@ def name_mangle(s, prefix=""):
 def posix_escape(s):
     #The only special character inside of a ' is ', which terminates
     #the '.  We will surround s with single quotes.  If we encounter a
-    #single quote inside of s, we need to close our enclosure with ',
-    #escape the single quote in s with "'", then reopen our enclosure
+    #single quote inside of s, we need to close with ',
+    #escape the valid single quote in s with "'", then reopen our enclosure
     #with '.
     return "'%s'" % (s.replace("'", "'\"'\"'"))
 
@@ -55,13 +55,6 @@ class BashScriptRunner(object):
         return self.run_env(script, {}, "RCB", *args)
 
     def run_env(self, script, environment, prefix, *args):
-        # first pass: no input, return something like the following
-        # { "response": {
-        #     "result_code": <result-code-ish>
-        #     "result_str": <error-or-success-message>
-        #     "result_data": <extended error info or arbitrary data>
-        #   }
-        # }
         env = {}
         env.update(self.environment)
         env.update(dict([(name_mangle(k, prefix), v)
@@ -83,27 +76,30 @@ class BashScriptRunner(object):
         except IndexError:
             fh = 2
         #first pass, never use bash to run things
-        c = subprocess.Popen(to_run,
-                             stdin=open("/dev/null", "r"),
-                             stdout=fh,
-                             stderr=fh,
-                             env=env)
+        c = BashExec(to_run,
+                     stdin=open("/dev/null", "r"),
+                     stdout=fh,
+                     stderr=fh,
+                     env=env)
         response['result_data'] = {"script": path}
-        c.wait()
+        ret_code, outputs = c.wait()
+        response['result_data'].update(outputs)
         response['result_code'] = c.returncode
         response['result_str'] = os.strerror(c.returncode)
         return response
 
 
-class WilkExec(object):
+class BashExec(object):
     def __init__(self, cmd, stdin=None, stdout=None, stderr=None, env=None):
         self.env = env
         self.pipe_read, self.pipe_write = os.pipe()
         pid = os.fork()
         if pid != 0:
+            # parent process
             self.child_pid = pid
             os.close(self.pipe_write)
         else:
+            # child process
             os.close(self.pipe_read)
             if stdin = None:
                 f = open("/dev/null", "r")
@@ -119,22 +115,21 @@ class WilkExec(object):
             os.execvpe(cmd[0], cmd, env)
 
     def wait(self, output_variables=None):
-        outputs = {}
-        ret_code = -1
-        running = True
         if output_variables is None:
             output_variables = []
+
+        # Wait for process to run
+        ret_code = os.waitpid(self.child_pid, 0)[1]
+
         output_str = ""
-        get_outputs = len(output_variables) > 0
-        pid, ret_code = os.waitpid(self.child_pid, 0)
         while(True):
             n = os.read(self.pipe_read, 1024)
             output_str += n
             if n == "":
                 break
-        outputs = dict([
-            (k, v) for k, v in [
-                line.split("=", 1) for line in
-                output_str.strip('\x00').split('\x00')]
-            if k in output_variables])
+
+        outputs = {}
+        if len(output_str) > 0:
+            outputs = dict([line.split("=", 1) for line in
+                            output_str.strip('\x00').split('\x00')])
         return ret_code, outputs
