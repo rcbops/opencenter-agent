@@ -6,6 +6,7 @@ from threading import Thread
 import fcntl
 import time
 
+
 def name_mangle(s, prefix=""):
     # we only support upper case variables and as a convenience convert
     # - to _, as - is not valid in bash variables.
@@ -93,6 +94,7 @@ class BashScriptRunner(object):
         response['result_str'] = os.strerror(c.returncode)
         return response
 
+
 class WilkExec(object):
     def __init__(self, cmd, stdin=None, stdout=None, stderr=None, env=None):
         self.env = env
@@ -131,7 +133,7 @@ class WilkExec(object):
             if n == "":
                 break
         outputs = dict([
-            (k,v) for k,v in [
+            (k, v) for k, v in [
                 line.split("=", 1) for line in
                 output_str.strip('\x00').split('\x00')]
             if k in output_variables])

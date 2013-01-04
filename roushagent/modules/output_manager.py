@@ -61,7 +61,7 @@ class OutputManager:
                 "modules", "modules", "modules", [], []],
             'modules.load': [
                 self.handle_modules,
-                "modules", "modules", "modules",[],[]],
+                "modules", "modules", "modules", [], []],
             'modules.actions': [
                 self.handle_modules,
                 "modules", "modules", "modules", [], []],
@@ -145,7 +145,7 @@ class OutputManager:
 
     def actions(self):
         d = {}
-        for k,v in self.dispatch_table.items():
+        for k, v in self.dispatch_table.items():
             d[k] = {"plugin": v[3],
                     "constraints": v[4],
                     "consequences": v[5]}
