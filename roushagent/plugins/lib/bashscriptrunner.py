@@ -95,9 +95,6 @@ class BashScriptRunner(object):
 
 class WilkExec(object):
     def __init__(self, cmd, stdin=None, stdout=None, stderr=None, env=None):
-        self.stdin = stdin
-        self.stdout = stdout
-        self.stderr = stderr
         self.env = env
         self.pipe_read, self.pipe_write = os.pipe()
         pid = os.fork()
@@ -106,8 +103,10 @@ class WilkExec(object):
             os.close(self.pipe_write)
         else:
             os.close(self.pipe_read)
-            if stdin is not None:
-                os.dup2(stdin, os.sys.stdin.fileno())
+            if stdin = None:
+                f = open("/dev/null", "r")
+                stdin = f.fileno()
+            os.dup2(stdin, os.sys.stdin.fileno())
             if stdout is not None:
                 os.dup2(stdout, os.sys.stdout.fileno())
             if stderr is not None:
@@ -116,24 +115,21 @@ class WilkExec(object):
             os.dup2(self.pipe_write, 3)
             os.close(self.pipe_write)
             os.execvpe(cmd[0], cmd, env)
+
     def wait(self, output_variables=None):
         outputs = {}
         ret_code = -1
         running = True
-        while running:
-            if output_variables is None:
-                output_variables = []
-            output_str = ""
-            get_outputs = len(output_variables) > 0
-            print "BEFORE"
-            pid, ret_code = os.waitpid(self.child_pid, 0)
-            print "AFTER"
-            running = False
-            while(True):
-                n = os.read(self.pipe_read, 1024)
-                output_str += n
-                if n == "":
-                    break
+        if output_variables is None:
+            output_variables = []
+        output_str = ""
+        get_outputs = len(output_variables) > 0
+        pid, ret_code = os.waitpid(self.child_pid, 0)
+        while(True):
+            n = os.read(self.pipe_read, 1024)
+            output_str += n
+            if n == "":
+                break
         outputs = dict([
             (k,v) for k,v in [
                 line.split("=", 1) for line in
