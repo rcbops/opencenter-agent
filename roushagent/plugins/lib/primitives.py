@@ -13,12 +13,16 @@ from roush.db import api as db_api
 # primitive functions for orchestration.
 class OrchestratorTasks:
     def __init__(self, endpoint='http://localhost:8080', logger=None,
-                 parent_task_id=None):
+                 parent_task_id=None, adventure_globals=None):
         self.endpoint = RoushEndpoint(endpoint)
         self.logger = logger
         self.parent_task_id = parent_task_id
 
         self.api = db_api.api_from_endpoint(endpoint)
+
+        self.adventure_globals = adventure_globals
+        if not adventure_globals:
+            self.adventure_glocals = []
 
         if not logger:
             self.logger = logging.getLogger()
@@ -108,7 +112,11 @@ class OrchestratorTasks:
             del vals['primitive']
             del vals['parameters']
 
-            self.logger.debug('Wrapping %s actino' % action)
+            self.logger.debug('padding globals %s' % self.adventure_globals)
+
+            parameters['globals'] = self.adventure_globals
+
+            self.logger.debug('Wrapping %s action' % action)
 
             if '.' in action:  # it is a backend primitive
                 backend_fn = roush.backends.primitive_by_name(action)
