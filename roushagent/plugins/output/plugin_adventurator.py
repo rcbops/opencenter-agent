@@ -74,7 +74,7 @@ def handle_adventurate(input_data):
     ns['StateMachineState'] = StateMachineState
     ns['tasks'] = OrchestratorTasks(endpoint=roush_endpoint,
                                     parent_task_id=parent_id,
-                                    adventure_globals = adv_globals)
+                                    adventure_globals=adv_globals)
     ns['input_data'] = initial_state
     ns['result_str'] = 'fail'
     ns['result_code'] = 254
