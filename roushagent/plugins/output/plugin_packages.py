@@ -11,8 +11,10 @@ def setup(config={}):
     LOG.debug('doing setup for packages handler')
     if not 'script_path' in config:
         raise ValueError("Expecting script_path in configuration")
-    script_path = [config["script_path"]]
-    script = BashScriptRunner(script_path=script_path, log=LOG)
+    script_path = [os.path.join(global_config['bash_path'], name)]
+    env = {"ROUSH_LIB_DIR": global_config['bash_path']}
+    script = BashScriptRunner(script_path=script_path, log=LOG,
+                              environment=env)
     packages = PackageThing(script, config)
     register_action('get_updates', packages.dispatch)
     register_action('do_updates', packages.dispatch)

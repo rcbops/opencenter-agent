@@ -3,17 +3,20 @@
 import netifaces
 
 from bashscriptrunner import BashScriptRunner
-
+import os
 
 name = "chef"
 
 
 def setup(config={}):
-    LOG.debug('Doing setup in plugin_chef.py')
+    LOG.debug('Doing setup in plugin_chef.py using bash_path %s' %
+              global_config['main']['bash_path'])
     if not 'script_path' in config:
         raise ValueError("Expecting script_path in configuration")
-    script_path = [config["script_path"]]
-    script = BashScriptRunner(script_path=script_path, log=LOG)
+    script_path = [os.path.join(global_config['main']['bash_path'], name)]
+    env = {"ROUSH_BASH_DIR": global_config['main']['bash_path']}
+    script = BashScriptRunner(script_path=script_path, log=LOG,
+                              environment=env)
     chef = ChefThing(script, config)
     register_action('install_chef', chef.dispatch)
     register_action('run_chef', chef.dispatch)

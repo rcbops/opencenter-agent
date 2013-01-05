@@ -1,10 +1,5 @@
 import os
 import string
-import subprocess
-import logging
-from threading import Thread
-import fcntl
-import time
 
 
 def name_mangle(s, prefix=""):
