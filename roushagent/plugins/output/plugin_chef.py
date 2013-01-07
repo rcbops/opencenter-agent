@@ -11,8 +11,9 @@ name = "chef"
 def setup(config={}):
     LOG.debug('Doing setup in plugin_chef.py using bash_path %s' %
               global_config['main']['bash_path'])
-    if not 'script_path' in config:
-        raise ValueError("Expecting script_path in configuration")
+    if not 'bash_path' in global_config['main']:
+        LOG.error("bash_path is not set")
+        raise ValueError("bash_path not set")
     script_path = [os.path.join(global_config['main']['bash_path'], name)]
     env = {"ROUSH_BASH_DIR": global_config['main']['bash_path']}
     script = BashScriptRunner(script_path=script_path, log=LOG,
