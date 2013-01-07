@@ -50,7 +50,7 @@ class BashScriptRunner(object):
         return self.run_env(script, {}, "RCB", *args)
 
     def run_env(self, script, environment, prefix, *args):
-        env = {}
+        env = {"PATH": "/usr/sbin:/usr/bin:/sbin:/bin"}
         env.update(self.environment)
         env.update(dict([(name_mangle(k, prefix), v)
                          for k, v in environment.iteritems()]))
