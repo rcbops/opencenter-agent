@@ -54,7 +54,7 @@ chef-solr chef-solr/amqp_password password ${CHEF_AMQP_PASSWORD}
 chef-server-webui chef-server-webui/admin_password password ${CHEF_WEBUI_PASSWORD}
 EOF
 
-if ! dpkg -l chef-server &>/dev/null; then
+if ! dpkg -l chef-server | grep -v '^ii ' &>/dev/null; then
     apt-get update
     apt-get install -y --force-yes opscode-keyring
     sudo apt-get upgrade -y --force-yes
