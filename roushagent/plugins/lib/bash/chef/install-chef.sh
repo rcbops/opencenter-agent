@@ -1,7 +1,8 @@
 #!/bin/bash
 
 set -o errexit
-
+source "$ROUSH_BASH_DIR/roush.sh
+"
 if [[ -f /etc/redhat-release ]]; then
     DISTRO="redhat"
 else
@@ -40,6 +41,9 @@ elif [[ $DISTRO = "redhat" ]]; then
     chkconfig --add /etc/init.d/chef-client
     chkconfig chef-client on
 fi
+
+return_fact "chef_server_uri" "$CHEF_SERVER"
+return_fact "chef_server_pem" "$CHEF_VALIDATOR"
 
 chmod +rx /etc/init.d/chef-client
 mkdir -p /var/log/chef

@@ -122,8 +122,14 @@ class BashExec(object):
             if n == "":
                 break
 
-        outputs = {}
+        outputs = {"facts": {},
+                   "attrs": {}}
         if len(output_str) > 0:
-            outputs = dict([line.split("=", 1) for line in
-                            output_str.strip('\x00').split('\x00')])
+            stuff = output_str.strip("\0").split("\0")
+            #output is in the form of type\0key\0value\0
+            if len(stuff) % 3 == 0:
+                while(len(stuff) > 0):
+                    vtype, key, value = stuff[0:3]
+                    stuff = stuff[3:]
+                    outputs[vtype][key] = value
         return ret_code, outputs
