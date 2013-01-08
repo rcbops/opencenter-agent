@@ -94,9 +94,5 @@ EOF
 fi
 
 return_fact "chef_server_uri" "$CHEF_URL"
-return_fact "chef_server_pem" "$VALIDATION_PEM"
-return_attr "chef_webui_password" "$WEBUI_PASSWORD"
-#print some json in case someone wants to do something with it
-printf '{"URL": "%s", "VALIDATION_PEM": "%s", "WEBUI_PASSWORD": "%s"}' \
-    "$CHEF_URL" "$(tr '\n' '\t' </etc/chef/validation.pem | sed -e 's/\t/\\n/g')" \
-    "$CHEF_WEBUI_PASSWORD"
+return_fact "chef_server_pem" "$(cat /etc/chef/validation.pem)"
+return_attr "chef_webui_password" "$CHEF_WEBUI_PASSWORD"
