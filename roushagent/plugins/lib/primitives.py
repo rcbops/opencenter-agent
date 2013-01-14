@@ -86,13 +86,7 @@ class OrchestratorTasks:
                                  result_str=log_entry,
                                  result_data={})
 
-    def sm_eval(self, sm_dict, input_state):
-        def otask(fn, *args, **kwargs):
-            def outer(input_state, **outer_args):
-                kwargs.update(outer_args)
-                return fn(input_state, *args, **kwargs)
-            return outer
-
+    def sm_eval(self, plan, input_state):
         def be_task(prim_name, fn, api, **kwargs):
             def wrapped(input_state, **outer_args):
                 kwargs.update(outer_args)
@@ -100,48 +94,43 @@ class OrchestratorTasks:
                                             fn, api, **kwargs)
             return wrapped
 
-        self.logger.info('building state machine for %s' % sm_dict)
+        self.logger.info('building state machine for %s' % plan)
         sm = StateMachine(input_state)
-        if 'start_state' in sm_dict:
-            sm.set_state(sm_dict['start_state'])
+        sm.set_state('state_0')
 
-        for state, vals in sm_dict['states'].items():
-            action = vals['primitive']
-            parameters = vals['parameters']
-
-            del vals['primitive']
-            del vals['parameters']
+        for state_index, state in enumerate(plan):
+            parameters = state['ns']
+            primitive = state['primitive']
 
             self.logger.debug('padding globals %s' % self.adventure_globals)
 
             parameters['globals'] = self.adventure_globals
 
-            self.logger.debug('Wrapping %s action' % action)
+            self.logger.debug('Wrapping %s primitive' % primitive)
 
-            if '.' in action:  # it is a backend primitive
-                backend_fn = roush.backends.primitive_by_name(action)
-                if not backend_fn:
-                    msg = 'cannot find backend primitive "%s"' % action
-                    self.logger.debug(msg)
-                    return({'result_code': 1,
-                            'result_str': msg,
-                            'result_data': {}})
+            backend_fn = roush.backends.primitive_by_name(primitive)
+            if not backend_fn:
+                msg = 'cannot find backend primitive "%s"' % primitive
+                self.logger.debug(msg)
+                return({'result_code': 1,
+                        'result_str': msg,
+                        'result_data': {}})
 
-                # we have the backend fn, now wrap it up.
-                fn = be_task(action, backend_fn, self.api, **parameters)
-            else:
-                if not hasattr(self, 'primitive_%s' % action):
-                    msg = 'cannot find primitive "%s"' % action
+            # we have the backend fn, now wrap it up.
+            fn = be_task(primitive, backend_fn, self.api, **parameters)
 
-                    self.logger.debug(msg)
-                    return ({'result_code': 1,
-                             'result_str': msg,
-                             'result_data': {}}, {})
+            # solver plans are linear, so we'll jump to next step always
+            # plus, we'll assume that failure goes to default failure case
+            next_state = state_index + 1
+            success_state = 'state_%d' % next_state
 
-                fn = otask(getattr(self, 'primitive_%s' % action),
-                           **parameters)
+            if(next_state) == len(plan):
+                success_state = 'success'
 
-            sm.add_state(state, StateMachineState(advance=fn, **vals))
+            sm.add_state(
+                'state_%d' % state_index, StateMachineState(
+                    advance=fn,
+                    on_success=success_state))
 
         result_data, end_state = sm.run_to_completion()
         return (result_data, end_state)
