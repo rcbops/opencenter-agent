@@ -58,16 +58,16 @@ class OutputManager:
         self.dispatch_table = {
             'modules.list': [
                 self.handle_modules,
-                "modules", "modules", "modules", [], []],
+                "modules", "modules", "modules", [], [], {}],
             'modules.load': [
                 self.handle_modules,
-                "modules", "modules", "modules", [], []],
+                "modules", "modules", "modules", [], [], {}],
             'modules.actions': [
                 self.handle_modules,
-                "modules", "modules", "modules", [], []],
+                "modules", "modules", "modules", [], [], {}],
             'modules.reload': [
                 self.handle_modules,
-                "modules", "modules", "modules", [], []]}
+                "modules", "modules", "modules", [], [], {}]}
         self.config = config
         self.load(path)
 
@@ -90,45 +90,31 @@ class OutputManager:
         ns = {'global_config': self.config,
               'LOG': LOG}
         LOG.debug('Loading plugin file %s' % shortpath)
-        try:
-            try:
-                execfile(path, ns)
-            except Exception as e:
-                LOG.warning("Unable to load %s: '%s'. Ignoring." % (shortpath,
-                                                                    e.message))
-                return
-            if not 'name' in ns:
-                LOG.warning('Plugin missing "name" value. Ignoring.')
-                return
-            name = ns['name']
-            # getChild is only available on python2.7
-            # ns['LOG'] = ns['LOG'].getChild("output_%s" % name)
-            ns['LOG'] = logging.getLogger('%s.%s' % (ns['LOG'],
-                                                     'output_%s' % name))
-            ns['register_action'] = partial(self.register_action, name)
+        execfile(path, ns)
 
-            self.loaded_modules.append(name)
-            self.output_plugins[name] = ns
-            config = self.config.get(name, {})
-            ns['module_config'] = config
-            if 'setup' in ns:
-                try:
-                    ns['setup'](config)
-                except NameError as e:
-                    LOG.warning("Failed to run setup on %s: %s" % (
-                        shortpath, e))
-                except:
-                    LOG.debug("Failed to run setup on %s" % shortpath)
-                    del self.output_plugins[name]
-            else:
-                LOG.warning('No setup function in %s. Ignoring.' % shortpath)
-        except Exception as e:
-            LOG.warning("An unexpected error occured in %s: %s" % (
-                shortpath, e.message))
+        if not 'name' in ns:
+            LOG.warning('Plugin missing "name" value. Ignoring.')
+            return
+        name = ns['name']
+        # getChild is only available on python2.7
+        # ns['LOG'] = ns['LOG'].getChild("output_%s" % name)
+        ns['LOG'] = logging.getLogger('%s.%s' % (ns['LOG'],
+                                                 'output_%s' % name))
+        ns['register_action'] = partial(self.register_action, name)
+
+        self.loaded_modules.append(name)
+        self.output_plugins[name] = ns
+        config = self.config.get(name, {})
+        ns['module_config'] = config
+        if 'setup' in ns:
+            ns['setup'](config)
+        else:
+            LOG.warning('No setup function in %s. Ignoring.' % shortpath)
 
     def register_action(self, plugin, action, method,
                         constraints=[],
-                        consequences=[]):
+                        consequences=[],
+                        args={}):
         LOG.debug('Registering handler for action %s' % action)
         # First handler wins
         if action in self.dispatch_table:
@@ -141,14 +127,16 @@ class OutputManager:
                                            method.func_name,
                                            plugin,
                                            constraints,
-                                           consequences)
+                                           consequences,
+                                           args)
 
     def actions(self):
         d = {}
         for k, v in self.dispatch_table.items():
             d[k] = {"plugin": v[3],
                     "constraints": v[4],
-                    "consequences": v[5]}
+                    "consequences": v[5],
+                    "args": v[6]}
         return d
 
     def load(self, path):
@@ -178,7 +166,7 @@ class OutputManager:
                   'result_str': 'no dispatcher found for action "%s"' % action,
                   'result_data': ''}
         if action in self.dispatch_table:
-            fn, path, _, plugin, _, _ = self.dispatch_table[action]
+            fn, path, _, plugin, _, _, _ = self.dispatch_table[action]
             LOG.debug('Plugin_manager: dispatching action %s from plugin %s' %
                       (action, plugin))
             LOG.debug('Received input_data %s' % (input_data))
