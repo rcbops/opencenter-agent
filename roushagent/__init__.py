@@ -88,11 +88,9 @@ class RoushAgent():
         try:
             self._setup_scaffolding(argv)
             self._setup_handlers()
-        except KeyboardInterrupt:
-            self._exit()
-        except SystemExit:
-            raise
-        except:
+        except Exception as e:
+            etext = detailed_exception(e)
+            self.log.error('exception in initializing roush-agent: %s' % etext)
             self._exit()
 
     def _exit(self):
