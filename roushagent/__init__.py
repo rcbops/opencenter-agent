@@ -136,6 +136,14 @@ class RoushAgent():
             except:
                 pass
 
+    def usage(self):
+        usage = """
+        -c	Use specified config file
+        -v 	Enables verbose logging
+        -d	Runs as a daemon
+        """
+        print usage
+
     def _parse_opts(self, argv):
         background = debug = False
         configfile = None
@@ -144,7 +152,7 @@ class RoushAgent():
             opts, args = getopt.getopt(argv, 'c:vd')
         except getopt.GetoptError as err:
             print str(err)
-            usage()
+            self.usage()
             sys.exit(1)
 
         for o, a in opts:
@@ -155,7 +163,7 @@ class RoushAgent():
             elif o == '-d':
                 background = True
             else:
-                usage()
+                self.usage()
                 sys.exit(1)
 
         return background, debug, configfile
