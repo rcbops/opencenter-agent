@@ -25,7 +25,8 @@ Package: roush-agent-input-task
 Architecture: all
 Section: python
 Depends: roush-agent (= ${binary:Version}),
- roush-client
+ roush-client,
+ python-requests
 Provides: ${python:Provides}
 Description: the input task plug-in
 
