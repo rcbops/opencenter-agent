@@ -260,7 +260,8 @@ class RoushAgent():
                     fcntl.flock(pidfile.fileno(), fcntl.LOCK_EX |
                                 fcntl.LOCK_NB)
                 except IOError:
-                    self.logger.error('Lock exists on pidfile: already running')
+                    self.logger.error('Lock exists on pidfile: already '
+                                      'running')
                     pidfile.seek(0)
                     pidfile.truncate()
                     pidfile.write(str(os.getpid()))
