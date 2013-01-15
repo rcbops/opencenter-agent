@@ -225,6 +225,9 @@ class RoushAgent():
 
     def _setup_scaffolding(self, argv):
         background, debug, configfile = self._parse_opts(argv)
+        print("daemonize: %s, debug: %s, configfile: %s, loglevel: %s" %
+              (background, debug, configfile,
+               logging.getLevelName(self.log.getEffectiveLevel())))
         config_section = self.config_section
         config = self.config
         if configfile:
