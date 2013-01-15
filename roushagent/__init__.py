@@ -92,7 +92,8 @@ class RoushAgent():
             self._exit()
         except SystemExit:
             raise
-        except:
+        except Exception, e:
+            print 'Exception: %s' % e
             self._exit()
 
     def _exit(self):
@@ -234,8 +235,8 @@ class RoushAgent():
                            if type(h) == logging.StreamHandler])
             if streams == 0:
                 self.log.addHandler(logging.StreamHandler(sys.stderr))
-            for h in self.logger.handlers:
-                h.setLevel(logging.DEBUG)
+            self.logger.setLevel(logging.DEBUG)
+            self.logger.debug('Log level set to debug')
 
         if background:
             # daemonize
