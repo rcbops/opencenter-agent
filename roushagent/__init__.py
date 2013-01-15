@@ -89,30 +89,35 @@ class RoushAgent():
             self._setup_scaffolding(argv)
             self._setup_handlers()
         except KeyboardInterrupt:
-            self._exit()
+            self._exit(None)
         except SystemExit:
             raise
         except Exception, e:
-            print 'Exception: %s' % e
-            self._exit()
+            self._exit(e)
 
-    def _exit(self):
+    def _exit(self, exception):
         self.logger.debug('exiting...')
         self._cleanup()
 
-        exc_info = sys.exc_info()
-        # wouldn't we rather have a full traceback?
-        if hasattr(exc_info[0], '__name__'):
-            exc_class, exc, tb = exc_info
-            tb_path, tb_lineno, tb_func = traceback.extract_tb(tb)[-1][:3]
-            self.logger.error('%s (%s:%s in %s)', exc_info[1], tb_path,
-                               tb_lineno, tb_func)
-        else:  # string exception
-            self.logger.error(exc_info[0])
+        if exception:
+            self.logger.error('Exception: %s' % exception)
+            exc_info = sys.exc_info()
+
+            # wouldn't we rather have a full traceback?
+            if hasattr(exc_info[0], '__name__'):
+                exc_class, exc, tb = exc_info
+                tb_path, tb_lineno, tb_func = traceback.extract_tb(tb)[-1][:3]
+                self.logger.error('%s (%s:%s in %s)', exc_info[1], tb_path,
+                                  tb_lineno, tb_func)
+            else:  # string exception
+                self.logger.error(exc_info[0])
+
             if self.logger.isEnabledFor(logging.DEBUG):
                 print ''
                 traceback.print_exception(*exc_info)
+
             sys.exit(1)
+
         sys.exit(0)
 
     def _cleanup(self):
