@@ -20,7 +20,7 @@ def setup(config={}):
                               environment=env)
     chef = ChefThing(script, config)
     register_action('install_chef', chef.dispatch, [], [],
-                    {"chef-server": {"type": "interface",
+                    {"chef_server": {"type": "interface",
                                      "name": "chef-server",
                                      "required": True}})
     register_action('run_chef', chef.dispatch)
