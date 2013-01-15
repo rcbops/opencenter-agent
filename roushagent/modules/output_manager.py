@@ -73,6 +73,19 @@ class OutputManager:
 
         LOG.debug('Dispatch methods: %s' % self.dispatch_table.keys())
 
+    def load(self, path):
+        # Load a plugin by file name.  modules with
+        # action_foo methods will be auto-registered
+        # for the 'foo' action
+        if type(path) == list:
+            for d in path:
+                self.load(d)
+        else:
+            if os.path.isdir(path):
+                self._load_directory(path)
+            else:
+                self._load_file(path)
+
     def _load_directory(self, path):
         LOG.debug('Preparing to load output modules in directory %s' % path)
         dirlist = os.listdir(path)
@@ -138,19 +151,6 @@ class OutputManager:
                     "consequences": v[5],
                     "args": v[6]}
         return d
-
-    def load(self, path):
-        # Load a plugin by file name.  modules with
-        # action_foo methods will be auto-registered
-        # for the 'foo' action
-        if type(path) == list:
-            for d in path:
-                self.load(d)
-        else:
-            if os.path.isdir(path):
-                self._load_directory(path)
-            else:
-                self._load_file(path)
 
     def dispatch(self, input_data):
         # look at the dispatch table for matching actions
