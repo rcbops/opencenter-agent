@@ -19,7 +19,10 @@ def setup(config={}):
     script = BashScriptRunner(script_path=script_path, log=LOG,
                               environment=env)
     chef = ChefThing(script, config)
-    register_action('install_chef', chef.dispatch)
+    register_action('install_chef', chef.dispatch, [], [],
+                    {"chef-server": {"type": "interface",
+                                     "name": "chef-server",
+                                     "required": True}})
     register_action('run_chef', chef.dispatch)
     register_action('install_chef_server', chef.dispatch)
     register_action('get_chef_info', chef.dispatch)
