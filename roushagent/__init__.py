@@ -76,8 +76,8 @@ class RoushAgent():
         self.config_section = config_section
         self.input_handler = None
         self.output_handler = None
-        self.log = logging.getLogger()
-        self.log.addHandler(logging.StreamHandler(sys.stderr))
+        self.logger = logging.getLogger()
+        self.logger.addHandler(logging.StreamHandler(sys.stderr))
         self.config = {config_section: {}}
 
         # something really screwy with sigint and threading...
@@ -96,10 +96,7 @@ class RoushAgent():
             self._exit()
 
     def _exit(self):
-        log = self.log
-
-        log.debug('exiting...')
-
+        self.logger.debug('exiting...')
         self._cleanup()
 
         exc_info = sys.exc_info()
@@ -120,17 +117,16 @@ class RoushAgent():
     def _cleanup(self):
         output_handler = self.output_handler
         input_handler = self.input_handler
-        log = self.log
 
         if input_handler:
-            log.debug('Stopping input handler.')
+            self.logger.debug('Stopping input handler.')
             try:
                 input_handler.stop()
             except:
                 pass
 
         if output_handler:
-            log.debug('Stopping output handler.')
+            self.logger.debug('Stopping output handler.')
             try:
                 output_handler.stop()
             except:
@@ -173,14 +169,14 @@ class RoushAgent():
     def _configure_logs(self, configfile):
         if configfile:
             import logging.config
-            phandlers = self.log.handlers
+            phandlers = self.logger.handlers
             try:
-                self.log.handlers = []
+                self.logger.handlers = []
                 logging.config.fileConfig(configfile)
             except:
-                self.log.handlers = phandlers
-                self.log.error("Unable to configure logging")
-        self.log = logging.getLogger()
+                self.logger.handlers = phandlers
+                self.logger.error("Unable to configure logging")
+        self.logger = logging.getLogger()
 
     def _read_config(self, configfile, defaults={}):
         cp = ConfigParser(defaults=defaults)
@@ -233,13 +229,12 @@ class RoushAgent():
             config = self.config = self._read_config(configfile, defaults={
                 'base_dir': self.base})
             self._configure_logs(config[config_section]['log_config'])
-        log = self.log
         if debug:
-            streams = len([h for h in log.handlers
+            streams = len([h for h in self.logger.handlers
                            if type(h) == logging.StreamHandler])
             if streams == 0:
                 self.log.addHandler(logging.StreamHandler(sys.stderr))
-            for h in log.handlers:
+            for h in self.logger.handlers:
                 h.setLevel(logging.DEBUG)
 
         if background:
@@ -259,7 +254,7 @@ class RoushAgent():
                     fcntl.flock(pidfile.fileno(), fcntl.LOCK_EX |
                                 fcntl.LOCK_NB)
                 except IOError:
-                    log.error('Lock exists on pidfile: already running')
+                    self.logger.error('Lock exists on pidfile: already running')
                     pidfile.seek(0)
                     pidfile.truncate()
                     pidfile.write(str(os.getpid()))
@@ -295,21 +290,20 @@ class RoushAgent():
     def dispatch(self):
         output_handler = self.output_handler
         input_handler = self.input_handler
-        log = self.log
 
         # we'll assume non-blocking.  we should negotiate this
         # with the plugins, I suppose
         do_quit = False
         try:
             while not do_quit:
-                log.debug('FETCH')
+                self.logger.debug('FETCH')
                 result = input_handler.fetch()
                 if len(result) == 0:
                     time.sleep(5)
                 else:
-                    log.debug('Got input from input handler "%s"' % (
-                        result['plugin']))
-                    log.debug('Data: %s' % result['input'])
+                    self.logger.debug('Got input from input handler "%s"'
+                                      % (result['plugin']))
+                    self.logger.debug('Data: %s' % result['input'])
 
                     # Apply to the pool
                     worker = RoushAgentDispatchWorker(input_handler,
@@ -318,11 +312,11 @@ class RoushAgent():
                     worker.setDaemon(True)
                     worker.start()
         except KeyboardInterrupt:
-            log.debug('Got keyboard interrupt.')
+            self.logger.debug('Got keyboard interrupt.')
             self._exit()
 
         except Exception, e:
-            log.debug('Exception: %s' % detailed_exception(e))
+            self.logger.debug('Exception: %s' % detailed_exception(e))
 
-        log.debug("falling out of dispatch loop")
+        self.logger.debug("falling out of dispatch loop")
         self._exit()
