@@ -64,7 +64,7 @@ Description: a simple file management plugin.  very very unsafe.
 Package: roush-agent-output-adventurator
 Architecture: all
 Section: python
-Depends: roush-agent(= ${binary:Version}), roush
+Depends: roush-agent(= ${binary:Version}), python-roush
 Provides: ${python:Provides}
 Description: an output plugin to run adventures
 
