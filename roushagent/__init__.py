@@ -137,30 +137,32 @@ class RoushAgent():
                 pass
 
     def usage(self):
-        usage = """
-        -c	Use specified config file
-        -v 	Enables verbose logging
-        -d	Runs as a daemon
-        """
-        print usage
+        """Print a usage message."""
+
+        print """The following command line flags are supported:
+
+[-c|--config] <file>: use this config file
+[-v|--verbose]:       include if you want verbose logging
+[-d|--deamonize]:     if set then roush will run as a daemon"""
 
     def _parse_opts(self, argv):
         background = debug = False
         configfile = None
 
         try:
-            opts, args = getopt.getopt(argv, 'c:vd')
+            opts, args = getopt.getopt(argv, 'c:vd',
+                                       ['config=', 'verbose', 'daemonize'])
         except getopt.GetoptError as err:
             print str(err)
             self.usage()
             sys.exit(1)
 
         for o, a in opts:
-            if o == '-c':
+            if o in ('-c', '--config'):
                 configfile = a
-            elif o == '-v':
+            elif o in ('-v', '--verbose'):
                 debug = True
-            elif o == '-d':
+            elif o in ('-d', '--daemonize'):
                 background = True
             else:
                 self.usage()
