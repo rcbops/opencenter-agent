@@ -105,11 +105,11 @@ class RoushAgent():
         if hasattr(exc_info[0], '__name__'):
             exc_class, exc, tb = exc_info
             tb_path, tb_lineno, tb_func = traceback.extract_tb(tb)[-1][:3]
-            log.error('%s (%s:%s in %s)', exc_info[1], tb_path,
-                      tb_lineno, tb_func)
+            self.logger.error('%s (%s:%s in %s)', exc_info[1], tb_path,
+                               tb_lineno, tb_func)
         else:  # string exception
-            log.error(exc_info[0])
-            if log.isEnabledFor(logging.DEBUG):
+            self.logger.error(exc_info[0])
+            if self.logger.isEnabledFor(logging.DEBUG):
                 print ''
                 traceback.print_exception(*exc_info)
             sys.exit(1)
