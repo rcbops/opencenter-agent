@@ -173,13 +173,13 @@ class OutputManager:
             base = self.config['main'].get('trans_log_dir', '/var/log/roush')
 
             if not os.path.isdir(base):
-                if not os.path.isdir(base):
-                    raise OSError(2, "Specified path '%s' " % (base) +
-                                  "does not exist or is not a directory.")
-                    if not os.access(base, os.W_OK):
-                        raise OSError(13,
-                                      "Specified path '%s' is not writable." %
-                                      base)
+                raise OSError(2, "Specified path '%s' " % (base) +
+                              "does not exist or is not a directory.")
+
+            if not os.access(base, os.W_OK):
+                raise OSError(13,
+                              "Specified path '%s' is not writable." %
+                              base)
 
             # we won't log from built-in functions
             ns = None
