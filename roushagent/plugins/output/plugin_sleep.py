@@ -9,9 +9,8 @@ name = 'sleep'
 
 def setup(config={}):
     LOG.debug('doing setup for sleep handler')
-    register_action('sleep', handle_sleep, args={"sleep_interval": {
-                "required": True, "type": "int"}}
-)
+    register_action('sleep', handle_sleep,
+                    args={"sleep_interval": {"required": True, "type": "int"}})
 
 
 def handle_sleep(input_data):
