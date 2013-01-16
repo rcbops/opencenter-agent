@@ -321,10 +321,10 @@ class RoushAgent():
                     worker.start()
         except KeyboardInterrupt:
             self.logger.debug('Got keyboard interrupt.')
-            self._exit()
+            self._exit(None)
 
         except Exception, e:
             self.logger.debug('Exception: %s' % detailed_exception(e))
 
         self.logger.debug("falling out of dispatch loop")
-        self._exit()
+        self._exit(None)
