@@ -240,7 +240,7 @@ class RoushAgent():
             streams = len([h for h in self.logger.handlers
                            if type(h) == logging.StreamHandler])
             if streams == 0:
-                self.log.addHandler(logging.StreamHandler(sys.stderr))
+                self.logger.addHandler(logging.StreamHandler(sys.stderr))
             self.logger.setLevel(logging.DEBUG)
             self.logger.debug('Log level set to debug')
 
