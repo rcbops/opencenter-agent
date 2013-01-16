@@ -7,7 +7,7 @@ import os
 import random
 import time
 
-from utils import detailed_exception
+from roushagent.utils import detailed_exception
 from roushclient.client import RoushEndpoint
 from state import StateMachine, StateMachineState
 from primitives import OrchestratorTasks
