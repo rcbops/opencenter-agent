@@ -229,7 +229,7 @@ class RoushAgent():
         background, debug, configfile = self._parse_opts(argv)
         print("daemonize: %s, debug: %s, configfile: %s, loglevel: %s" %
               (background, debug, configfile,
-               logging.getLevelName(self.log.getEffectiveLevel())))
+               logging.getLevelName(self.logger.getEffectiveLevel())))
         config_section = self.config_section
         config = self.config
         if configfile:
