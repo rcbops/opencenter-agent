@@ -88,11 +88,7 @@ class RoushAgent():
         try:
             self._setup_scaffolding(argv)
             self._setup_handlers()
-        except KeyboardInterrupt:
-            self._exit(None)
-        except SystemExit:
-            raise
-        except Exception, e:
+        except Exception as e:
             self._exit(e)
 
     def _exit(self, exception):
@@ -100,10 +96,12 @@ class RoushAgent():
         self._cleanup()
 
         if exception:
-            self.logger.error('Exception: %s' % exception)
-            exc_info = sys.exc_info()
+            etext = detailed_exception(exception)
+            self.logger.error('exception in initializing roush-agent: %s'
+                              % etext)
 
             # wouldn't we rather have a full traceback?
+            exc_info = sys.exc_info()
             if hasattr(exc_info[0], '__name__'):
                 exc_class, exc, tb = exc_info
                 tb_path, tb_lineno, tb_func = traceback.extract_tb(tb)[-1][:3]
@@ -229,6 +227,9 @@ class RoushAgent():
 
     def _setup_scaffolding(self, argv):
         background, debug, configfile = self._parse_opts(argv)
+        print("daemonize: %s, debug: %s, configfile: %s, loglevel: %s" %
+              (background, debug, configfile,
+               logging.getLevelName(self.log.getEffectiveLevel())))
         config_section = self.config_section
         config = self.config
         if configfile:
