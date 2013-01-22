@@ -22,7 +22,7 @@ DEBIAN_FRONTEND=noninteractive apt-get install curl -y --force-yes
 curl -skS -L http://www.opscode.com/chef/install.sh | bash
 mkdir -p /etc/chef
 cat <<EOF >/etc/chef/client.rb
-chef_server_url "$CHEF_SERVER"
+chef_server_url "$CHEF_SERVER_URL"
 chef_environment "$CHEF_ENVIRONMENT"
 EOF
 if [ -n "${CHEF_VALIDATION_NAME}" ]; then
@@ -30,7 +30,7 @@ if [ -n "${CHEF_VALIDATION_NAME}" ]; then
 fi
 
 cat <<EOF > /etc/chef/validation.pem
-$CHEF_VALIDATOR
+$CHEF_SERVER_PEM
 EOF
 
 if [[ $DISTRO = "debian" ]]; then
