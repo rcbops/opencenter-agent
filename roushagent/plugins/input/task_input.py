@@ -32,7 +32,6 @@ class TaskThread(threading.Thread):
             return True
         else:
             LOG.info('Connecting to endpoint')
-
             try:
                 self.endpoint = RoushEndpoint(self.endpoint_uri)
             except ConnectionError:
@@ -43,19 +42,11 @@ class TaskThread(threading.Thread):
         if not self.host_id:
             # try to find our host ID from the endpoint
             LOG.info('Initial connection: fetching host ID')
-
-            for node in self.endpoint.nodes.filter("name='%s'" % (
-                    self.name)):
-                self.host_id = node.id
-
-            if not self.host_id:
-                # make a new node entry for this host
-                LOG.info('Creating new host entry')
-                node = self.endpoint.nodes.new(name=self.name)
-                node.save()
-                self.host_id = node.id
-
-                LOG.info('New host ID: %d' % self.host_id)
+            #TODO: Fix up client to support whoami in a more
+            #reasonable manner and fix this code up
+            root = self.endpoint.nodes.filter(
+                'facts.parent_id = None and name = "workspace"').first()
+            self.host_id = root.whoami(self.name).json['node']['id']
 
         # update the module list
         self.producer_lock.acquire()
