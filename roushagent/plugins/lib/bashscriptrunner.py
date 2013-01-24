@@ -1,3 +1,4 @@
+import fcntl
 import os
 import string
 
@@ -115,9 +116,16 @@ class BashExec(object):
         # Wait for process to run
         ret_code = os.waitpid(self.child_pid, 0)[1]
 
+        fl = fcntl.fcntl(self.pipe_read, fcntl.F_GETFL)
+        fcntl.fcntl(self.pipe_read, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+
         output_str = ""
         while(True):
-            n = os.read(self.pipe_read, 1024)
+            try:
+                n = os.read(self.pipe_read, 1024)
+            except OSError:  # EWOULDBLOCK/EAGAIN
+                break
+
             output_str += n
             if n == "":
                 break
@@ -127,9 +135,12 @@ class BashExec(object):
         if len(output_str) > 0:
             stuff = output_str.strip("\0").split("\0")
             #output is in the form of type\0key\0value\0
-            if len(stuff) % 3 == 0:
-                while(len(stuff) > 0):
+            while(len(stuff) > 0):
+                if len(stuff) % 3 == 0:
                     vtype, key, value = stuff[0:3]
                     stuff = stuff[3:]
                     outputs[vtype][key] = value
+                else:
+                    break
+
         return ret_code, outputs
