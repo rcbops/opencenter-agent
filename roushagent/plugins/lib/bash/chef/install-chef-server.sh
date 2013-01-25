@@ -30,13 +30,15 @@ cp /etc/resolv.conf /tmp/rc
 apt-get remove --purge resolvconf -y --force-yes
 cp /tmp/rc /etc/resolv.conf
 
+MY_IP=$(ip route list match 0.0.0.0 | awk 'NR==1 {print $3}')
+
 CHEF_URL=${CHEF_URL:-$(get_sel "chef/chef_server_url")}
 CHEF_AMQP_PASSWORD=${CHEF_AMQP_PASSWORD:-$(get_sel "chef-solr/amqp_password")}
 CHEF_WEBUI_PASSWORD=${CHEF_WEBUI_PASSWORD:-$(get_sel "chef-server-webui/admin_password")}
 CHEF_UNIX_USER=${CHEF_UNIX_USER:-root}
 
 # defaults if not set
-CHEF_URL=${CHEF_URL:-http://$(hostname -f):4000}
+CHEF_URL=${CHEF_URL:-http://${MY_IP}:4000}
 CHEF_AMQP_PASSWORD=${CHEF_AMQP_PASSWORD:-$(pwgen -1)}
 CHEF_WEBUI_PASSWORD=${CHEF_WEBUI_PASSWORD:-$(pwgen -1)}
 
