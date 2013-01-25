@@ -1,8 +1,8 @@
 #!/bin/bash
 
 set -o errexit
-source "$ROUSH_BASH_DIR/roush.sh
-"
+source "$ROUSH_BASH_DIR/roush.sh"
+
 if [[ -f /etc/redhat-release ]]; then
     DISTRO="redhat"
 else
