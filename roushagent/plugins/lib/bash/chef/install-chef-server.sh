@@ -30,7 +30,8 @@ cp /etc/resolv.conf /tmp/rc
 apt-get remove --purge resolvconf -y --force-yes
 cp /tmp/rc /etc/resolv.conf
 
-MY_IP=$(ip route list match 0.0.0.0 | awk 'NR==1 {print $3}')
+PRIMARY_INTERFACE=$(ip route list match 0.0.0.0 | awk 'NR==1 {print $5}')
+MY_IP=$(ip addr show dev ${PRIMARY_INTERFACE} | awk 'NR==3 {print $2}' | cut -d '/' -f1)
 
 CHEF_URL=${CHEF_URL:-$(get_sel "chef/chef_server_url")}
 CHEF_AMQP_PASSWORD=${CHEF_AMQP_PASSWORD:-$(get_sel "chef-solr/amqp_password")}
