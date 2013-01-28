@@ -13,22 +13,22 @@ from state import StateMachine, StateMachineState
 from primitives import OrchestratorTasks
 
 name = 'adventurator'
-roush_endpoint = 'http://localhost:8080'
+endpoint = 'http://localhost:8080'
 
 
 def setup(config={}):
-    global roush_endpoint
-    roush_endpoint = 'http://localhost:8080'
+    global endpoint
+    endpoint = 'http://localhost:8080'
 
-    if 'roush_endpoint' in config:
-        roush_endpoint = config['roush_endpoint']
+    if 'endpoint' in config:
+        endpoint = config['endpoint']
 
     LOG.debug('doing setup for %s handler' % name)
     register_action('adventurate', handle_adventurate)
 
 
 def handle_adventurate(input_data):
-    global roush_endpoint
+    global endpoint
 
     parent_id = input_data['id']
     action = input_data['action']
@@ -37,7 +37,7 @@ def handle_adventurate(input_data):
     adventure_dsl = None
     adventure_id = None
 
-    ep = RoushEndpoint(roush_endpoint)
+    ep = RoushEndpoint(endpoint)
 
     if 'adventure' in payload:
         adventure_obj = ep.adventures[int(payload['adventure'])]
@@ -72,7 +72,7 @@ def handle_adventurate(input_data):
     ns['LOG'] = LOG
     ns['StateMachine'] = StateMachine
     ns['StateMachineState'] = StateMachineState
-    ns['tasks'] = OrchestratorTasks(endpoint=roush_endpoint,
+    ns['tasks'] = OrchestratorTasks(endpoint=endpoint,
                                     parent_task_id=parent_id,
                                     adventure_globals=adv_globals)
     ns['input_data'] = initial_state
