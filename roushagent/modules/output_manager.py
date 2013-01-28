@@ -102,7 +102,7 @@ class OutputManager:
         # we'll have registration collisions.
         ns = {'global_config': self.config,
               'LOG': LOG}
-        LOG.debug('Loading plugin file %s' % shortpath)
+        LOG.debug('Loading output plugin file %s' % shortpath)
         execfile(path, ns)
 
         if not 'name' in ns:

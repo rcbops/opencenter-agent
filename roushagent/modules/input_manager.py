@@ -81,33 +81,18 @@ class InputManager:
         ns = {'LOG': LOG}
 
         LOG.debug("Loading input plugin file %s" % path)
-        try:
-            try:
-                execfile(path, ns)
-            except Exception as e:
-                LOG.warning("Unable to load %s: '%s'. Ignoring." %
-                            (path, e.message))
-                return
-            if not 'name' in ns:
-                LOG.warning('Plugin missing "name" value. Ignoring.')
-                return
+        execfile(path, ns)
 
-            name = ns['name']
-            self.input_plugins[name] = ns
-            config = self.config.get(name, {})
-
-            if 'setup' in ns:
-                try:
-                    ns['setup'](config)
-                except Exception as e:
-                    LOG.debug("Failed to run setup on %s: (%s)" % (path,
-                                                                   str(e)))
-                    del self.input_plugins[name]
-            else:
-                LOG.warning('No setup function in %s. Ignoring.' % path)
-        except Exception as e:
-            LOG.warning("An unexpected error occurred when loading %s: %s" % (
-                path, e.message))
+        if not 'name' in ns:
+            LOG.warning('Plugin missing "name" value. Ignoring.')
+            return
+        name = ns['name']
+        self.input_plugins[name] = ns
+        config = self.config.get(name, {})
+        if 'setup' in ns:
+            ns['setup'](config)
+        else:
+            LOG.warning('No setup function in %s. Ignoring.' % path)
 
     def load(self, path):
         # Load a plugin by file name.  modules with
