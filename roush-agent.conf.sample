@@ -25,5 +25,7 @@ bind_address = 0.0.0.0
 bind_port = 8000
 
 [taskerator]
-endpoint = http://127.0.0.1:8080
+endpoint = http://127.0.0.1:8080/admin
 
+[adventurator]
+roush_endpoint = http://127.0.0.1:8080/admin
