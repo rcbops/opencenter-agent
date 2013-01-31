@@ -28,4 +28,4 @@ bind_port = 8000
 endpoint = http://127.0.0.1:8080/admin
 
 [adventurator]
-roush_endpoint = http://127.0.0.1:8080/admin
+endpoint = http://127.0.0.1:8080/admin
