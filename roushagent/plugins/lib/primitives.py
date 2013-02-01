@@ -122,7 +122,7 @@ class OrchestratorTasks:
                 # this primitive comes from node tasks.
                 backend_fn = roush.backends.primitive_by_name('agent.run_task')
                 fn = be_task('agent.run_task', backend_fn, self.api,
-                             **{'action': 'primitive',
+                             **{'action': primitive,
                                 'payload': parameters})
 
             # we have the backend fn, now wrap it up.

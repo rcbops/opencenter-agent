@@ -43,9 +43,6 @@ elif [[ $DISTRO = "redhat" ]]; then
     chkconfig chef-client on
 fi
 
-return_fact "chef_server_uri" "$CHEF_SERVER_URL"
-return_fact "chef_server_pem" "$CHEF_SERVER_PEM"
-
 chmod +rx /etc/init.d/chef-client
 mkdir -p /var/log/chef
 /etc/init.d/chef-client start
