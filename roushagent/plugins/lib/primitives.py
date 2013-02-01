@@ -108,16 +108,24 @@ class OrchestratorTasks:
 
             self.logger.debug('Wrapping %s primitive' % primitive)
 
-            backend_fn = roush.backends.primitive_by_name(primitive)
-            if not backend_fn:
-                msg = 'cannot find backend primitive "%s"' % primitive
-                self.logger.debug(msg)
-                return({'result_code': 1,
-                        'result_str': msg,
-                        'result_data': {}})
+            if '.' in primitive:
+                # this primitive comes from backends
+                backend_fn = roush.backends.primitive_by_name(primitive)
+                if not backend_fn:
+                    msg = 'cannot find backend primitive "%s"' % primitive
+                    self.logger.debug(msg)
+                    return({'result_code': 1,
+                            'result_str': msg,
+                            'result_data': {}})
+                fn = be_task(primitive, backend_fn, self.api, **parameters)
+            else:
+                # this primitive comes from node tasks.
+                backend_fn = roush.backends.primitive_by_name('agent.run_task')
+                fn = be_task('agent.run_task', backend_fn, self.api,
+                             **{'action': 'primitive',
+                                'payload': parameters})
 
             # we have the backend fn, now wrap it up.
-            fn = be_task(primitive, backend_fn, self.api, **parameters)
 
             # solver plans are linear, so we'll jump to next step always
             # plus, we'll assume that failure goes to default failure case
