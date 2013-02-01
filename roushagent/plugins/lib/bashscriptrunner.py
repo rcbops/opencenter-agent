@@ -146,7 +146,7 @@ class BashExec(object):
                     if vtype == "consequences":
                         outputs['consequences'].append(value)
                     else:
-                        c = 'node.%s.%s := %s' % (vtype, key, value)
+                        c = '%s.%s := %s' % (vtype, key, value)
                         outputs['consequences'].append(c)
                 else:
                     break

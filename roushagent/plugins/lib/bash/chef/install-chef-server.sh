@@ -96,8 +96,8 @@ ${HOMEDIR}/.chef/validation.pem
 EOF
 fi
 
-return_fact "chef_server_client_name" "chefadmin"
-return_fact "chef_server_client_pem" "$(cat /root/.chef/chefadmin.pem)"
-return_fact "chef_server_uri" "$CHEF_URL"
-return_fact "chef_server_pem" "$(cat /etc/chef/validation.pem)"
-return_attr "chef_webui_password" "$CHEF_WEBUI_PASSWORD"
+return_fact "chef_server_client_name" "'chefadmin'"
+return_fact "chef_server_client_pem" "'$(cat /root/.chef/chefadmin.pem)'"
+return_fact "chef_server_uri" "'$CHEF_URL'"
+return_fact "chef_server_pem" "'$(cat /etc/chef/validation.pem)'"
+return_attr "chef_webui_password" "'$CHEF_WEBUI_PASSWORD'"
