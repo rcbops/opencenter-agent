@@ -130,16 +130,24 @@ class BashExec(object):
             if n == "":
                 break
 
-        outputs = {"facts": {},
-                   "attrs": {}}
+        outputs = {"consequences": []}
         if len(output_str) > 0:
             stuff = output_str.strip("\0").split("\0")
             #output is in the form of type\0key\0value\0
             while(len(stuff) > 0):
                 if len(stuff) % 3 == 0:
+                    # facts and attrs have convenience functions and
+                    # may be returned as key/value pairs.  The format
+                    # is type\0key\0value\0.  Consequences may be
+                    # returned directly using a format
+                    # consequence\0\0consequence_string\0.
                     vtype, key, value = stuff[0:3]
                     stuff = stuff[3:]
-                    outputs[vtype][key] = value
+                    if vtype == "consequences":
+                        outputs['consequences'].append(value)
+                    else:
+                        c = 'node.%s.%s := %s' % (vtype, key, value)
+                        outputs['consequences'].append(c)
                 else:
                     break
 
