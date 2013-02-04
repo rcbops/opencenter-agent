@@ -19,7 +19,8 @@ done
 
 CHEF_ENVIRONMENT=${CHEF_ENVIRONMENT:-_default}
 DEBIAN_FRONTEND=noninteractive apt-get install curl -y --force-yes
-curl -skS -L http://www.opscode.com/chef/install.sh | bash
+# forcing chef-client install to 10.18.2-2
+curl -skS -L http://www.opscode.com/chef/install.sh | bash -s - -v 10.18.2-2
 mkdir -p /etc/chef
 cat <<EOF >/etc/chef/client.rb
 chef_server_url "$CHEF_SERVER_URL"
