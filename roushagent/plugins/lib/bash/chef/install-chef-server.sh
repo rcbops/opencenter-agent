@@ -46,7 +46,7 @@ chef chef/chef_server_url string ${CHEF_URL}
 chef-solr chef-solr/amqp_password password ${CHEF_AMQP_PASSWORD}
 EOF
 
-if ! dpkg -l chef-server | grep -v '^ii ' &>/dev/null; then
+if ! dpkg -s chef-server &>/dev/null; then
     curl https://opscode-omnitruck-release.s3.amazonaws.com/ubuntu/12.04/x86_64/chef-server_11.0.4-1.ubuntu.12.04_amd64.deb > /tmp/chef-server.deb
     dpkg -i /tmp/chef-server.deb
     chef-server-ctl reconfigure
