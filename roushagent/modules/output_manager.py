@@ -2,6 +2,7 @@
 
 import os
 import logging
+import socket
 from functools import partial
 
 LOG = logging.getLogger('roush.output')
@@ -56,18 +57,21 @@ class OutputManager:
         # should all actions be named module.action?
         self.loaded_modules = ['modules']
         self.dispatch_table = {
+            'logfile.tail': [
+                self.handle_logfile,
+                'modules', 'modules', 'modules', [], [], {}],
             'modules.list': [
                 self.handle_modules,
-                "modules", "modules", "modules", [], [], {}],
+                'modules', 'modules', 'modules', [], [], {}],
             'modules.load': [
                 self.handle_modules,
-                "modules", "modules", "modules", [], [], {}],
+                'modules', 'modules', 'modules', [], [], {}],
             'modules.actions': [
                 self.handle_modules,
-                "modules", "modules", "modules", [], [], {}],
+                'modules', 'modules', 'modules', [], [], {}],
             'modules.reload': [
                 self.handle_modules,
-                "modules", "modules", "modules", [], [], {}]}
+                'modules', 'modules', 'modules', [], [], {}]}
         self.config = config
         self.load(path)
 
@@ -110,7 +114,7 @@ class OutputManager:
             return
         name = ns['name']
         # getChild is only available on python2.7
-        # ns['LOG'] = ns['LOG'].getChild("output_%s" % name)
+        # ns['LOG'] = ns['LOG'].getChild('output_%s' % name)
         ns['LOG'] = logging.getLogger('%s.%s' % (ns['LOG'],
                                                  'output_%s' % name))
         ns['register_action'] = partial(self.register_action, name)
@@ -146,10 +150,10 @@ class OutputManager:
     def actions(self):
         d = {}
         for k, v in self.dispatch_table.items():
-            d[k] = {"plugin": v[3],
-                    "constraints": v[4],
-                    "consequences": v[5],
-                    "args": v[6]}
+            d[k] = {'plugin': v[3],
+                    'constraints': v[4],
+                    'consequences': v[5],
+                    'args': v[6]}
         return d
 
     def dispatch(self, input_data):
@@ -173,12 +177,12 @@ class OutputManager:
             base = self.config['main'].get('trans_log_dir', '/var/log/roush')
 
             if not os.path.isdir(base):
-                raise OSError(2, "Specified path '%s' " % (base) +
-                              "does not exist or is not a directory.")
+                raise OSError(2, 'Specified path "%s" ' % (base) +
+                              'does not exist or is not a directory.')
 
             if not os.access(base, os.W_OK):
                 raise OSError(13,
-                              "Specified path '%s' is not writable." %
+                              'Specified path "%s" is not writable.' %
                               base)
 
             # we won't log from built-in functions
@@ -188,8 +192,8 @@ class OutputManager:
                 t_LOG = ns['LOG']
                 if 'id' in input_data:
                     ns['LOG'] = logging.getLogger(
-                        "roush.output.trans_%s" % input_data['id'])
-                    h = logging.FileHandler(os.path.join(base, "trans_%s.log" %
+                        'roush.output.trans_%s' % input_data['id'])
+                    h = logging.FileHandler(os.path.join(base, 'trans_%s.log' %
                                                          input_data['id']))
                     ns['LOG'].addHandler(h)
 
@@ -210,35 +214,81 @@ class OutputManager:
         return result
 
     # some internal methods to provide some agent introspection
+    def handle_logfile(self, input_data):
+        def _ok(code=0, message='success', data={}):
+            return {'result_code': code,
+                    'result_str': message,
+                    'result_data': data}
+
+        def _fail(code=2, message='unknown failure', data={}):
+            return _ok(code, message, data)
+
+        action = input_data['action']
+        payload = input_data['payload']
+
+        if not 'task_id' in payload or \
+                not 'dest_ip' in payload or \
+                not 'dest_port' in payload:
+            return _fail(message='must specify task_id, '
+                         'dest_ip and dest_port')
+
+        if action == 'logfile.tail':
+            base = self.config['main'].get('trans_log_dir', '/var/log/roush')
+            log_path = os.path.join(base, 'trans_%s.log' % payload['task_id'])
+
+            data = ''
+            with open(log_path, 'r') as fd:
+                fd.seek(0, os.SEEK_END)
+                length = fd.tell()
+                fd.seek(max((length-1024, 0)))
+                data = fd.read()
+
+            # open the socket and jet it out
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+            try:
+                sock.connect((payload['dest_ip'],
+                              int(payload['dest_port'])))
+            except socket.error as e:
+                sock.close()
+                return _fail(message='%s' % str(e))
+
+            sock.send(data)
+            sock.shutdown(socket.SHUT_RDWR)
+            sock.close()
+            return _ok()
+
     def handle_modules(self, input_data):
+        def _ok(code=0, message='success', data={}):
+            return {'result_code': code,
+                    'result_str': message,
+                    'result_data': data}
+
+        def _fail(code=2, message='unknown failure', data={}):
+            return _ok(code, message, data)
+
         action = input_data['action']
         payload = input_data['payload']
         result_code = 1
         result_str = 'failed to perform action'
         result_data = ''
         if action == 'modules.list':
-            result_code = 0
-            result_str = 'success'
-            result_data = {"name": "roush_agent_output_modules",
-                           "value": self.loaded_modules}
+            return _ok(data={'name': 'roush_agent_output_modules',
+                                  'value': self.loaded_modules})
         elif action == 'modules.actions':
-            result_code = 0
-            result_str = 'success'
-            result_data = {"name": "roush_agent_actions",
-                           "value": self.actions()}
+            return _ok(data={'name': 'roush_agent_actions',
+                                  'value': self.actions()})
         elif action == 'modules.load':
             if not 'path' in payload:
-                result_str = 'no "path" specified in payload'
+                return _fail(message='no "path" specified in payload')
             elif not os.path.isfile(payload['path']):
-                result_str = 'specified module does not exist'
+                return _fail(message='specified module does not exist')
             else:
                 # any exceptions we'll bubble up from the manager
                 self.loadfile(payload['path'])
         elif action == 'modules.reload':
             pass
-        return {'result_code': result_code,
-                'result_str': result_str,
-                'result_data': result_data}
+        return _ok()
 
     def stop(self):
         for plugin in self.output_plugins:
