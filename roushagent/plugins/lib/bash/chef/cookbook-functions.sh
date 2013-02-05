@@ -78,7 +78,7 @@ function upload_cookbooks() {
     local destdir=$1
     local knife_file=$2
 
-    knife cookbook upload -a -o ${destdir}/cookbooks -c ${knife_file}
+    /opt/chef-server/bin/knife cookbook upload -a -o ${destdir}/cookbooks -c ${knife_file}
 }
 
 function upload_roles() {
@@ -88,5 +88,5 @@ function upload_roles() {
     local destdir=$1
     local knife_file=$2
 
-    knife role from file ${destdir}/roles/*.rb -c ${knife_file}
+    /opt/chef-server/bin/knife role from file ${destdir}/roles/*.rb -c ${knife_file}
 }
