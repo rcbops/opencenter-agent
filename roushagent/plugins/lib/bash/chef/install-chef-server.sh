@@ -35,18 +35,15 @@ MY_IP=$(ip addr show dev ${PRIMARY_INTERFACE} | awk 'NR==3 {print $2}' | cut -d 
 
 CHEF_URL=${CHEF_URL:-$(get_sel "chef/chef_server_url")}
 CHEF_AMQP_PASSWORD=${CHEF_AMQP_PASSWORD:-$(get_sel "chef-solr/amqp_password")}
-#CHEF_WEBUI_PASSWORD=${CHEF_WEBUI_PASSWORD:-$(get_sel "chef-server-webui/admin_password")}
 CHEF_UNIX_USER=${CHEF_UNIX_USER:-root}
 
 # defaults if not set
 CHEF_URL=${CHEF_URL:-https://${MY_IP}}
 CHEF_AMQP_PASSWORD=${CHEF_AMQP_PASSWORD:-$(pwgen -1)}
-#CHEF_WEBUI_PASSWORD=${CHEF_WEBUI_PASSWORD:-$(pwgen -1)}
 
 cat <<EOF | debconf-set-selections
 chef chef/chef_server_url string ${CHEF_URL}
 chef-solr chef-solr/amqp_password password ${CHEF_AMQP_PASSWORD}
-#chef-server-webui chef-server-webui/admin_password password ${CHEF_WEBUI_PASSWORD}
 EOF
 
 if ! dpkg -l chef-server | grep -v '^ii ' &>/dev/null; then
@@ -88,5 +85,4 @@ return_fact "chef_server_client_name" "'admin'"
 return_fact "chef_server_client_pem" "'$(cat /root/.chef/admin.pem)'"
 return_fact "chef_server_uri" "'$CHEF_URL'"
 return_fact "chef_server_pem" "'$(cat /etc/chef/validation.pem)'"
-#return_attr "chef_webui_password" "'$CHEF_WEBUI_PASSWORD'"
 return_attr "chef_webui_password" "'p@ssw0rd1'"
