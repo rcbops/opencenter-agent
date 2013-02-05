@@ -94,11 +94,12 @@ class PackageThing(object):
             upgrade_count += 1
             upgrade_list.append(i.name)
         return(retval(0, "Package Update List", {
-        ['attrs.AvailablePackages := %s' % package_count,
-         'attrs.UpgradablePackageCount := %s' % upgrade_count,
-         'attrs.SkippedPackageCount := %s' % skipped_count,
-         'attrs.UpgradablePackages := %s' % json.dumps(upgrade_list),
-         'attrs.SkippedPackageList := %s' % json.dumps(skipped_list)]}))
+            "consequences": [
+                'attrs.AvailablePackages := %s' % package_count,
+                'attrs.UpgradablePackageCount := %s' % upgrade_count,
+                'attrs.SkippedPackageCount := %s' % skipped_count,
+                'attrs.UpgradablePackages := %s' % json.dumps(upgrade_list),
+                'attrs.SkippedPackageList := %s' % json.dumps(skipped_list)]}))
 
     def get_updatesApt(self, input_data):
         import apt_pkg
@@ -134,12 +135,12 @@ class PackageThing(object):
                         upgrade_list.append(i.name)
                         upgrade_count += 1
         return(retval(0, "Package Update List", {
-            "consequences":
-            ['attrs.AvailablePackages := %s' % cache.PackageCount,
-             'attrs.UpgradablePackageCount := %s' % upgrade_count,
-             'attrs.SkippedPackageCount := %s' % skipped_count,
-             'attrs.UpgradablePackages := %s' % json.dumps(upgrade_list),
-             'attrs.SkippedPackageList := %s' % json.dumps(skipped_list)]}))
+            "consequences": [
+                'attrs.AvailablePackages := %s' % cache.PackageCount,
+                'attrs.UpgradablePackageCount := %s' % upgrade_count,
+                'attrs.SkippedPackageCount := %s' % skipped_count,
+                'attrs.UpgradablePackages := %s' % json.dumps(upgrade_list),
+                'attrs.SkippedPackageList := %s' % json.dumps(skipped_list)]}))
 
     def dispatch(self, input_data):
         self.script.log = LOG
