@@ -24,7 +24,7 @@ function checkout_master() {
     local repo=$2
     local branch=$3
 
-    local version="2.9.0"
+    local version="2.9.1"
 
     topdir=$(dirname ${destdir})
     mkdir -p ${topdir}
