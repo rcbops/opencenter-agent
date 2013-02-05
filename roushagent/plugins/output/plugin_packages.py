@@ -3,7 +3,7 @@
 import sys
 import os
 from bashscriptrunner import BashScriptRunner
-
+import
 name = 'packages'
 
 
@@ -74,7 +74,7 @@ class PackageThing(object):
         elif (local_distro == 'redhat'):
             return self.get_updatesYum(input_data)
         else:
-            return retval(254, "Package action not supported on this OS", "")
+            return retval(254, "Package action not supported on this OS", {})
 
     def get_updatesYum(sef, input_data):
         import yum
@@ -93,12 +93,13 @@ class PackageThing(object):
             print "update package %s" % i
             upgrade_count += 1
             upgrade_list.append(i.name)
-        return(retval(0, "Package Update List",
-               {'AvailablePackages': package_count,
-                'UpgradablePackageCount': upgrade_count,
-                'SkippedPackageCount': skipped_count,
-                'UpgradablePackages': upgrade_list,
-                'SkippedPackageList': skipped_list}))
+        return(retval(0, "Package Update List", {
+            "consequences": [
+                'attrs.AvailablePackages := %s' % package_count,
+                'attrs.UpgradablePackageCount := %s' % upgrade_count,
+                'attrs.SkippedPackageCount := %s' % skipped_count,
+                'attrs.UpgradablePackages := %s' % json.dumps(upgrade_list),
+                'attrs.SkippedPackageList := %s' % json.dumps(skipped_list)]}))
 
     def get_updatesApt(self, input_data):
         import apt_pkg
@@ -133,12 +134,13 @@ class PackageThing(object):
                     else:
                         upgrade_list.append(i.name)
                         upgrade_count += 1
-        return(retval(0, "Package Update List",
-               {'AvailablePackages': cache.PackageCount,
-                'UpgradablePackageCount': upgrade_count,
-                'SkippedPackageCount': skipped_count,
-                'UpgradablePackages': upgrade_list,
-                'SkippedPackageList': skipped_list}))
+        return(retval(0, "Package Update List", {
+            "consequences": [
+                'attrs.AvailablePackages := %s' % cache.PackageCount,
+                'attrs.UpgradablePackageCount := %s' % upgrade_count,
+                'attrs.SkippedPackageCount := %s' % skipped_count,
+                'attrs.UpgradablePackages := %s' % json.dumps(upgrade_list),
+                'attrs.SkippedPackageList := %s' % json.dumps(skipped_list)]}))
 
     def dispatch(self, input_data):
         self.script.log = LOG
