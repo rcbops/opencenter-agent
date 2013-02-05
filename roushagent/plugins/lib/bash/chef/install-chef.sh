@@ -46,4 +46,8 @@ fi
 
 chmod +rx /etc/init.d/chef-client
 mkdir -p /var/log/chef
-/etc/init.d/chef-client start
+
+chef-client
+chef-client
+
+# /etc/init.d/chef-client start
