@@ -38,7 +38,7 @@ function checkout_master() {
         rm ${destdir}
     elif [ -e ${destdir} ]; then
         echo "${destdir} exists and is not a symlink"
-        exit 0
+        exit 1
     fi
 
     ln -s chef-cookbooks-v${version} ${destdir}
