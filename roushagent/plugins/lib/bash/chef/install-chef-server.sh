@@ -59,6 +59,7 @@ fi
 #fi
 
 HOMEDIR=$(getent passwd ${CHEF_UNIX_USER} | cut -d: -f6)
+export HOME=${HOMEDIR}
 mkdir -p ${HOMEDIR}/.chef
 cp /etc/chef-server/{chef-validator.pem,chef-webui.pem,admin.pem} ${HOMEDIR}/.chef
 chown -R ${CHEF_UNIX_USER}: ${HOMEDIR}/.chef
