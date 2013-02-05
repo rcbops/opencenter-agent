@@ -85,5 +85,5 @@ echo 'export PATH=${PATH}:/opt/chef-server/bin' >> ${HOMEDIR}/.profile
 return_fact "chef_server_client_name" "'admin'"
 return_fact "chef_server_client_pem" "'$(cat /root/.chef/admin.pem)'"
 return_fact "chef_server_uri" "'$CHEF_URL'"
-return_fact "chef_server_pem" "'$(cat /etc/chef/validation.pem)'"
+return_fact "chef_server_pem" "'$(cat /etc/chef-server/chef-validator.pem)'"
 return_attr "chef_webui_password" "'p@ssw0rd1'"
