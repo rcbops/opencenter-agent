@@ -43,11 +43,15 @@ def service_action(input_data):
     return _return(result, os.strerror(result))
 
 
-def _return(result_code, result_str, result_data={}):
+def _return(result_code, result_str, result_data=None):
+    if result_data is None:
+        result_data = {}
     return {'result_code': result_code,
             'result_str': result_str,
             'result_data': result_data}
 
 
-def _success(result_str='success', result_data={}):
+def _success(result_str='success', result_data=None):
+    if result_data is None:
+        result_data = {}
     return _return(0, result_str, result_data)
