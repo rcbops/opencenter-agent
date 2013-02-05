@@ -240,7 +240,7 @@ class OutputManager:
             with open(log_path, 'r') as fd:
                 fd.seek(0, os.SEEK_END)
                 length = fd.tell()
-                fd.seek(max((length-1024, 0)))
+                fd.seek(max((length - 1024, 0)))
                 data = fd.read()
 
             # open the socket and jet it out
@@ -269,15 +269,13 @@ class OutputManager:
 
         action = input_data['action']
         payload = input_data['payload']
-        result_code = 1
-        result_str = 'failed to perform action'
-        result_data = ''
+
         if action == 'modules.list':
             return _ok(data={'name': 'roush_agent_output_modules',
-                                  'value': self.loaded_modules})
+                             'value': self.loaded_modules})
         elif action == 'modules.actions':
             return _ok(data={'name': 'roush_agent_actions',
-                                  'value': self.actions()})
+                             'value': self.actions()})
         elif action == 'modules.load':
             if not 'path' in payload:
                 return _fail(message='no "path" specified in payload')
