@@ -3,7 +3,7 @@
 import sys
 import os
 from bashscriptrunner import BashScriptRunner
-import
+import json
 name = 'packages'
 
 
