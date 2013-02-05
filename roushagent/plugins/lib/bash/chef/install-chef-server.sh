@@ -46,6 +46,8 @@ chef chef/chef_server_url string ${CHEF_URL}
 chef-solr chef-solr/amqp_password password ${CHEF_AMQP_PASSWORD}
 EOF
 
+HOMEDIR=$(getent passwd ${CHEF_UNIX_USER} | cut -d: -f6)
+export HOME=${HOMEDIR}
 if ! dpkg -s chef-server &>/dev/null; then
     curl https://opscode-omnitruck-release.s3.amazonaws.com/ubuntu/12.04/x86_64/chef-server_11.0.4-1.ubuntu.12.04_amd64.deb > /tmp/chef-server.deb
     dpkg -i /tmp/chef-server.deb
@@ -58,8 +60,6 @@ fi
 #    curl -skS -L http://www.opscode.com/chef/install.sh | bash -s - -v 10.18.2-2
 #fi
 
-HOMEDIR=$(getent passwd ${CHEF_UNIX_USER} | cut -d: -f6)
-export HOME=${HOMEDIR}
 mkdir -p ${HOMEDIR}/.chef
 cp /etc/chef-server/{chef-validator.pem,chef-webui.pem,admin.pem} ${HOMEDIR}/.chef
 chown -R ${CHEF_UNIX_USER}: ${HOMEDIR}/.chef
