@@ -17,7 +17,7 @@ def handle_sleep(input_data):
     action = input_data['action']
     payload = input_data['payload']
 
-    sleep_time = payload.get('sleep_interval', 5)
+    sleep_time = int(payload.get('sleep_interval', 5))
     success_percentage = payload.get('success_percentage', 100)
 
     result = random.randrange(1, 100)
