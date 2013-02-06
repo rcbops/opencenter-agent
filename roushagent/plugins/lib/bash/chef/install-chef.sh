@@ -9,13 +9,22 @@ else
     DISTRO="debian"
 fi
 
-REQUIRED="CHEF_SERVER_URL CHEF_SERVER_PEM"
+REQUIRED="CHEF_SERVER_URL CHEF_SERVER_PEM CHEF_SERVER_HOSTNAME"
 for r in $REQUIRED; do
     if [[ -z ${!r} ]]; then
         echo Environment variable $r required but not set 1>&2
         exit 22
     fi
 done
+
+# pad the /etc/hosts file, as chef 11 seems to somehow require name resolution
+CHEF_HOST_PARTS=(${CHEF_SERVER_HOSTNAME//./ })
+CHEF_SERVER_SHORTNAME=${CHEF_HOST_PARTS[0]}
+CHEF_SERVER_IP=$(echo ${CHEF_SERVER_URL} | sed -e 's#.*://\([0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+\).*#\1#')
+
+if ( ! grep -q "${CHEF_SERVER_SHORTNAME}" /etc/hosts ); then
+    echo -e "\n${CHEF_SERVER_IP}\t${CHEF_SERVER_SHORTNAME}\t${CHEF_SERVER_HOSTNAME}\n" > /etc/hosts
+fi
 
 CHEF_ENVIRONMENT=${CHEF_ENVIRONMENT:-_default}
 DEBIAN_FRONTEND=noninteractive apt-get install curl -y --force-yes
