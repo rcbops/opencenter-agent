@@ -23,7 +23,7 @@ CHEF_SERVER_SHORTNAME=${CHEF_HOST_PARTS[0]}
 CHEF_SERVER_IP=$(echo ${CHEF_SERVER_URL} | sed -e 's#.*://\([0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+\).*#\1#')
 
 if ( ! grep -q "${CHEF_SERVER_SHORTNAME}" /etc/hosts ); then
-    echo -e "\n${CHEF_SERVER_IP}\t${CHEF_SERVER_SHORTNAME}\t${CHEF_SERVER_HOSTNAME}\n" > /etc/hosts
+    echo -e "\n${CHEF_SERVER_IP}\t${CHEF_SERVER_SHORTNAME}\t${CHEF_SERVER_HOSTNAME}\n" >> /etc/hosts
 fi
 
 CHEF_ENVIRONMENT=${CHEF_ENVIRONMENT:-_default}
