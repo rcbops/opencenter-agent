@@ -26,11 +26,13 @@ def setup(config={}):
                          'name': 'chef-server',
                          'required': True},
          'CHEF_SERVER_URL': {'type': 'evaluated',
-                             'expression': 'nodes.{chef_serv'
-                             'er}.facts.chef_server_uri'},
+                             'expression': 'nodes.{chef_server}.'
+                             'facts.chef_server_uri'},
          'CHEF_SERVER_PEM': {'type': 'evaluated',
-                             'expression': 'nodes.{chef_'
-                             'server}.facts.chef_server_pem'}})
+                             'expression': 'nodes.{chef_server}.'
+                             'facts.chef_server_pem'},
+         'CHEF_SERVER_HOSTNAME': {'type': 'evaluated',
+                                  'expression': 'nodes.{chef_server}.name'}})
     register_action('run_chef', chef.dispatch)
     register_action('install_chef_server', chef.dispatch)
     register_action('get_chef_info', chef.dispatch)
@@ -69,7 +71,8 @@ class ChefThing(object):
     def install_chef(self, input_data):
         payload = input_data['payload']
         action = input_data['action']
-        required = ['CHEF_SERVER_URL', 'CHEF_SERVER_PEM']
+        required = ['CHEF_SERVER_URL', 'CHEF_SERVER_PEM',
+                    'CHEF_SERVER_HOSTNAME']
         optional = ['CHEF_RUNLIST', 'CHEF_ENVIRONMENT', 'CHEF_VALIDATION_NAME']
         good, env = get_environment(required, optional, payload)
         if not good:
