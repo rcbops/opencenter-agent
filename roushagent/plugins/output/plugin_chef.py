@@ -71,7 +71,8 @@ class ChefThing(object):
     def install_chef(self, input_data):
         payload = input_data['payload']
         action = input_data['action']
-        required = ['CHEF_SERVER_URL', 'CHEF_SERVER_PEM', 'CHEF_SERVER_HOSTNAME']
+        required = ['CHEF_SERVER_URL', 'CHEF_SERVER_PEM',
+                    'CHEF_SERVER_HOSTNAME']
         optional = ['CHEF_RUNLIST', 'CHEF_ENVIRONMENT', 'CHEF_VALIDATION_NAME']
         good, env = get_environment(required, optional, payload)
         if not good:
