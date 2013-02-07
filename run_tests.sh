@@ -41,7 +41,7 @@ force=0
 #no_site_packages=0
 # installvenvopts=
 noseargs=
-noseopts="-v"
+noseopts="-v --processes=4"
 wrapper=""
 just_pep8=0
 coverage=0
@@ -84,7 +84,7 @@ function run_pep8 {
 }
 
 
-NOSETESTS="nosetests $noseopts $noseargs test.py"
+NOSETESTS="nosetests $noseopts $noseargs tests/*.py"
 
 if [ $never_venv -eq 0 ]
 then
