@@ -11,40 +11,39 @@ if ! [[ -e /etc/debian_version ]] ; then
     exit 1
 fi
 
-function get_sel() {
-    # $1 - debconf selection to get
-
-    local value=""
-    if ( debconf-get-selections | grep -q ${1}); then
-        value=$(debconf-get-selections | grep ${1} | awk '{ print $4 }')
-        echo "Found existing debconf value for ${1}: ${value}" >&2
-    fi
-
-    echo ${value}
-}
-
 locale-gen en_US.UTF-8
 
-apt-get install -y --force-yes debconf-utils pwgen wget lsb-release
+apt-get install -y --force-yes pwgen wget lsb-release
 cp /etc/resolv.conf /tmp/rc
 apt-get remove --purge resolvconf -y --force-yes
 cp /tmp/rc /etc/resolv.conf
 
 PRIMARY_INTERFACE=$(ip route list match 0.0.0.0 | awk 'NR==1 {print $5}')
 MY_IP=$(ip addr show dev ${PRIMARY_INTERFACE} | awk 'NR==3 {print $2}' | cut -d '/' -f1)
-
-CHEF_URL=${CHEF_URL:-$(get_sel "chef/chef_server_url")}
-CHEF_AMQP_PASSWORD=${CHEF_AMQP_PASSWORD:-$(get_sel "chef-solr/amqp_password")}
 CHEF_UNIX_USER=${CHEF_UNIX_USER:-root}
 
-# defaults if not set
-CHEF_URL=${CHEF_URL:-https://${MY_IP}}
-CHEF_AMQP_PASSWORD=${CHEF_AMQP_PASSWORD:-$(pwgen -1)}
+if [ ! -e "/etc/chef-server/chef-server.rb" ]; then
+  # defaults if not set
+  CHEF_WEBUI_PASSWORD=${CHEF_WEBUI_PASSWORD:-$(pwgen -1)}
+  CHEF_AMQP_PASSWORD=${CHEF_AMQP_PASSWORD:-$(pwgen -1)}
+  CHEF_POSTGRESQL_PASSWORD=${CHEF_POSTGRESQL_PASSWORD:-$(pwgen -1)}
+  CHEF_POSTGRESQL_RO_PASSWORD=${CHEF_POSTGRESQL_PASSWORD:-$(pwgen -1)}
+  CHEF_FE_PORT=${CHEF_FE_PORT:-80}
+  CHEF_FE_SSL_PORT=${CHEF_FE_SSL_PORT:-443}
+  CHEF_URL=${CHEF_URL:-https://${MY_IP}:${CHEF_FE_SSL_PORT}}
 
-cat <<EOF | debconf-set-selections
-chef chef/chef_server_url string ${CHEF_URL}
-chef-solr chef-solr/amqp_password password ${CHEF_AMQP_PASSWORD}
+  mkdir -p /etc/chef-server
+  cat > /etc/chef-server/chef-server.rb <<EOF
+node.override["chef_server"]["chef-server-webui"]["web_ui_admin_default_password"] = "${CHEF_WEBUI_PASSWORD}"
+node.override["chef_server"]["rabbitmq"]["password"] = "${CHEF_AMQP_PASSWORD}"
+node.override["chef_server"]["postgresql"]["sql_password"] = "${CHEF_POSTGRESQL_PASSWORD}"
+node.override["chef_server"]["postgresql"]["sql_ro_password"] = "${CHEF_POSTGRESQL_RO_PASSWORD}"
+node.override["chef_server"]["nginx"]["url"] = "${CHEF_URL}"
+node.override["chef_server"]["nginx"]["ssl_port"] = ${CHEF_FE_SSL_PORT}
+node.override["chef_server"]["nginx"]["non_ssl_port"] = ${CHEF_FE_PORT}
+node.override["chef_server"]["nginx"]["enable_non_ssl"] = true
 EOF
+fi
 
 HOMEDIR=$(getent passwd ${CHEF_UNIX_USER} | cut -d: -f6)
 export HOME=${HOMEDIR}
@@ -54,11 +53,6 @@ if ! dpkg -s chef-server &>/dev/null; then
     chef-server-ctl reconfigure
     rm -f /tmp/chef-server.deb
 fi
-
-# is this needed?
-#if ! dpkg -l chef-client | grep -v '^ii ' &>/dev/null; then
-#    curl -skS -L http://www.opscode.com/chef/install.sh | bash -s - -v 10.18.2-2
-#fi
 
 mkdir -p ${HOMEDIR}/.chef
 cp /etc/chef-server/{chef-validator.pem,chef-webui.pem,admin.pem} ${HOMEDIR}/.chef
@@ -84,6 +78,6 @@ echo 'export PATH=${PATH}:/opt/chef-server/bin' >> ${HOMEDIR}/.profile
 
 return_fact "chef_server_client_name" "'admin'"
 return_fact "chef_server_client_pem" "'$(cat /root/.chef/admin.pem)'"
-return_fact "chef_server_uri" "'$CHEF_URL'"
+return_fact "chef_server_uri" "'${CHEF_URL}'"
 return_fact "chef_server_pem" "'$(cat /etc/chef-server/chef-validator.pem)'"
-return_attr "chef_webui_password" "'p@ssw0rd1'"
+return_attr "chef_webui_password" "'${CHEF_WEBUI_PASSWORD}'"
