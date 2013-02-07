@@ -58,8 +58,6 @@ mkdir -p ${HOMEDIR}/.chef
 cp /etc/chef-server/{chef-validator.pem,chef-webui.pem,admin.pem} ${HOMEDIR}/.chef
 chown -R ${CHEF_UNIX_USER}: ${HOMEDIR}/.chef
 
-sleep 10
-
 if [[ ! -e ${HOMEDIR}/.chef/knife.rb ]]; then
 cat <<EOF | /opt/chef-server/bin/knife configure -i
 ${HOMEDIR}/.chef/knife.rb
