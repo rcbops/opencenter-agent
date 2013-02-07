@@ -100,7 +100,7 @@ def handle_adventurate(input_data):
             node_obj.adventure_id = None
             node_obj.save()
 
-        return _retval(1, result_data=detailed_exception(e))
+        return _retval(1, result_data=detailed_exception())
 
     output_data = {'result_code': 1,
                    'result_str': 'no return data from adventure',
