@@ -41,7 +41,7 @@ force=0
 #no_site_packages=0
 # installvenvopts=
 noseargs=
-noseopts="-v --processes=4"
+noseopts="-v"
 wrapper=""
 just_pep8=0
 coverage=0
