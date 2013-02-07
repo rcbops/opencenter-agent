@@ -6,7 +6,7 @@ import sys
 import traceback
 
 
-def detailed_exception(e):
+def detailed_exception():
     exc_type, exc_value, exc_traceback = sys.exc_info()
     full_traceback = repr(
         traceback.format_exception(
