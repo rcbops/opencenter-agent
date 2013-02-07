@@ -57,7 +57,7 @@ class RoushAgentDispatchWorker(Thread):
             raise KeyboardInterrupt
 
         except Exception as e:
-            etext = detailed_exception(e)
+            etext = detailed_exception()
             self.logger.debug('exception in output handler: %s' % etext)
             data['output'] = {'result_code': 254,
                               'result_str': 'dispatch error',
@@ -96,7 +96,7 @@ class RoushAgent():
         self._cleanup()
 
         if exception:
-            etext = detailed_exception(exception)
+            etext = detailed_exception()
             self.logger.error('exception in initializing roush-agent: %s'
                               % etext)
 
@@ -324,7 +324,7 @@ class RoushAgent():
             self._exit(None)
 
         except Exception, e:
-            self.logger.debug('Exception: %s' % detailed_exception(e))
+            self.logger.debug('Exception: %s' % detailed_exception())
 
         self.logger.debug("falling out of dispatch loop")
         self._exit(None)
