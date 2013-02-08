@@ -296,6 +296,21 @@ class TestInfrastructure(testtools.TestCase):
         self.assertTrue(debug)
         self.assertEqual(config_file, 'gerkin')
 
+    def test_configure_logs_no_config(self):
+        agent = RoushAgentNoInitialization([])
+        agent._configure_logs(None)
+
+    def test_configure_logs_bogus_config(self):
+        agent = RoushAgentNoInitialization([])
+        agent.logger = logging.getLogger() 
+        agent.logger.addHandler(logging.StreamHandler(sys.stderr))
+
+        # If we pass a bogus config we should end up with the same handlers
+        # at the end as we did beforehand.
+        self.assertEquals(len(agent.logger.handlers), 5)
+        agent._configure_logs('this is a bogus config')
+        self.assertEquals(len(agent.logger.handlers), 5)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -4,6 +4,7 @@ import fcntl
 import getopt
 import json
 import logging
+import logging.config
 import os
 import signal
 import socket
@@ -180,7 +181,6 @@ class RoushAgent():
 
     def _configure_logs(self, configfile):
         if configfile:
-            import logging.config
             phandlers = self.logger.handlers
             try:
                 self.logger.handlers = []
