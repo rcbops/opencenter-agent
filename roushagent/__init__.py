@@ -4,6 +4,7 @@ import fcntl
 import getopt
 import json
 import logging
+import logging.config
 import os
 import signal
 import socket
@@ -16,6 +17,7 @@ from threading import Thread
 from ConfigParser import ConfigParser
 from logging.handlers import SysLogHandler
 
+from roushagent import exceptions
 from roushagent.modules import OutputManager
 from roushagent.modules import InputManager
 from roushagent.utils import detailed_exception
@@ -180,7 +182,6 @@ class RoushAgent():
 
     def _configure_logs(self, configfile):
         if configfile:
-            import logging.config
             phandlers = self.logger.handlers
             try:
                 self.logger.handlers = []
@@ -206,7 +207,17 @@ class RoushAgent():
             defaults = {}
 
         cp = ConfigParser(defaults=defaults)
+
+        if not os.path.exists(configfile):
+            raise exceptions.FileNotFound(
+                'Configuraton file %s is missing' % configfile)
+
         cp.read(configfile)
+        if not cp.sections():
+            raise exceptions.NoConfigFound(
+                'The configuration file %s appears to contain no configuration'
+                % configfile)
+
         config = self.config = dict([[s, dict(cp.items(s))]
                                      for s in cp.sections()])
         config_section = self.config_section
@@ -218,25 +229,30 @@ class RoushAgent():
                     raise RuntimeError(
                         'file %s: include directive %s is not a file' % (
                             configfile,
-                            config[config_section]['include'],))
+                            config[config_section]['include']))
                 config = self.config = self._read_config(
-                    config[config_section]['include'])
+                    config[config_section]['include'], defaults=config)
+
             if 'include_dir' in config[config_section]:
                 # import and merge a whole directory
                 if not os.path.isdir(config[config_section]['include_dir']):
                     raise RuntimeError(
-                        'file %s: include_dir directive %s is not a dir' % (
-                            configfile,
-                            config[config_section]['include_dir'],))
+                        'file %s: include_dir directive %s is not a directory'
+                        % (configfile,
+                           config[config_section]['include_dir']))
 
                 for f in sorted(os.listdir(
                         config[config_section]['include_dir'])):
-                    if f.endswith('.conf'):
+                    if not f.endswith('.conf'):
+                        self.logger.info('Skipping file %s because it does '
+                                         'not end in .conf' % f)
+                    else:
                         import_file = os.path.join(
                             config[config_section]['include_dir'],
                             f)
-                        config = self.config = self._read_config(import_file,
-                                                                 config)
+                        config = self.config = self._read_config(
+                            import_file, defaults=config)
+
         # merge in the read config into the exisiting config
         for section in config:
             if section in defaults:

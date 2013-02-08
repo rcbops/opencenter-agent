@@ -2,12 +2,16 @@
 
 import fixtures
 import logging
+import os
 import StringIO
 import sys
 import testtools
 import unittest
 
+from roushagent import exceptions
 from roushagent import RoushAgent
+from roushagent import utils
+
 
 # Suppress WARNING logs
 LOG = logging.getLogger('output')
@@ -295,6 +299,106 @@ class TestInfrastructure(testtools.TestCase):
         self.assertTrue(background)
         self.assertTrue(debug)
         self.assertEqual(config_file, 'gerkin')
+
+    def test_configure_logs_no_config(self):
+        agent = RoushAgentNoInitialization([])
+        agent._configure_logs(None)
+
+    def test_configure_logs_bogus_config(self):
+        agent = RoushAgentNoInitialization([])
+        agent.logger = logging.getLogger()
+        agent.logger.addHandler(logging.StreamHandler(sys.stderr))
+
+        # If we pass a bogus config we should end up with the same handlers
+        # at the end as we did beforehand.
+        self.assertEquals(len(agent.logger.handlers), 5)
+        agent._configure_logs('this is a bogus config')
+        self.assertEquals(len(agent.logger.handlers), 5)
+
+    def test_read_config_missing(self):
+        agent = RoushAgentNoInitialization([])
+        agent.config_section = 'taskerator'
+        with utils.temporary_file() as config_file:
+            os.remove(config_file)
+            self.assertRaises(exceptions.FileNotFound, agent._read_config,
+                              config_file)
+
+    def test_read_config_empty(self):
+        agent = RoushAgentNoInitialization([])
+        agent.config_section = 'taskerator'
+        with utils.temporary_file() as config_file:
+            self.assertRaises(exceptions.NoConfigFound, agent._read_config,
+                              config_file)
+
+    def test_read_config_simple_with_default(self):
+        agent = RoushAgentNoInitialization([])
+        with utils.temporary_file() as config_file:
+            with open(config_file, 'w') as f:
+                f.write("""[taskerator]
+endpoint = http://127.0.0.1:8080/admin
+banana = False""")
+
+            agent.config_section = 'taskerator'
+            config = agent._read_config(
+                config_file, defaults={'taskerator': {'banana': True}})
+            self.assertTrue(config['taskerator']['banana'])
+            self.assertEqual(config['taskerator']['endpoint'],
+                             'http://127.0.0.1:8080/admin')
+
+    def test_read_config_with_included_file(self):
+        agent = RoushAgentNoInitialization([])
+        with utils.temporary_directory() as path:
+            config_file = os.path.join(path, 'config')
+            included_file = os.path.join(path, 'included')
+
+            with open(config_file, 'w') as f:
+                f.write("""[taskerator]
+endpoint = http://127.0.0.1:8080/admin
+include = %s""" % included_file)
+
+            agent.config_section = 'taskerator'
+            self.assertRaises(RuntimeError, agent._read_config, config_file)
+
+            with open(included_file, 'w') as f:
+                f.write("""[taskerator]
+included_value = fish""")
+
+            config = agent._read_config(config_file)
+            self.assertEquals(config['taskerator']['endpoint'],
+                              'http://127.0.0.1:8080/admin')
+            self.assertEqual(config['taskerator']['included_value'], 'fish')
+
+    def test_read_config_with_included_directory(self):
+        agent = RoushAgentNoInitialization([])
+        with utils.temporary_directory() as path:
+            config_file = os.path.join(path, 'config')
+            included_dir = os.path.join(path, 'included')
+
+            with open(config_file, 'w') as f:
+                f.write("""[taskerator]
+endpoint = http://127.0.0.1:8080/admin
+original = foo
+include_dir = %s""" % included_dir)
+
+            agent.config_section = 'taskerator'
+            self.assertRaises(RuntimeError, agent._read_config, config_file)
+
+            os.mkdir(included_dir)
+            with open(os.path.join(included_dir, 'banana'), 'w') as f:
+                f.write("""[taskerator]
+endpoint = notthis""")
+
+            config = agent._read_config(config_file)
+            self.assertEquals(config['taskerator']['endpoint'],
+                              'http://127.0.0.1:8080/admin')
+
+            with open(os.path.join(included_dir, 'foo.conf'), 'w') as f:
+                f.write("""[taskerator]
+endpoint = butthis""")
+
+            config = agent._read_config(config_file)
+            self.assertEquals(config['taskerator']['endpoint'], 'butthis')
+            self.assertEquals(config['taskerator']['original'], 'foo')
 
 
 if __name__ == '__main__':
