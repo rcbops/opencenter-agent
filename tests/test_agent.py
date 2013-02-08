@@ -8,6 +8,7 @@ import sys
 import testtools
 import unittest
 
+from roushagent import exceptions
 from roushagent import RoushAgent
 from roushagent import utils
 
@@ -316,14 +317,29 @@ class TestInfrastructure(testtools.TestCase):
 
     def test_read_config_missing(self):
         agent = RoushAgentNoInitialization([])
+        agent.config_section='taskerator'
         with utils.temporary_file() as config_file:
             os.remove(config_file)
-            self.assertRaises(AttributeError, agent._read_config, config_file)
+            self.assertRaises(exceptions.FileNotFound, agent._read_config,
+                              config_file)
 
     def test_read_config_empty(self):
         agent = RoushAgentNoInitialization([])
+        agent.config_section='taskerator'
         with utils.temporary_file() as config_file:
-            self.assertRaises(AttributeError, agent._read_config, config_file)
+            self.assertRaises(exceptions.NoConfigFound, agent._read_config,
+                              config_file)
+
+    def test_read_config_simple(self):
+        agent = RoushAgentNoInitialization([])
+        with utils.temporary_file() as config_file:
+            with open(config_file, 'w') as f:
+                f.write("""[taskerator]
+endpoint = http://127.0.0.1:8080/admin
+banana = False""")
+
+            agent.config_section='taskerator'
+            agent._read_config(config_file, defaults={'banana': True})
 
 
 if __name__ == '__main__':
