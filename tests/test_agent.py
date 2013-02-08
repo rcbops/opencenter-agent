@@ -184,6 +184,17 @@ class ExitCalledException(Exception):
     pass
 
 
+class FakeHandler(object):
+    def __init__(self, raise_exception=False):
+        self.raise_exception = raise_exception
+        self.stop_called = False
+
+    def stop(self):
+        self.stop_called = True
+        if self.raise_exception:
+            raise Exception('exception!')
+
+
 class TestInfrastructure(testtools.TestCase):
     def fake_exit(self, exit_code):
         self.exit_code_set = exit_code
@@ -223,6 +234,22 @@ class TestInfrastructure(testtools.TestCase):
         except FakeExceptionForTest:
             self.assertRaises(ExitCalledException, agent._exit, True)
         self.assertEqual(self.exit_code_set, 1)
+
+    def test_cleanup_no_exceptions(self):
+        agent = RoushAgentNoInitialization([])
+        agent.input_handler = FakeHandler(False)
+        agent.output_handler = FakeHandler(False)
+        agent._cleanup()
+        self.assertTrue(agent.input_handler.stop_called)
+        self.assertTrue(agent.output_handler.stop_called)
+
+    def test_cleanup_exceptions(self):
+        agent = RoushAgentNoInitialization([])
+        agent.input_handler = FakeHandler(True)
+        agent.output_handler = FakeHandler(True)
+        agent._cleanup()
+        self.assertTrue(agent.input_handler.stop_called)
+        self.assertTrue(agent.output_handler.stop_called)
 
 
 if __name__ == '__main__':
