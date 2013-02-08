@@ -4,6 +4,7 @@ import fcntl
 import getopt
 import json
 import logging
+import logging.config
 import os
 import signal
 import socket
@@ -16,6 +17,7 @@ from threading import Thread
 from ConfigParser import ConfigParser
 from logging.handlers import SysLogHandler
 
+from roushagent import exceptions
 from roushagent.modules import OutputManager
 from roushagent.modules import InputManager
 from roushagent.utils import detailed_exception
@@ -180,7 +182,6 @@ class RoushAgent():
 
     def _configure_logs(self, configfile):
         if configfile:
-            import logging.config
             phandlers = self.logger.handlers
             try:
                 self.logger.handlers = []
@@ -206,7 +207,17 @@ class RoushAgent():
             defaults = {}
 
         cp = ConfigParser(defaults=defaults)
+
+        if not os.path.exists(configfile):
+            raise exceptions.FileNotFound(
+                'Configuraton file %s is missing' % configfile)
+
         cp.read(configfile)
+        if not cp.sections():
+            raise exceptions.NoConfigFound(
+                'The configuration file %s appears to contain no configuration'
+                % configfile)
+
         config = self.config = dict([[s, dict(cp.items(s))]
                                      for s in cp.sections()])
         config_section = self.config_section
