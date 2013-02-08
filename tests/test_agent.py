@@ -177,8 +177,8 @@ class TestRoushAgentOutputBroken(unittest.TestCase):
 class RoushAgentNoInitialization(RoushAgent):
     """Turn off initialization to make unit testing easier."""
     def _initialize(self, argv, config_section):
-        self.logger = logging.getLogger() 
-        self.logger.addHandler(logging.StreamHandler(sys.stderr)) 
+        self.logger = logging.getLogger()
+        self.logger.addHandler(logging.StreamHandler(sys.stderr))
 
 
 class ExitCalledException(Exception):
@@ -200,7 +200,7 @@ class TestInfrastructure(testtools.TestCase):
     def fake_exit(self, exit_code):
         self.exit_code_set = exit_code
         raise ExitCalledException()
-        
+
     def test_exit_no_exception(self):
         self.exit_code_set = None
         self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
@@ -213,7 +213,7 @@ class TestInfrastructure(testtools.TestCase):
 
         self.assertRaises(ExitCalledException, agent._exit, None)
         self.assertEqual(self.exit_code_set, 0)
-        
+
     def test_exit_exception(self):
         self.exit_code_set = None
         self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
