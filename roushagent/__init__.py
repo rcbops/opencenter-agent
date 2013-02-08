@@ -71,6 +71,9 @@ class RoushAgentDispatchWorker(Thread):
 
 class RoushAgent():
     def __init__(self, argv, config_section='main'):
+        self._initialize(argv, config_section)
+
+    def _initialize(self, argv, config_section):
         self.base = os.path.realpath(os.path.join(os.path.dirname(__file__),
                                                   '..'))
         self.config_section = config_section
@@ -88,10 +91,15 @@ class RoushAgent():
         try:
             self._setup_scaffolding(argv)
             self._setup_handlers()
-        except Exception as e:
-            self._exit(e)
+        except Exception:
+            self._exit(True)
 
     def _exit(self, exception):
+        """Terminate the agent.
+
+        :param: exception: whether an exception should be logged. This should
+                           be a boolean value.
+        """
         self.logger.debug('exiting...')
         self._cleanup()
 
@@ -321,10 +329,10 @@ class RoushAgent():
                     worker.start()
         except KeyboardInterrupt:
             self.logger.debug('Got keyboard interrupt.')
-            self._exit(None)
+            self._exit(False)
 
         except Exception, e:
             self.logger.debug('Exception: %s' % detailed_exception())
 
         self.logger.debug("falling out of dispatch loop")
-        self._exit(None)
+        self._exit(False)
