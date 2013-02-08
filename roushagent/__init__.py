@@ -4,6 +4,7 @@ import fcntl
 import getopt
 import json
 import logging
+import logging.config
 import os
 import signal
 import socket
@@ -16,6 +17,7 @@ from threading import Thread
 from ConfigParser import ConfigParser
 from logging.handlers import SysLogHandler
 
+from roushagent import exceptions
 from roushagent.modules import OutputManager
 from roushagent.modules import InputManager
 from roushagent.utils import detailed_exception
@@ -57,7 +59,7 @@ class RoushAgentDispatchWorker(Thread):
             raise KeyboardInterrupt
 
         except Exception as e:
-            etext = detailed_exception(e)
+            etext = detailed_exception()
             self.logger.debug('exception in output handler: %s' % etext)
             data['output'] = {'result_code': 254,
                               'result_str': 'dispatch error',
@@ -71,6 +73,9 @@ class RoushAgentDispatchWorker(Thread):
 
 class RoushAgent():
     def __init__(self, argv, config_section='main'):
+        self._initialize(argv, config_section)
+
+    def _initialize(self, argv, config_section):
         self.base = os.path.realpath(os.path.join(os.path.dirname(__file__),
                                                   '..'))
         self.config_section = config_section
@@ -88,15 +93,20 @@ class RoushAgent():
         try:
             self._setup_scaffolding(argv)
             self._setup_handlers()
-        except Exception as e:
-            self._exit(e)
+        except Exception:
+            self._exit(True)
 
     def _exit(self, exception):
+        """Terminate the agent.
+
+        :param: exception: whether an exception should be logged. This should
+                           be a boolean value.
+        """
         self.logger.debug('exiting...')
         self._cleanup()
 
         if exception:
-            etext = detailed_exception(exception)
+            etext = detailed_exception()
             self.logger.error('exception in initializing roush-agent: %s'
                               % etext)
 
@@ -136,7 +146,7 @@ class RoushAgent():
             except:
                 pass
 
-    def usage(self):
+    def _usage(self):
         """Print a usage message."""
 
         print """The following command line flags are supported:
@@ -154,7 +164,7 @@ class RoushAgent():
                                        ['config=', 'verbose', 'daemonize'])
         except getopt.GetoptError as err:
             print str(err)
-            self.usage()
+            self._usage()
             sys.exit(1)
 
         for o, a in opts:
@@ -165,14 +175,13 @@ class RoushAgent():
             elif o in ('-d', '--daemonize'):
                 background = True
             else:
-                self.usage()
+                self._usage()
                 sys.exit(1)
 
         return background, debug, configfile
 
     def _configure_logs(self, configfile):
         if configfile:
-            import logging.config
             phandlers = self.logger.handlers
             try:
                 self.logger.handlers = []
@@ -182,9 +191,33 @@ class RoushAgent():
                 self.logger.error("Unable to configure logging")
         self.logger = logging.getLogger()
 
-    def _read_config(self, configfile, defaults={}):
+    def _read_config(self, configfile, defaults=None):
+        """Read a configuration file from disk.
+
+        :param: configfile: the path to a configuration file
+        :para: defaults:    default configuration values as a dictionary
+
+        :returns: configuration values as a dictionary
+        """
+
+        # You can't have a dictionary as a default argument for a method:
+        # http://pythonconquerstheuniverse.wordpress.com/category/
+        #     python-gotchas/
+        if not defaults:
+            defaults = {}
+
         cp = ConfigParser(defaults=defaults)
+
+        if not os.path.exists(configfile):
+            raise exceptions.FileNotFound(
+                'Configuraton file %s is missing' % configfile)
+
         cp.read(configfile)
+        if not cp.sections():
+            raise exceptions.NoConfigFound(
+                'The configuration file %s appears to contain no configuration'
+                % configfile)
+
         config = self.config = dict([[s, dict(cp.items(s))]
                                      for s in cp.sections()])
         config_section = self.config_section
@@ -196,25 +229,30 @@ class RoushAgent():
                     raise RuntimeError(
                         'file %s: include directive %s is not a file' % (
                             configfile,
-                            config[config_section]['include'],))
+                            config[config_section]['include']))
                 config = self.config = self._read_config(
-                    config[config_section]['include'])
+                    config[config_section]['include'], defaults=config)
+
             if 'include_dir' in config[config_section]:
                 # import and merge a whole directory
                 if not os.path.isdir(config[config_section]['include_dir']):
                     raise RuntimeError(
-                        'file %s: include_dir directive %s is not a dir' % (
-                            configfile,
-                            config[config_section]['include_dir'],))
+                        'file %s: include_dir directive %s is not a directory'
+                        % (configfile,
+                           config[config_section]['include_dir']))
 
                 for f in sorted(os.listdir(
                         config[config_section]['include_dir'])):
-                    if f.endswith('.conf'):
+                    if not f.endswith('.conf'):
+                        self.logger.info('Skipping file %s because it does '
+                                         'not end in .conf' % f)
+                    else:
                         import_file = os.path.join(
                             config[config_section]['include_dir'],
                             f)
-                        config = self.config = self._read_config(import_file,
-                                                                 config)
+                        config = self.config = self._read_config(
+                            import_file, defaults=config)
+
         # merge in the read config into the exisiting config
         for section in config:
             if section in defaults:
@@ -321,10 +359,10 @@ class RoushAgent():
                     worker.start()
         except KeyboardInterrupt:
             self.logger.debug('Got keyboard interrupt.')
-            self._exit(None)
+            self._exit(False)
 
         except Exception, e:
-            self.logger.debug('Exception: %s' % detailed_exception(e))
+            self.logger.debug('Exception: %s' % detailed_exception())
 
         self.logger.debug("falling out of dispatch loop")
-        self._exit(None)
+        self._exit(False)
