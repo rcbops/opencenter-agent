@@ -229,25 +229,30 @@ class RoushAgent():
                     raise RuntimeError(
                         'file %s: include directive %s is not a file' % (
                             configfile,
-                            config[config_section]['include'],))
+                            config[config_section]['include']))
                 config = self.config = self._read_config(
-                    config[config_section]['include'])
+                    config[config_section]['include'], defaults=config)
+
             if 'include_dir' in config[config_section]:
                 # import and merge a whole directory
                 if not os.path.isdir(config[config_section]['include_dir']):
                     raise RuntimeError(
-                        'file %s: include_dir directive %s is not a dir' % (
-                            configfile,
-                            config[config_section]['include_dir'],))
+                        'file %s: include_dir directive %s is not a directory'
+                        % (configfile,
+                           config[config_section]['include_dir']))
 
                 for f in sorted(os.listdir(
                         config[config_section]['include_dir'])):
-                    if f.endswith('.conf'):
+                    if not f.endswith('.conf'):
+                        self.logger.info('Skipping file %s because it does '
+                                         'not end in .conf' % f)
+                    else:
                         import_file = os.path.join(
                             config[config_section]['include_dir'],
                             f)
-                        config = self.config = self._read_config(import_file,
-                                                                 config)
+                        config = self.config = self._read_config(
+                            import_file, defaults=config)
+
         # merge in the read config into the exisiting config
         for section in config:
             if section in defaults:
