@@ -39,6 +39,11 @@ class TestTemporaryFiles(unittest.TestCase):
             self.assertTrue(os.path.exists(filename))
         self.assertFalse(os.path.exists(filename))
 
+    def test_temporary_directory(self):
+        with utils.temporary_directory() as path:
+            self.assertTrue(os.path.exists(path))
+        self.assertFalse(os.path.exists(path))
+
 
 if __name__ == '__main__':
     unittest.main()
