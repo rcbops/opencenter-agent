@@ -261,5 +261,41 @@ class TestInfrastructure(testtools.TestCase):
 
         self.assertNotEqual(io.getvalue().find('verbose'), -1)
 
+    def test_parse_opts_bad_arg(self):
+        io = StringIO.StringIO()
+        self.useFixture(fixtures.MonkeyPatch('sys.stdout', io))
+
+        self.exit_code_set = None
+        self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
+
+        agent = RoushAgentNoInitialization([])
+
+        try:
+            agent._parse_opts(['--banana'])
+        except ExitCalledException:
+            pass
+
+        self.assertEqual(self.exit_code_set, 1)
+        self.assertNotEqual(io.getvalue().find('verbose'), -1)
+
+    def test_parse_opts_sets_values(self):
+        io = StringIO.StringIO()
+        self.useFixture(fixtures.MonkeyPatch('sys.stdout', io))
+
+        self.exit_code_set = None
+        self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
+
+        agent = RoushAgentNoInitialization([])
+        background, debug, config_file = agent._parse_opts(
+            ['--config', 'gerkin', '--verbose', '-d'])
+
+        self.assertEqual(self.exit_code_set, None)
+        self.assertEqual(len(io.getvalue()), 0)
+
+        self.assertTrue(background)
+        self.assertTrue(debug)
+        self.assertEqual(config_file, 'gerkin')
+
+
 if __name__ == '__main__':
     unittest.main()
