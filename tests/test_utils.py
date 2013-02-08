@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-import unittest
 import logging
+import os
+import unittest
 
 from roushagent import utils
 
@@ -30,6 +31,14 @@ class TestRoushUtils(unittest.TestCase):
             self.assertNotEqual(trace_as_string.find('foo()'), -1)
             self.assertEqual(trace_as_string.find('banana()'), -1)
             self.assertNotEqual(trace_as_string.find('testing 123'), -1)
+
+
+class TestTemporaryFiles(unittest.TestCase):
+    def test_temporary_file(self):
+        with utils.temporary_file() as filename:
+            self.assertTrue(os.path.exists(filename))
+        self.assertFalse(os.path.exists(filename))
+
 
 if __name__ == '__main__':
     unittest.main()

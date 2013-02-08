@@ -2,12 +2,15 @@
 
 import fixtures
 import logging
+import os
 import StringIO
 import sys
 import testtools
 import unittest
 
 from roushagent import RoushAgent
+from roushagent import utils
+
 
 # Suppress WARNING logs
 LOG = logging.getLogger('output')
@@ -310,6 +313,17 @@ class TestInfrastructure(testtools.TestCase):
         self.assertEquals(len(agent.logger.handlers), 5)
         agent._configure_logs('this is a bogus config')
         self.assertEquals(len(agent.logger.handlers), 5)
+
+    def test_read_config_missing(self):
+        agent = RoushAgentNoInitialization([])
+        with utils.temporary_file() as config_file:
+            os.remove(config_file)
+            self.assertRaises(AttributeError, agent._read_config, config_file)
+
+    def test_read_config_empty(self):
+        agent = RoushAgentNoInitialization([])
+        with utils.temporary_file() as config_file:
+            self.assertRaises(AttributeError, agent._read_config, config_file)
 
 
 if __name__ == '__main__':
