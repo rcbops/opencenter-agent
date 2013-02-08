@@ -3,6 +3,9 @@
 set -o errexit
 source "$ROUSH_BASH_DIR/roush.sh"
 
+# forcing chef-client install to 10.18.2-2
+CHEF_CLIENT_VERSION=${CHEF_CLIENT_VERSION:-"10.18.2-2"}
+
 if [[ -f /etc/redhat-release ]]; then
     DISTRO="redhat"
 else
@@ -28,9 +31,10 @@ fi
 
 CHEF_ENVIRONMENT=${CHEF_ENVIRONMENT:-_default}
 DEBIAN_FRONTEND=noninteractive apt-get install curl -y --force-yes
-# forcing chef-client install to 10.18.2-2
-curl -skS -L http://www.opscode.com/chef/install.sh | bash -s - -v 10.18.2-2
-mkdir -p /etc/chef
+curl -skS -L http://www.opscode.com/chef/install.sh | bash -s - -v ${CHEF_CLIENT_VERSION}
+if ! [[ -e /etc/chef ]]; then
+    mkdir -p /etc/chef
+fi
 cat <<EOF >/etc/chef/client.rb
 chef_server_url "$CHEF_SERVER_URL"
 chef_environment "$CHEF_ENVIRONMENT"
@@ -60,3 +64,5 @@ chef-client
 chef-client
 
 # /etc/init.d/chef-client start
+
+return_attr "chef_client_version" "'${CHEF_CLIENT_VERSION}'"
