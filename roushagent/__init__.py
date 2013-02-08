@@ -190,7 +190,21 @@ class RoushAgent():
                 self.logger.error("Unable to configure logging")
         self.logger = logging.getLogger()
 
-    def _read_config(self, configfile, defaults={}):
+    def _read_config(self, configfile, defaults=None):
+        """Read a configuration file from disk.
+
+        :param: configfile: the path to a configuration file
+        :para: defaults:    default configuration values as a dictionary
+
+        :returns: configuration values as a dictionary
+        """
+
+        # You can't have a dictionary as a default argument for a method:
+        # http://pythonconquerstheuniverse.wordpress.com/category/
+        #     python-gotchas/
+        if not defaults:
+            defaults = {}
+
         cp = ConfigParser(defaults=defaults)
         cp.read(configfile)
         config = self.config = dict([[s, dict(cp.items(s))]
