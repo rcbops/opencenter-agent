@@ -306,7 +306,7 @@ class TestInfrastructure(testtools.TestCase):
 
     def test_configure_logs_bogus_config(self):
         agent = RoushAgentNoInitialization([])
-        agent.logger = logging.getLogger() 
+        agent.logger = logging.getLogger()
         agent.logger.addHandler(logging.StreamHandler(sys.stderr))
 
         # If we pass a bogus config we should end up with the same handlers
@@ -317,7 +317,7 @@ class TestInfrastructure(testtools.TestCase):
 
     def test_read_config_missing(self):
         agent = RoushAgentNoInitialization([])
-        agent.config_section='taskerator'
+        agent.config_section = 'taskerator'
         with utils.temporary_file() as config_file:
             os.remove(config_file)
             self.assertRaises(exceptions.FileNotFound, agent._read_config,
@@ -325,7 +325,7 @@ class TestInfrastructure(testtools.TestCase):
 
     def test_read_config_empty(self):
         agent = RoushAgentNoInitialization([])
-        agent.config_section='taskerator'
+        agent.config_section = 'taskerator'
         with utils.temporary_file() as config_file:
             self.assertRaises(exceptions.NoConfigFound, agent._read_config,
                               config_file)
@@ -338,7 +338,7 @@ class TestInfrastructure(testtools.TestCase):
 endpoint = http://127.0.0.1:8080/admin
 banana = False""")
 
-            agent.config_section='taskerator'
+            agent.config_section = 'taskerator'
             config = agent._read_config(
                 config_file, defaults={'taskerator': {'banana': True}})
             self.assertTrue(config['taskerator']['banana'])
@@ -356,7 +356,7 @@ banana = False""")
 endpoint = http://127.0.0.1:8080/admin
 include = %s""" % included_file)
 
-            agent.config_section='taskerator'
+            agent.config_section = 'taskerator'
             self.assertRaises(RuntimeError, agent._read_config, config_file)
 
             with open(included_file, 'w') as f:
@@ -365,7 +365,7 @@ included_value = fish""")
 
             config = agent._read_config(config_file)
             self.assertEquals(config['taskerator']['endpoint'],
-                             'http://127.0.0.1:8080/admin')
+                              'http://127.0.0.1:8080/admin')
             self.assertEqual(config['taskerator']['included_value'], 'fish')
 
     def test_read_config_with_included_directory(self):
@@ -380,7 +380,7 @@ endpoint = http://127.0.0.1:8080/admin
 original = foo
 include_dir = %s""" % included_dir)
 
-            agent.config_section='taskerator'
+            agent.config_section = 'taskerator'
             self.assertRaises(RuntimeError, agent._read_config, config_file)
 
             os.mkdir(included_dir)
