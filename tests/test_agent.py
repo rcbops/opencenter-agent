@@ -2,6 +2,7 @@
 
 import fixtures
 import logging
+import StringIO
 import sys
 import testtools
 import unittest
@@ -251,6 +252,14 @@ class TestInfrastructure(testtools.TestCase):
         self.assertTrue(agent.input_handler.stop_called)
         self.assertTrue(agent.output_handler.stop_called)
 
+    def test_usage(self):
+        io = StringIO.StringIO()
+        self.useFixture(fixtures.MonkeyPatch('sys.stdout', io))
+
+        agent = RoushAgentNoInitialization([])
+        agent._usage()
+
+        self.assertNotEqual(io.getvalue().find('verbose'), -1)
 
 if __name__ == '__main__':
     unittest.main()

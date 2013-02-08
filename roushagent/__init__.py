@@ -144,7 +144,7 @@ class RoushAgent():
             except:
                 pass
 
-    def usage(self):
+    def _usage(self):
         """Print a usage message."""
 
         print """The following command line flags are supported:
@@ -162,7 +162,7 @@ class RoushAgent():
                                        ['config=', 'verbose', 'daemonize'])
         except getopt.GetoptError as err:
             print str(err)
-            self.usage()
+            self._usage()
             sys.exit(1)
 
         for o, a in opts:
@@ -173,7 +173,7 @@ class RoushAgent():
             elif o in ('-d', '--daemonize'):
                 background = True
             else:
-                self.usage()
+                self._usage()
                 sys.exit(1)
 
         return background, debug, configfile
