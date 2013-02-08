@@ -345,7 +345,7 @@ banana = False""")
             self.assertEqual(config['taskerator']['endpoint'],
                              'http://127.0.0.1:8080/admin')
 
-    def test_read_config_with_include(self):
+    def test_read_config_with_included_file(self):
         agent = RoushAgentNoInitialization([])
         with utils.temporary_directory() as path:
             config_file = os.path.join(path, 'config')
@@ -363,12 +363,43 @@ include = %s""" % included_file)
                 f.write("""[taskerator]
 included_value = fish""")
 
-            # NOTE(mikal): including a file clobbers the entire contents of
-            # the section, even if you set values in the section itself. This
-            # feels wrong to me, but its how the code is written...
             config = agent._read_config(config_file)
-            self.assertFalse('endpoint' in config['taskerator'])
+            self.assertEquals(config['taskerator']['endpoint'],
+                             'http://127.0.0.1:8080/admin')
             self.assertEqual(config['taskerator']['included_value'], 'fish')
+
+    def test_read_config_with_included_directory(self):
+        agent = RoushAgentNoInitialization([])
+        with utils.temporary_directory() as path:
+            config_file = os.path.join(path, 'config')
+            included_dir = os.path.join(path, 'included')
+
+            with open(config_file, 'w') as f:
+                f.write("""[taskerator]
+endpoint = http://127.0.0.1:8080/admin
+original = foo
+include_dir = %s""" % included_dir)
+
+            agent.config_section='taskerator'
+            self.assertRaises(RuntimeError, agent._read_config, config_file)
+
+            os.mkdir(included_dir)
+            with open(os.path.join(included_dir, 'banana'), 'w') as f:
+                f.write("""[taskerator]
+endpoint = notthis""")
+
+            config = agent._read_config(config_file)
+            self.assertEquals(config['taskerator']['endpoint'],
+                              'http://127.0.0.1:8080/admin')
+
+            with open(os.path.join(included_dir, 'foo.conf'), 'w') as f:
+                f.write("""[taskerator]
+endpoint = butthis""")
+
+            config = agent._read_config(config_file)
+            self.assertEquals(config['taskerator']['endpoint'], 'butthis')
+            self.assertEquals(config['taskerator']['original'], 'foo')
+
 
 if __name__ == '__main__':
     unittest.main()
