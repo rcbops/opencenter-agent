@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 
-import unittest
+import fixtures
 import logging
+import StringIO
+import sys
+import testtools
+import unittest
 
 from roushagent import RoushAgent
 
@@ -168,6 +172,130 @@ class TestRoushAgentOutputBroken(unittest.TestCase):
         # Stop it so teardown occurs
         self.agent.output_handler.stop()
         self.assertTrue(self.output_state.output_teardown_called)
+
+
+class RoushAgentNoInitialization(RoushAgent):
+    """Turn off initialization to make unit testing easier."""
+    def _initialize(self, argv, config_section):
+        self.logger = logging.getLogger()
+        self.logger.addHandler(logging.StreamHandler(sys.stderr))
+
+
+class ExitCalledException(Exception):
+    pass
+
+
+class FakeHandler(object):
+    def __init__(self, raise_exception=False):
+        self.raise_exception = raise_exception
+        self.stop_called = False
+
+    def stop(self):
+        self.stop_called = True
+        if self.raise_exception:
+            raise Exception('exception!')
+
+
+class TestInfrastructure(testtools.TestCase):
+    def fake_exit(self, exit_code):
+        self.exit_code_set = exit_code
+        raise ExitCalledException()
+
+    def test_exit_no_exception(self):
+        self.exit_code_set = None
+        self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
+
+        agent = RoushAgentNoInitialization([])
+
+        def no_cleanup():
+            pass
+        agent._cleanup = no_cleanup
+
+        self.assertRaises(ExitCalledException, agent._exit, None)
+        self.assertEqual(self.exit_code_set, 0)
+
+    def test_exit_exception(self):
+        self.exit_code_set = None
+        self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
+
+        agent = RoushAgentNoInitialization([])
+
+        def no_cleanup():
+            pass
+        agent._cleanup = no_cleanup
+
+        class FakeExceptionForTest(Exception):
+            pass
+
+        def bar():
+            raise FakeExceptionForTest('testing 123')
+
+        try:
+            bar()
+        except FakeExceptionForTest:
+            self.assertRaises(ExitCalledException, agent._exit, True)
+        self.assertEqual(self.exit_code_set, 1)
+
+    def test_cleanup_no_exceptions(self):
+        agent = RoushAgentNoInitialization([])
+        agent.input_handler = FakeHandler(False)
+        agent.output_handler = FakeHandler(False)
+        agent._cleanup()
+        self.assertTrue(agent.input_handler.stop_called)
+        self.assertTrue(agent.output_handler.stop_called)
+
+    def test_cleanup_exceptions(self):
+        agent = RoushAgentNoInitialization([])
+        agent.input_handler = FakeHandler(True)
+        agent.output_handler = FakeHandler(True)
+        agent._cleanup()
+        self.assertTrue(agent.input_handler.stop_called)
+        self.assertTrue(agent.output_handler.stop_called)
+
+    def test_usage(self):
+        io = StringIO.StringIO()
+        self.useFixture(fixtures.MonkeyPatch('sys.stdout', io))
+
+        agent = RoushAgentNoInitialization([])
+        agent._usage()
+
+        self.assertNotEqual(io.getvalue().find('verbose'), -1)
+
+    def test_parse_opts_bad_arg(self):
+        io = StringIO.StringIO()
+        self.useFixture(fixtures.MonkeyPatch('sys.stdout', io))
+
+        self.exit_code_set = None
+        self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
+
+        agent = RoushAgentNoInitialization([])
+
+        try:
+            agent._parse_opts(['--banana'])
+        except ExitCalledException:
+            pass
+
+        self.assertEqual(self.exit_code_set, 1)
+        self.assertNotEqual(io.getvalue().find('verbose'), -1)
+
+    def test_parse_opts_sets_values(self):
+        io = StringIO.StringIO()
+        self.useFixture(fixtures.MonkeyPatch('sys.stdout', io))
+
+        self.exit_code_set = None
+        self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
+
+        agent = RoushAgentNoInitialization([])
+        background, debug, config_file = agent._parse_opts(
+            ['--config', 'gerkin', '--verbose', '-d'])
+
+        self.assertEqual(self.exit_code_set, None)
+        self.assertEqual(len(io.getvalue()), 0)
+
+        self.assertTrue(background)
+        self.assertTrue(debug)
+        self.assertEqual(config_file, 'gerkin')
+
 
 if __name__ == '__main__':
     unittest.main()
