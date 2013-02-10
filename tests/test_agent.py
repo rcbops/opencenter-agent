@@ -306,14 +306,12 @@ class TestInfrastructure(testtools.TestCase):
 
     def test_configure_logs_bogus_config(self):
         agent = RoushAgentNoInitialization([])
-        agent.logger = logging.getLogger()
-        agent.logger.addHandler(logging.StreamHandler(sys.stderr))
 
         # If we pass a bogus config we should end up with the same handlers
         # at the end as we did beforehand.
-        self.assertEquals(len(agent.logger.handlers), 5)
+        handlers_before = len(agent.logger.handlers)
         agent._configure_logs('this is a bogus config')
-        self.assertEquals(len(agent.logger.handlers), 5)
+        self.assertEquals(len(agent.logger.handlers), handlers_before)
 
     def test_read_config_missing(self):
         agent = RoushAgentNoInitialization([])

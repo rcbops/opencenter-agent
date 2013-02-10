@@ -73,9 +73,6 @@ class RoushAgentDispatchWorker(Thread):
 
 class RoushAgent():
     def __init__(self, argv, config_section='main'):
-        self._initialize(argv, config_section)
-
-    def _initialize(self, argv, config_section):
         self.base = os.path.realpath(os.path.join(os.path.dirname(__file__),
                                                   '..'))
         self.config_section = config_section
@@ -85,8 +82,10 @@ class RoushAgent():
         self.logger.addHandler(logging.StreamHandler(sys.stderr))
         self.config = {config_section: {}}
 
-        # something really screwy with sigint and threading...
+        self._initialize(argv, config_section)
 
+    def _initialize(self, argv, config_section):
+        # something really screwy with sigint and threading...
         # signal.signal(signal.SIGTERM, lambda a, b: self._exit())
         signal.signal(signal.SIGINT, signal.SIG_DFL)
 
