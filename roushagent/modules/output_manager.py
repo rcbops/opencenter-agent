@@ -5,6 +5,8 @@ import logging
 import socket
 from functools import partial
 
+import manager
+
 LOG = logging.getLogger('roush.output')
 
 # output modules recieve an input action, and return an output
@@ -49,11 +51,11 @@ LOG = logging.getLogger('roush.output')
 #
 
 
-class OutputManager:
+class OutputManager(manager.Manager):
     def __init__(self, path, config={}):
         # Load all available plugins, or those
         # specified by the config.
-        self.output_plugins = {}
+        self.plugins = {}
         # should all actions be named module.action?
         self.loaded_modules = ['modules']
         self.dispatch_table = {
@@ -77,28 +79,6 @@ class OutputManager:
 
         LOG.debug('Dispatch methods: %s' % self.dispatch_table.keys())
 
-    def load(self, path):
-        # Load a plugin by file name.  modules with
-        # action_foo methods will be auto-registered
-        # for the 'foo' action
-        if type(path) == list:
-            for d in path:
-                self.load(d)
-        else:
-            if os.path.isdir(path):
-                self._load_directory(path)
-            else:
-                self._load_file(path)
-
-    def _load_directory(self, path):
-        LOG.debug('Preparing to load output modules in directory %s' % path)
-        dirlist = os.listdir(path)
-        for relpath in dirlist:
-            p = os.path.join(path, relpath)
-
-            if not os.path.isdir(p) and p.endswith('.py'):
-                self._load_file(p)
-
     def _load_file(self, path):
         self.shortpath = shortpath = os.path.basename(path)
 
@@ -120,7 +100,7 @@ class OutputManager:
         ns['register_action'] = partial(self.register_action, name)
 
         self.loaded_modules.append(name)
-        self.output_plugins[name] = ns
+        self.plugins[name] = ns
         config = self.config.get(name, {})
         ns['module_config'] = config
         if 'setup' in ns:
@@ -187,8 +167,8 @@ class OutputManager:
 
             # we won't log from built-in functions
             ns = None
-            if plugin in self.output_plugins:
-                ns = self.output_plugins[plugin]
+            if plugin in self.plugins:
+                ns = self.plugins[plugin]
                 t_LOG = ns['LOG']
                 if 'id' in input_data:
                     ns['LOG'] = logging.getLogger(
@@ -287,8 +267,3 @@ class OutputManager:
         elif action == 'modules.reload':
             pass
         return _ok()
-
-    def stop(self):
-        for plugin in self.output_plugins:
-            if 'teardown' in self.output_plugins[plugin]:
-                self.output_plugins[plugin]['teardown']()

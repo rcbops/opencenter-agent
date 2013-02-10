@@ -30,9 +30,9 @@ class TestRoushAgentWorking(unittest.TestCase):
             self.result['input'])
         self.agent.input_handler.result(self.result)
         self.input_state = \
-            self.agent.input_handler.input_plugins['input']['state']
+            self.agent.input_handler.plugins['input']['state']
         self.output_state = \
-            self.agent.output_handler.output_plugins['output']['state']
+            self.agent.output_handler.plugins['output']['state']
 
     def tearDown(self):
         self.agent._cleanup()
@@ -88,9 +88,9 @@ class TestRoushAgentInputBroken(unittest.TestCase):
             self.key_error = True
 
         self.input_state = \
-            self.agent.input_handler.input_plugins['input']['state']
+            self.agent.input_handler.plugins['input']['state']
         self.output_state = \
-            self.agent.output_handler.output_plugins['output']['state']
+            self.agent.output_handler.plugins['output']['state']
 
     def tearDown(self):
         self.agent._cleanup()
@@ -138,9 +138,9 @@ class TestRoushAgentOutputBroken(unittest.TestCase):
             self.result['input'])
         self.agent.input_handler.result(self.result)
         self.input_state = \
-            self.agent.input_handler.input_plugins['input']['state']
+            self.agent.input_handler.plugins['input']['state']
         self.output_state = \
-            self.agent.output_handler.output_plugins['output']['state']
+            self.agent.output_handler.plugins['output']['state']
 
     def tearDown(self):
         self.agent._cleanup()
