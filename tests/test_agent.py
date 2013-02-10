@@ -205,6 +205,13 @@ class TestInfrastructure(testtools.TestCase):
         self.exit_code_set = exit_code
         raise ExitCalledException()
 
+    def fake_fork(self):
+        self.fork_called = True
+        return 0
+
+    def fake_noop(self, *args, **kwargs):
+        pass
+
     def test_exit_no_exception(self):
         self.exit_code_set = None
         self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
@@ -397,13 +404,7 @@ endpoint = butthis""")
             config = agent._read_config(config_file)
             self.assertEquals(config['taskerator']['endpoint'], 'butthis')
             self.assertEquals(config['taskerator']['original'], 'foo')
-
-    def fake_fork(self):
-        self.fork_called = True
-        return 0
-
-    def fake_noop(self, *args, **kwargs):
-        pass
+        
 
     def test_setup_scaffolding_simple(self):
         def fake_parse_opts(self):
