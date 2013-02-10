@@ -262,6 +262,21 @@ class RoushAgent():
         # pass logging config off to logger
         return defaults
 
+    def _handle_pidfile(self):
+        pidfile = open(config[config_section]['pidfile'], 'a+')
+        try:
+            fcntl.flock(pidfile.fileno(), fcntl.LOCK_EX |
+                        fcntl.LOCK_NB)
+        except IOError:
+            self.logger.error('Lock exists on pidfile: already '
+                              'running')
+            self._exit(False)
+
+        pidfile.seek(0)
+        pidfile.truncate()
+        pidfile.write(str(os.getpid()))
+        pidfile.flush()
+
     def _setup_scaffolding(self, argv):
         background, debug, configfile = self._parse_opts(argv)
         print("daemonize: %s, debug: %s, configfile: %s, loglevel: %s" %
@@ -293,17 +308,7 @@ class RoushAgent():
                     sys.exit(0)
 
             if 'pidfile' in config[config_section]:
-                pidfile = open(config[config_section]['pidfile'], 'a+')
-                try:
-                    fcntl.flock(pidfile.fileno(), fcntl.LOCK_EX |
-                                fcntl.LOCK_NB)
-                except IOError:
-                    self.logger.error('Lock exists on pidfile: already '
-                                      'running')
-                    pidfile.seek(0)
-                    pidfile.truncate()
-                    pidfile.write(str(os.getpid()))
-                    pidfile.flush()
+                self._handle_pidfile()
 
     def _setup_handlers(self):
         config = self.config
