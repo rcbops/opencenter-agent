@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import fixtures
+import fcntl
 import logging
 import os
 import StringIO
@@ -404,7 +405,32 @@ endpoint = butthis""")
             config = agent._read_config(config_file)
             self.assertEquals(config['taskerator']['endpoint'], 'butthis')
             self.assertEquals(config['taskerator']['original'], 'foo')
-        
+
+    def test_handle_pidfile_exists(self):
+        self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
+
+        with utils.temporary_file() as pid_file:
+            with open(pid_file, 'a+') as pidfile:
+                fcntl.flock(pidfile.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB) 
+
+                agent = RoushAgentNoInitialization([])
+                agent.config_section = 'testing'
+                agent.config = {'testing': {'pidfile': pid_file}}
+
+                self.assertRaises(ExitCalledException, agent._handle_pidfile)
+
+    def test_handle_pidfile_new(self):
+        self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
+
+        with utils.temporary_file() as pid_file:
+            agent = RoushAgentNoInitialization([])
+            agent.config_section = 'testing'
+            agent.config = {'testing': {'pidfile': pid_file}}
+            agent._handle_pidfile()
+
+            with open(pid_file, 'r') as pidfile:
+                pid_from_pidfile = int(pidfile.read())
+            self.assertEqual(os.getpid(), pid_from_pidfile)
 
     def test_setup_scaffolding_simple(self):
         def fake_parse_opts(self):
