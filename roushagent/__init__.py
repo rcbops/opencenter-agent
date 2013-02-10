@@ -263,7 +263,7 @@ class RoushAgent():
         return defaults
 
     def _handle_pidfile(self):
-        pidfile = open(self.config[config_section]['pidfile'], 'a+')
+        pidfile = open(self.config[self.config_section]['pidfile'], 'a+')
         try:
             fcntl.flock(pidfile.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         except IOError:
