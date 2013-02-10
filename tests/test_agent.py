@@ -398,6 +398,65 @@ endpoint = butthis""")
             self.assertEquals(config['taskerator']['endpoint'], 'butthis')
             self.assertEquals(config['taskerator']['original'], 'foo')
 
+    def fake_fork(self):
+        self.fork_called = True
+        return 0
+
+    def fake_noop(self, *args, **kwargs):
+        pass
+
+    def test_setup_scaffolding_simple(self):
+        def fake_parse_opts(self):
+            return False, False, None
+
+        self.fork_called = False
+        self.useFixture(fixtures.MonkeyPatch('os.fork', self.fake_fork))
+        self.useFixture(fixtures.MonkeyPatch('os.setsid', self.fake_noop))
+        self.useFixture(fixtures.MonkeyPatch('os.chdir', self.fake_noop))
+        self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
+
+        agent = RoushAgentNoInitialization([])
+        agent._parse_opts = fake_parse_opts
+        agent._setup_scaffolding([])
+        self.assertNotEqual(agent.logger.getEffectiveLevel(), logging.DEBUG)
+        self.assertFalse(self.fork_called)
+
+    def test_setup_scaffolding_debug(self):
+        def fake_parse_opts(self):
+            return False, True, None
+
+        self.fork_called = False
+        self.useFixture(fixtures.MonkeyPatch('os.fork', self.fake_fork))
+        self.useFixture(fixtures.MonkeyPatch('os.setsid', self.fake_noop))
+        self.useFixture(fixtures.MonkeyPatch('os.chdir', self.fake_noop))
+        self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
+
+        agent = RoushAgentNoInitialization([])
+        agent._parse_opts = fake_parse_opts
+        agent._setup_scaffolding([])
+
+        print type(agent.logger)
+        self.assertEqual(agent.logger.getEffectiveLevel(), logging.DEBUG)
+        self.assertFalse(self.fork_called)
+
+    def test_setup_scaffolding_daemonize(self):
+        def fake_parse_opts(self):
+            return True, False, None
+
+        self.fork_called = False
+        self.useFixture(fixtures.MonkeyPatch('os.fork', self.fake_fork))
+        self.useFixture(fixtures.MonkeyPatch('os.setsid', self.fake_noop))
+        self.useFixture(fixtures.MonkeyPatch('os.chdir', self.fake_noop))
+        self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
+
+        agent = RoushAgentNoInitialization([])
+        agent._parse_opts = fake_parse_opts
+        agent._setup_scaffolding([])
+
+        print type(agent.logger)
+        self.assertNotEqual(agent.logger.getEffectiveLevel(), logging.DEBUG)
+        self.assertTrue(self.fork_called)
+
 
 if __name__ == '__main__':
     unittest.main()
