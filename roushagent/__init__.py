@@ -73,9 +73,6 @@ class RoushAgentDispatchWorker(Thread):
 
 class RoushAgent():
     def __init__(self, argv, config_section='main'):
-        self._initialize(argv, config_section)
-
-    def _initialize(self, argv, config_section):
         self.base = os.path.realpath(os.path.join(os.path.dirname(__file__),
                                                   '..'))
         self.config_section = config_section
@@ -85,8 +82,10 @@ class RoushAgent():
         self.logger.addHandler(logging.StreamHandler(sys.stderr))
         self.config = {config_section: {}}
 
-        # something really screwy with sigint and threading...
+        self._initialize(argv, config_section)
 
+    def _initialize(self, argv, config_section):
+        # something really screwy with sigint and threading...
         # signal.signal(signal.SIGTERM, lambda a, b: self._exit())
         signal.signal(signal.SIGINT, signal.SIG_DFL)
 
@@ -263,6 +262,20 @@ class RoushAgent():
         # pass logging config off to logger
         return defaults
 
+    def _handle_pidfile(self):
+        pidfile = open(self.config[self.config_section]['pidfile'], 'a+')
+        try:
+            fcntl.flock(pidfile.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except IOError:
+            self.logger.error('Lock exists on pidfile: already '
+                              'running')
+            self._exit(False)
+
+        pidfile.seek(0)
+        pidfile.truncate()
+        pidfile.write(str(os.getpid()))
+        pidfile.flush()
+
     def _setup_scaffolding(self, argv):
         background, debug, configfile = self._parse_opts(argv)
         print("daemonize: %s, debug: %s, configfile: %s, loglevel: %s" %
@@ -294,17 +307,7 @@ class RoushAgent():
                     sys.exit(0)
 
             if 'pidfile' in config[config_section]:
-                pidfile = open(config[config_section]['pidfile'], 'a+')
-                try:
-                    fcntl.flock(pidfile.fileno(), fcntl.LOCK_EX |
-                                fcntl.LOCK_NB)
-                except IOError:
-                    self.logger.error('Lock exists on pidfile: already '
-                                      'running')
-                    pidfile.seek(0)
-                    pidfile.truncate()
-                    pidfile.write(str(os.getpid()))
-                    pidfile.flush()
+                self._handle_pidfile()
 
     def _setup_handlers(self):
         config = self.config
