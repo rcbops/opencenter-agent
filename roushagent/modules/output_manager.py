@@ -58,33 +58,26 @@ class OutputManager(manager.Manager):
         super(OutputManager, self).__init__(path, config=config)
 
         # should all actions be named module.action?
-        self.dispatch_table = {
-            'logfile.tail': [
-                self.handle_logfile,
-                'modules', 'modules', 'modules', [], [], {}],
-            'logfile.watch': [
-                self.handle_logfile,
-                'modules', 'modules', 'modules', [], [], {}],
-            'modules.list': [
-                self.handle_modules,
-                'modules', 'modules', 'modules', [], [], {}],
-            'modules.load': [
-                self.handle_modules,
-                'modules', 'modules', 'modules', [], [], {}],
-            'modules.actions': [
-                self.handle_modules,
-                'modules', 'modules', 'modules', [], [], {}],
-            'modules.reload': [
-                self.handle_modules,
-                'modules', 'modules', 'modules', [], [], {}]}
+        self.dispatch_table = {}
+        self.register_action('modules', 'modules', 'logfile.tail',
+                             self.handle_logfile)
+        self.register_action('modules', 'modules', 'logfile.watch',
+                             self.handle_logfile)
+        self.register_action('modules', 'modules', 'modules.list',
+                             self.handle_modules)
+        self.register_action('modules', 'modules', 'modules.load',
+                             self.handle_modules)
+        self.register_action('modules', 'modules', 'modules.actions',
+                             self.handle_modules)
+        self.register_action('modules', 'modules', 'modules.reload',
+                             self.handle_modules)
+
         self.load(path)
 
         LOG.debug('Dispatch methods: %s' % self.dispatch_table.keys())
 
-    def register_action(self, plugin, action, method,
-                        constraints=[],
-                        consequences=[],
-                        args={}):
+    def register_action(self, plugin, shortpath, action, method,
+                        constraints=[], consequences=[], args={}):
         LOG.debug('Registering handler for action %s' % action)
         # First handler wins
         if action in self.dispatch_table:
@@ -93,20 +86,21 @@ class OutputManager(manager.Manager):
                                                                        path,
                                                                        name))
         else:
-            self.dispatch_table[action] = (method, self.shortpath,
-                                           method.func_name,
-                                           plugin,
-                                           constraints,
-                                           consequences,
-                                           args)
+            self.dispatch_table[action] = {'method': method,
+                                           'shortpath': shortpath,
+                                           'function': method.func_name,
+                                           'plugin': plugin,
+                                           'constraints': constraints,
+                                           'consequences': consequences,
+                                           'arguments': args}
 
     def actions(self):
         d = {}
-        for k, v in self.dispatch_table.items():
-            d[k] = {'plugin': v[3],
-                    'constraints': v[4],
-                    'consequences': v[5],
-                    'args': v[6]}
+        for action, params in self.dispatch_table.items():
+            d[action] = {'plugin': params['plugin'],
+                         'constraints': params['constraints'],
+                         'consequences': params['consequences'],
+                         'args': params['args']}
         return d
 
     def dispatch(self, input_data):
@@ -123,7 +117,12 @@ class OutputManager(manager.Manager):
                   'result_str': 'no dispatcher found for action "%s"' % action,
                   'result_data': ''}
         if action in self.dispatch_table:
-            fn, path, _, plugin, _, _, _ = self.dispatch_table[action]
+            # TODO(mikal): we don't really need the locals here
+            params = self.dispatch_table[action]
+            fn = params['method']
+            path = params['shortpath']
+            plugin = params['plugin']
+
             LOG.debug('Plugin_manager: dispatching action %s from plugin %s' %
                       (action, plugin))
             LOG.debug('Received input_data %s' % (input_data))
