@@ -3,6 +3,8 @@
 import os
 import logging
 import socket
+import select
+import time
 from functools import partial
 
 import manager
@@ -58,6 +60,9 @@ class OutputManager(manager.Manager):
         # should all actions be named module.action?
         self.dispatch_table = {
             'logfile.tail': [
+                self.handle_logfile,
+                'modules', 'modules', 'modules', [], [], {}],
+            'logfile.watch': [
                 self.handle_logfile,
                 'modules', 'modules', 'modules', [], [], {}],
             'modules.list': [
@@ -163,16 +168,35 @@ class OutputManager(manager.Manager):
 
     # some internal methods to provide some agent introspection
     def handle_logfile(self, input_data):
+        offset = 0
+
         def _ok(code=0, message='success', data={}):
             return {'result_code': code,
                     'result_str': message,
                     'result_data': data}
 
-        def _fail(code=2, message='unknown failure', data={}):
+        def _fail(code=1,  message='unknown failure', data={}):
             return _ok(code, message, data)
+
+        def _xfer_to_eof(fd_in, sock_out):
+            while True:
+                bytes_read = fd_in.read(1024)
+                if len(bytes_read) == 0:
+                    # fd_in EOF.
+                    return True
+
+                try:
+                    bytes_sent = sock_out.send(bytes_read)
+                except:
+                    return False
+
+                if bytes_sent == 0:
+                    # remote socket shut down
+                    return False
 
         action = input_data['action']
         payload = input_data['payload']
+        timeout = payload.get('timeout', 0)
 
         if not 'task_id' in payload or \
                 not 'dest_ip' in payload or \
@@ -180,31 +204,72 @@ class OutputManager(manager.Manager):
             return _fail(message='must specify task_id, '
                          'dest_ip and dest_port')
 
+        base = self.config['main'].get('trans_log_dir', '/var/log/roush')
+        log_path = os.path.join(base, 'trans_%s.log' % payload['task_id'])
+
+        data = ''
+        fd = open(log_path, 'r')
+        fd.seek(0, os.SEEK_END)
+        length = fd.tell()
+
         if action == 'logfile.tail':
-            base = self.config['main'].get('trans_log_dir', '/var/log/roush')
-            log_path = os.path.join(base, 'trans_%s.log' % payload['task_id'])
+            offset = max(length - 1024, 0)
 
-            data = ''
-            with open(log_path, 'r') as fd:
-                fd.seek(0, os.SEEK_END)
-                length = fd.tell()
-                fd.seek(max((length - 1024, 0)))
-                data = fd.read()
+        fd.seek(offset)
 
-            # open the socket and jet it out
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # open the socket and jet it out
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-            try:
-                sock.connect((payload['dest_ip'],
-                              int(payload['dest_port'])))
-            except socket.error as e:
-                sock.close()
-                return _fail(message='%s' % str(e))
+        try:
+            sock.connect((payload['dest_ip'],
+                          int(payload['dest_port'])))
+        except socket.error as e:
+            fd.close()
+            sock.close()
+            return _fail(message='%s' % str(e))
 
-            sock.send(data)
+        result = _xfer_to_eof(fd, sock)
+        if timeout == 0:
+            fd.close()
             sock.shutdown(socket.SHUT_RDWR)
             sock.close()
+
+        if result is False:
+            return _fail(code=1, message='remote socket disconnect')
+
+        if timeout == 0:
             return _ok()
+
+        # we're polling to end of file.  Socket and fd are open,
+        # fd is at EOF.  Wait for file size to change
+        pos = fd.tell()
+        success = True
+
+        while timeout > 0:
+            time.sleep(1)
+            timeout -= 1
+
+            # would be nice to be able to detect remote socket
+            # disconnected.  Sadly this doesn't seem trivially
+            # doable.
+            fd.seek(0, os.SEEK_END)
+            if fd.tell() != pos:
+                # new data in file
+                result = _xfer_to_eof(fd, sock)
+
+                if not result:
+                    success = False
+                    break
+
+                pos = fd.tell()
+
+        sock.shutdown(socket.SHUT_RDWR)
+        sock.close()
+
+        if not success:
+            return _fail(message='remote socket disconnect')
+
+        return _ok()
 
     def handle_modules(self, input_data):
         def _ok(code=0, message='success', data={}):
@@ -212,7 +277,7 @@ class OutputManager(manager.Manager):
                     'result_str': message,
                     'result_data': data}
 
-        def _fail(code=2, message='unknown failure', data={}):
+        def _fail(code=1, message='unknown failure', data={}):
             return _ok(code, message, data)
 
         action = input_data['action']
