@@ -64,30 +64,8 @@ LOG = logging.getLogger('roush.input')
 
 class InputManager(manager.Manager):
     def __init__(self, path, config={}):
-        # Load all available plugins, or those
-        # specified by the config.
-        self.plugins = {}
-        self.config = config
+        super(InputManager, self).__init__(path, config=config)
         self.load(path)
-
-    def _load_file(self, path):
-        # we can't really load this into the existing namespace --
-        # we'll have registration collisions.
-        ns = {'LOG': LOG}
-
-        LOG.debug("Loading input plugin file %s" % path)
-        execfile(path, ns)
-
-        if not 'name' in ns:
-            LOG.warning('Plugin missing "name" value. Ignoring.')
-            return
-        name = ns['name']
-        self.plugins[name] = ns
-        config = self.config.get(name, {})
-        if 'setup' in ns:
-            ns['setup'](config)
-        else:
-            LOG.warning('No setup function in %s. Ignoring.' % path)
 
     def result(self, result):
         input_data = result['input']

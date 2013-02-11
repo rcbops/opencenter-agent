@@ -53,11 +53,9 @@ LOG = logging.getLogger('roush.output')
 
 class OutputManager(manager.Manager):
     def __init__(self, path, config={}):
-        # Load all available plugins, or those
-        # specified by the config.
-        self.plugins = {}
+        super(OutputManager, self).__init__(path, config=config)
+
         # should all actions be named module.action?
-        self.loaded_modules = ['modules']
         self.dispatch_table = {
             'logfile.tail': [
                 self.handle_logfile,
@@ -74,39 +72,9 @@ class OutputManager(manager.Manager):
             'modules.reload': [
                 self.handle_modules,
                 'modules', 'modules', 'modules', [], [], {}]}
-        self.config = config
         self.load(path)
 
         LOG.debug('Dispatch methods: %s' % self.dispatch_table.keys())
-
-    def _load_file(self, path):
-        self.shortpath = shortpath = os.path.basename(path)
-
-        # we can't really load this into the existing namespace --
-        # we'll have registration collisions.
-        ns = {'global_config': self.config,
-              'LOG': LOG}
-        LOG.debug('Loading output plugin file %s' % shortpath)
-        execfile(path, ns)
-
-        if not 'name' in ns:
-            LOG.warning('Plugin missing "name" value. Ignoring.')
-            return
-        name = ns['name']
-        # getChild is only available on python2.7
-        # ns['LOG'] = ns['LOG'].getChild('output_%s' % name)
-        ns['LOG'] = logging.getLogger('%s.%s' % (ns['LOG'],
-                                                 'output_%s' % name))
-        ns['register_action'] = partial(self.register_action, name)
-
-        self.loaded_modules.append(name)
-        self.plugins[name] = ns
-        config = self.config.get(name, {})
-        ns['module_config'] = config
-        if 'setup' in ns:
-            ns['setup'](config)
-        else:
-            LOG.warning('No setup function in %s. Ignoring.' % shortpath)
 
     def register_action(self, plugin, action, method,
                         constraints=[],
