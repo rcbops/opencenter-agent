@@ -41,7 +41,7 @@ force=0
 #no_site_packages=0
 # installvenvopts=
 noseargs=
-noseopts="-v"
+noseopts="-v --with-xunit"
 wrapper=""
 just_pep8=0
 coverage=0
@@ -54,7 +54,7 @@ done
 
 # If enabled, tell nose to collect coverage data
 if [ $coverage -eq 1 ]; then
-    noseopts="$noseopts --with-xunit --with-coverage --cover-package=roushagent"
+    noseopts="$noseopts --with-coverage --cover-package=roushagent"
 fi
 
 function run_tests {
