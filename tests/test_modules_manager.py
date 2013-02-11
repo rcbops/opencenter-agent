@@ -39,7 +39,7 @@ class TestModuleManager(testtools.TestCase):
 
             self.assertEqual(self.files_loaded, 1)
 
-    def test_load(self):
+    def test_load_file(self):
         with utils.temporary_directory() as path:
             subdir_path = os.path.join(path, 'dir')
             os.mkdir(subdir_path)
