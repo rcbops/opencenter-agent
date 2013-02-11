@@ -2,6 +2,9 @@
 
 import os
 import logging
+
+import manager
+
 LOG = logging.getLogger('roush.input')
 
 # Input modules export a number of functions and attributes:
@@ -59,68 +62,19 @@ LOG = logging.getLogger('roush.input')
 #
 
 
-class InputManager:
+class InputManager(manager.Manager):
     def __init__(self, path, config={}):
-        # Load all available plugins, or those
-        # specified by the config.
-        self.input_plugins = {}
-        self.config = config
+        super(InputManager, self).__init__(path, config=config)
         self.load(path)
-
-    def _load_directory(self, path):
-        dirlist = os.listdir(path)
-        for relpath in dirlist:
-            p = os.path.join(path, relpath)
-
-            if not os.path.isdir(p) and p.endswith(".py"):
-                self._load_file(p)
-
-    def _load_file(self, path):
-        # we can't really load this into the existing namespace --
-        # we'll have registration collisions.
-        ns = {'LOG': LOG}
-
-        LOG.debug("Loading input plugin file %s" % path)
-        execfile(path, ns)
-
-        if not 'name' in ns:
-            LOG.warning('Plugin missing "name" value. Ignoring.')
-            return
-        name = ns['name']
-        self.input_plugins[name] = ns
-        config = self.config.get(name, {})
-        if 'setup' in ns:
-            ns['setup'](config)
-        else:
-            LOG.warning('No setup function in %s. Ignoring.' % path)
-
-    def load(self, path):
-        # Load a plugin by file name.  modules with
-        # action_foo methods will be auto-registered
-        # for the "foo" action
-        if type(path) == list:
-            for d in path:
-                self.load(d)
-        else:
-            if os.path.isdir(path):
-                self._load_directory(path)
-            else:
-                self._load_file(path)
-
-    def stop(self):
-        # run 'teardown' on all the loaded modules
-        for input_plugin in self.input_plugins:
-            if 'teardown' in self.input_plugins[input_plugin]:
-                self.input_plugins[input_plugin]['teardown']()
 
     def result(self, result):
         input_data = result['input']
         output_data = result['output']
         plugin = result['plugin']
 
-        if 'result' in self.input_plugins[plugin]:
+        if 'result' in self.plugins[plugin]:
             LOG.debug('sending result outcome to plugin "%s"' % plugin)
-            self.input_plugins[plugin]['result'](input_data, output_data)
+            self.plugins[plugin]['result'](input_data, output_data)
 
     def fetch(self):
         # walk through all the different input managers and fetch the
@@ -131,11 +85,11 @@ class InputManager:
         # plugins by last valid response or something to keep one plugin
         # from monopolizing the input queue.  In fact, FIXME
         #
-        for input_plugin in self.input_plugins:
-            if 'fetch' in self.input_plugins[input_plugin]:
-                fetch_result = self.input_plugins[input_plugin]['fetch']()
+        for input_plugin in self.plugins:
+            if 'fetch' in self.plugins[input_plugin]:
+                fetch_result = self.plugins[input_plugin]['fetch']()
                 if len(fetch_result):
-                    return {"plugin": self.input_plugins[input_plugin]['name'],
+                    return {"plugin": self.plugins[input_plugin]['name'],
                             "input": fetch_result}
 
         # otherwise, nothing

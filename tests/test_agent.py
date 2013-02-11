@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import fixtures
+import fcntl
 import logging
 import os
 import StringIO
@@ -29,9 +30,9 @@ class TestRoushAgentWorking(unittest.TestCase):
             self.result['input'])
         self.agent.input_handler.result(self.result)
         self.input_state = \
-            self.agent.input_handler.input_plugins['input']['state']
+            self.agent.input_handler.plugins['input']['state']
         self.output_state = \
-            self.agent.output_handler.output_plugins['output']['state']
+            self.agent.output_handler.plugins['output']['state']
 
     def tearDown(self):
         self.agent._cleanup()
@@ -87,9 +88,9 @@ class TestRoushAgentInputBroken(unittest.TestCase):
             self.key_error = True
 
         self.input_state = \
-            self.agent.input_handler.input_plugins['input']['state']
+            self.agent.input_handler.plugins['input']['state']
         self.output_state = \
-            self.agent.output_handler.output_plugins['output']['state']
+            self.agent.output_handler.plugins['output']['state']
 
     def tearDown(self):
         self.agent._cleanup()
@@ -137,9 +138,9 @@ class TestRoushAgentOutputBroken(unittest.TestCase):
             self.result['input'])
         self.agent.input_handler.result(self.result)
         self.input_state = \
-            self.agent.input_handler.input_plugins['input']['state']
+            self.agent.input_handler.plugins['input']['state']
         self.output_state = \
-            self.agent.output_handler.output_plugins['output']['state']
+            self.agent.output_handler.plugins['output']['state']
 
     def tearDown(self):
         self.agent._cleanup()
@@ -204,6 +205,13 @@ class TestInfrastructure(testtools.TestCase):
     def fake_exit(self, exit_code):
         self.exit_code_set = exit_code
         raise ExitCalledException()
+
+    def fake_fork(self):
+        self.fork_called = True
+        return 0
+
+    def fake_noop(self, *args, **kwargs):
+        pass
 
     def test_exit_no_exception(self):
         self.exit_code_set = None
@@ -306,14 +314,12 @@ class TestInfrastructure(testtools.TestCase):
 
     def test_configure_logs_bogus_config(self):
         agent = RoushAgentNoInitialization([])
-        agent.logger = logging.getLogger()
-        agent.logger.addHandler(logging.StreamHandler(sys.stderr))
 
         # If we pass a bogus config we should end up with the same handlers
         # at the end as we did beforehand.
-        self.assertEquals(len(agent.logger.handlers), 5)
+        handlers_before = len(agent.logger.handlers)
         agent._configure_logs('this is a bogus config')
-        self.assertEquals(len(agent.logger.handlers), 5)
+        self.assertEquals(len(agent.logger.handlers), handlers_before)
 
     def test_read_config_missing(self):
         agent = RoushAgentNoInitialization([])
@@ -399,6 +405,84 @@ endpoint = butthis""")
             config = agent._read_config(config_file)
             self.assertEquals(config['taskerator']['endpoint'], 'butthis')
             self.assertEquals(config['taskerator']['original'], 'foo')
+
+    def test_handle_pidfile_exists(self):
+        self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
+
+        with utils.temporary_file() as pid_file:
+            with open(pid_file, 'a+') as pidfile:
+                fcntl.flock(pidfile.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+                agent = RoushAgentNoInitialization([])
+                agent.config_section = 'testing'
+                agent.config = {'testing': {'pidfile': pid_file}}
+
+                self.assertRaises(ExitCalledException, agent._handle_pidfile)
+
+    def test_handle_pidfile_new(self):
+        self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
+
+        with utils.temporary_file() as pid_file:
+            agent = RoushAgentNoInitialization([])
+            agent.config_section = 'testing'
+            agent.config = {'testing': {'pidfile': pid_file}}
+            agent._handle_pidfile()
+
+            with open(pid_file, 'r') as pidfile:
+                pid_from_pidfile = int(pidfile.read())
+            self.assertEqual(os.getpid(), pid_from_pidfile)
+
+    def test_setup_scaffolding_simple(self):
+        def fake_parse_opts(self):
+            return False, False, None
+
+        self.fork_called = False
+        self.useFixture(fixtures.MonkeyPatch('os.fork', self.fake_fork))
+        self.useFixture(fixtures.MonkeyPatch('os.setsid', self.fake_noop))
+        self.useFixture(fixtures.MonkeyPatch('os.chdir', self.fake_noop))
+        self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
+
+        agent = RoushAgentNoInitialization([])
+        agent._parse_opts = fake_parse_opts
+        agent._setup_scaffolding([])
+        self.assertNotEqual(agent.logger.getEffectiveLevel(), logging.DEBUG)
+        self.assertFalse(self.fork_called)
+
+    def test_setup_scaffolding_debug(self):
+        def fake_parse_opts(self):
+            return False, True, None
+
+        self.fork_called = False
+        self.useFixture(fixtures.MonkeyPatch('os.fork', self.fake_fork))
+        self.useFixture(fixtures.MonkeyPatch('os.setsid', self.fake_noop))
+        self.useFixture(fixtures.MonkeyPatch('os.chdir', self.fake_noop))
+        self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
+
+        agent = RoushAgentNoInitialization([])
+        agent._parse_opts = fake_parse_opts
+        agent._setup_scaffolding([])
+
+        print type(agent.logger)
+        self.assertEqual(agent.logger.getEffectiveLevel(), logging.DEBUG)
+        self.assertFalse(self.fork_called)
+
+    def test_setup_scaffolding_daemonize(self):
+        def fake_parse_opts(self):
+            return True, False, None
+
+        self.fork_called = False
+        self.useFixture(fixtures.MonkeyPatch('os.fork', self.fake_fork))
+        self.useFixture(fixtures.MonkeyPatch('os.setsid', self.fake_noop))
+        self.useFixture(fixtures.MonkeyPatch('os.chdir', self.fake_noop))
+        self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
+
+        agent = RoushAgentNoInitialization([])
+        agent._parse_opts = fake_parse_opts
+        agent._setup_scaffolding([])
+
+        print type(agent.logger)
+        self.assertNotEqual(agent.logger.getEffectiveLevel(), logging.DEBUG)
+        self.assertTrue(self.fork_called)
 
 
 if __name__ == '__main__':
