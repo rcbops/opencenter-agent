@@ -411,7 +411,7 @@ endpoint = butthis""")
 
         with utils.temporary_file() as pid_file:
             with open(pid_file, 'a+') as pidfile:
-                fcntl.flock(pidfile.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB) 
+                fcntl.flock(pidfile.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
 
                 agent = RoushAgentNoInitialization([])
                 agent.config_section = 'testing'
