@@ -22,7 +22,7 @@ class OrchestratorTasks:
 
         self.adventure_globals = adventure_globals
         if not adventure_globals:
-            self.adventure_glocals = []
+            self.adventure_globals = {}
 
         if not logger:
             self.logger = logging.getLogger()
@@ -105,6 +105,7 @@ class OrchestratorTasks:
             self.logger.debug('padding globals %s' % self.adventure_globals)
 
             parameters['globals'] = self.adventure_globals
+            parameters['globals']['parent_task_id'] = self.parent_task_id
 
             self.logger.debug('Wrapping %s primitive' % primitive)
 
