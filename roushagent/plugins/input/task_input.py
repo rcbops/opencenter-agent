@@ -99,6 +99,12 @@ class TaskThread(threading.Thread):
                     task.state = 'running'
                     task.save()
 
+                    # update the node to show we are running this task
+                    myself = self.endpoint.nodes[self.host_id]
+                    myself._request_get()
+                    myself.task_id = task['id']
+                    myself.save()
+
                     self.pending_tasks.append(task.to_hash())
                     self.producer_condition.notify()
                     LOG.debug('added task to work queue' % task.to_hash())
@@ -142,10 +148,18 @@ class TaskThread(threading.Thread):
                 if txid > 0:
                     # update the db
                     task = self.endpoint.tasks[txid]
+                    task._request_get()
                     task.state = 'done'
                     task.result = result
                     task.save()
                     del self.running_tasks[txid]
+
+                    myself = self.endpoint.nodes[self.host_id]
+                    myself._request_get()
+                    if myself.task_id == task['id']:
+                        myself.task_id = None
+                        myself.save()
+
                 elif txid == -1:
                     # module list?
                     if result['result_code'] == 0:
