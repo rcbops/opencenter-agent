@@ -245,9 +245,11 @@ class OutputManager(manager.Manager):
         pos = fd.tell()
         success = True
 
-        while timeout > 0:
+        remaining_timeout = timeout
+
+        while remaining_timeout > 0:
             time.sleep(1)
-            timeout -= 1
+            remaining_timeout -= 1
 
             # would be nice to be able to detect remote socket
             # disconnected.  Sadly this doesn't seem trivially
@@ -255,6 +257,7 @@ class OutputManager(manager.Manager):
             fd.seek(0, os.SEEK_END)
             if fd.tell() != pos:
                 # new data in file
+                fd.seek(pos, os.SEEK_SET)
                 result = _xfer_to_eof(fd, sock)
 
                 if not result:
@@ -262,6 +265,7 @@ class OutputManager(manager.Manager):
                     break
 
                 pos = fd.tell()
+                remaining_timeout = timeout
 
         sock.shutdown(socket.SHUT_RDWR)
         sock.close()
