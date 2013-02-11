@@ -30,7 +30,7 @@ class Manager(object):
                 self._load_file(p)
 
     def _load_file(self, path):
-        self.shortpath = shortpath = os.path.basename(path)
+        shortpath = os.path.basename(path)
 
         # we can't really load this into the existing namespace --
         # we'll have registration collisions.
@@ -49,7 +49,7 @@ class Manager(object):
         # ns['LOG'] = ns['LOG'].getChild('output_%s' % name)
         ns['LOG'] = logging.getLogger('%s.%s' % (ns['LOG'],
                                                  'output_%s' % name))
-        ns['register_action'] = partial(self.register_action, name)
+        ns['register_action'] = partial(self.register_action, name, shortpath)
 
         self.loaded_modules.append(name)
         self.plugins[name] = ns
