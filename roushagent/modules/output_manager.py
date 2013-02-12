@@ -209,6 +209,9 @@ class OutputManager(manager.Manager):
         base = self.config['main'].get('trans_log_dir', '/var/log/roush')
         log_path = os.path.join(base, 'trans_%s.log' % payload['task_id'])
 
+        if not os.path.exists(log_path):
+            return _fail(message='no such transaction log file')
+
         data = ''
         fd = open(log_path, 'r')
         fd.seek(0, os.SEEK_END)

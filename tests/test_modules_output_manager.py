@@ -9,6 +9,28 @@ from roushagent.modules import output_manager
 from roushagent import utils
 
 
+class FakeSocket(object):
+    def __init__(self, protocol, transport):
+        pass
+
+    def connect(self, ip_port):
+        pass
+
+    def shutdown(self, kind):
+        pass
+
+    def close(self):
+        pass
+
+    def send(self, data):
+        return len(data)
+
+
+class FakeSocketSendFails(FakeSocket):
+    def send(self, data):
+        raise Exception('send failed')
+
+
 class TestModuleOutputManager(testtools.TestCase):
     def test_init(self):
         with utils.temporary_directory() as path:
@@ -125,6 +147,80 @@ class TestModuleOutputManager(testtools.TestCase):
         f = FileLikeObject(100)
         s = ExceptionalSocketLikeObject()
         self.assertFalse(output_manager._xfer_to_eof(f, s))
+
+    def test_handle_logfile_no_payload(self):
+        with utils.temporary_directory() as path:
+            om = output_manager.OutputManager(path)
+            out = om.handle_logfile({'action': 'modules.load',
+                                     'payload': {}})
+            self.assertEqual(out['result_code'], 1)
+
+    def test_handle_logfile_no_such_logfile(self):
+        with utils.temporary_directory() as path:
+            with utils.temporary_directory() as logdir:
+                om = output_manager.OutputManager(path)
+                om.config = {'main': {'trans_log_dir': logdir}}
+                out = om.handle_logfile({'action': 'modules.load',
+                                         'payload': {'task_id': '42',
+                                                     'dest_ip': '127.0.0.1',
+                                                     'dest_port': 4242}})
+                self.assertEqual(out['result_code'], 1)
+                self.assertEqual(out['result_str'],
+                                 'no such transaction log file')
+
+    def test_handle_logfile_remote_connection_failed(self):
+        with utils.temporary_directory() as path:
+            with utils.temporary_directory() as logdir:
+                om = output_manager.OutputManager(path)
+                om.config = {'main': {'trans_log_dir': logdir}}
+
+                with open(os.path.join(logdir, 'trans_42.log'), 'w') as f:
+                    f.write('This\nis\na\nlog\nfile')
+
+                out = om.handle_logfile({'action': 'logfile.tail',
+                                         'payload': {'task_id': '42',
+                                                     'dest_ip': '127.0.0.1',
+                                                     'dest_port': 4242}})
+                self.assertEqual(out['result_code'], 1)
+                self.assertEqual(out['result_str'],
+                                 '[Errno 111] Connection refused')
+
+    def test_handle_logfile_tail(self):
+        self.useFixture(fixtures.MonkeyPatch('socket.socket', FakeSocket))
+
+        with utils.temporary_directory() as path:
+            with utils.temporary_directory() as logdir:
+                om = output_manager.OutputManager(path)
+                om.config = {'main': {'trans_log_dir': logdir}}
+
+                with open(os.path.join(logdir, 'trans_42.log'), 'w') as f:
+                    f.write('This\nis\na\nlog\nfile')
+
+                out = om.handle_logfile({'action': 'logfile.tail',
+                                         'payload': {'task_id': '42',
+                                                     'dest_ip': '127.0.0.1',
+                                                     'dest_port': 4242}})
+                self.assertEqual(out['result_code'], 0)
+
+    def test_handle_logfile_tail_socket_fail(self):
+        self.useFixture(fixtures.MonkeyPatch('socket.socket',
+                                             FakeSocketSendFails))
+
+        with utils.temporary_directory() as path:
+            with utils.temporary_directory() as logdir:
+                om = output_manager.OutputManager(path)
+                om.config = {'main': {'trans_log_dir': logdir}}
+
+                with open(os.path.join(logdir, 'trans_42.log'), 'w') as f:
+                    f.write('This\nis\na\nlog\nfile')
+
+                out = om.handle_logfile({'action': 'logfile.tail',
+                                         'payload': {'task_id': '42',
+                                                     'dest_ip': '127.0.0.1',
+                                                     'dest_port': 4242}})
+                self.assertEqual(out['result_code'], 1)
+                self.assertEqual(out['result_str'],
+                                 'remote socket disconnect')
 
 
 if __name__ == '__main__':
