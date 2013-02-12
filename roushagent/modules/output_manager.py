@@ -81,10 +81,10 @@ class OutputManager(manager.Manager):
         LOG.debug('Registering handler for action %s' % action)
         # First handler wins
         if action in self.dispatch_table:
-            _, path, name = self.dispatch_table[action]
-            raise NameError('Action %s already registered to %s:%s' % (action,
-                                                                       path,
-                                                                       name))
+            action_details = self.dispatch_table[action]
+            raise NameError('Action %s already registered to %s:%s'
+                            % (action, action_details['short_path'],
+                               action_details['method']))
         else:
             self.dispatch_table[action] = {'method': method,
                                            'shortpath': shortpath,
