@@ -53,6 +53,17 @@ LOG = logging.getLogger('roush.output')
 #
 
 
+
+def _ok(code=0, message='success', data={}):
+    return {'result_code': code,
+            'result_str': message,
+            'result_data': data}
+
+
+def _fail(code=1, message='unknown failure', data={}):
+    return _ok(code, message, data)
+
+
 class OutputManager(manager.Manager):
     def __init__(self, path, config={}):
         super(OutputManager, self).__init__(path, config=config)
@@ -169,14 +180,6 @@ class OutputManager(manager.Manager):
     def handle_logfile(self, input_data):
         offset = 0
 
-        def _ok(code=0, message='success', data={}):
-            return {'result_code': code,
-                    'result_str': message,
-                    'result_data': data}
-
-        def _fail(code=1,  message='unknown failure', data={}):
-            return _ok(code, message, data)
-
         def _xfer_to_eof(fd_in, sock_out):
             while True:
                 bytes_read = fd_in.read(1024)
@@ -271,14 +274,6 @@ class OutputManager(manager.Manager):
         return _ok()
 
     def handle_modules(self, input_data):
-        def _ok(code=0, message='success', data={}):
-            return {'result_code': code,
-                    'result_str': message,
-                    'result_data': data}
-
-        def _fail(code=1, message='unknown failure', data={}):
-            return _ok(code, message, data)
-
         action = input_data['action']
         payload = input_data.get('payload')
 
