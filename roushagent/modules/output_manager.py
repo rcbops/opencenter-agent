@@ -53,6 +53,33 @@ LOG = logging.getLogger('roush.output')
 #
 
 
+def _ok(code=0, message='success', data={}):
+    return {'result_code': code,
+            'result_str': message,
+            'result_data': data}
+
+
+def _fail(code=1, message='unknown failure', data={}):
+    return _ok(code, message, data)
+
+
+def _xfer_to_eof(fd_in, sock_out):
+    while True:
+        bytes_read = fd_in.read(1024)
+        if len(bytes_read) == 0:
+            # fd_in EOF.
+            return True
+
+        try:
+            bytes_sent = sock_out.send(bytes_read)
+        except:
+            return False
+
+        if bytes_sent == 0:
+            # remote socket shut down
+            return False
+
+
 class OutputManager(manager.Manager):
     def __init__(self, path, config={}):
         super(OutputManager, self).__init__(path, config=config)
@@ -81,10 +108,10 @@ class OutputManager(manager.Manager):
         LOG.debug('Registering handler for action %s' % action)
         # First handler wins
         if action in self.dispatch_table:
-            _, path, name = self.dispatch_table[action]
-            raise NameError('Action %s already registered to %s:%s' % (action,
-                                                                       path,
-                                                                       name))
+            action_details = self.dispatch_table[action]
+            raise NameError('Action %s already registered to %s:%s'
+                            % (action, action_details['short_path'],
+                               action_details['method']))
         else:
             self.dispatch_table[action] = {'method': method,
                                            'shortpath': shortpath,
@@ -100,7 +127,7 @@ class OutputManager(manager.Manager):
             d[action] = {'plugin': params['plugin'],
                          'constraints': params['constraints'],
                          'consequences': params['consequences'],
-                         'args': params['args']}
+                         'args': params['arguments']}
         return d
 
     def dispatch(self, input_data):
@@ -169,32 +196,8 @@ class OutputManager(manager.Manager):
     def handle_logfile(self, input_data):
         offset = 0
 
-        def _ok(code=0, message='success', data={}):
-            return {'result_code': code,
-                    'result_str': message,
-                    'result_data': data}
-
-        def _fail(code=1,  message='unknown failure', data={}):
-            return _ok(code, message, data)
-
-        def _xfer_to_eof(fd_in, sock_out):
-            while True:
-                bytes_read = fd_in.read(1024)
-                if len(bytes_read) == 0:
-                    # fd_in EOF.
-                    return True
-
-                try:
-                    bytes_sent = sock_out.send(bytes_read)
-                except:
-                    return False
-
-                if bytes_sent == 0:
-                    # remote socket shut down
-                    return False
-
         action = input_data['action']
-        payload = input_data['payload']
+        payload = input_data.get('payload', {})
         timeout = payload.get('timeout', 0)
 
         if not 'task_id' in payload or \
@@ -275,16 +278,8 @@ class OutputManager(manager.Manager):
         return _ok()
 
     def handle_modules(self, input_data):
-        def _ok(code=0, message='success', data={}):
-            return {'result_code': code,
-                    'result_str': message,
-                    'result_data': data}
-
-        def _fail(code=1, message='unknown failure', data={}):
-            return _ok(code, message, data)
-
         action = input_data['action']
-        payload = input_data['payload']
+        payload = input_data.get('payload')
 
         if action == 'modules.list':
             return _ok(data={'name': 'roush_agent_output_modules',
@@ -293,13 +288,15 @@ class OutputManager(manager.Manager):
             return _ok(data={'name': 'roush_agent_actions',
                              'value': self.actions()})
         elif action == 'modules.load':
+            if not payload:
+                return _fail(message='no payload specified')
             if not 'path' in payload:
                 return _fail(message='no "path" specified in payload')
-            elif not os.path.isfile(payload['path']):
+            if not os.path.isfile(payload['path']):
                 return _fail(message='specified module does not exist')
-            else:
-                # any exceptions we'll bubble up from the manager
-                self.loadfile(payload['path'])
+
+            # any exceptions we'll bubble up from the manager
+            self.loadfile(payload['path'])
         elif action == 'modules.reload':
             pass
         return _ok()
