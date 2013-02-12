@@ -3,8 +3,8 @@
 set -o errexit
 source "$ROUSH_BASH_DIR/roush.sh"
 
-# forcing chef-client install to 10.18.2-2
-CHEF_CLIENT_VERSION=${CHEF_CLIENT_VERSION:-"10.18.2-2"}
+# forcing chef-client install to 11.2.0-1
+CHEF_CLIENT_VERSION=${CHEF_CLIENT_VERSION:-"11.2.0-1"}
 
 if [[ -f /etc/redhat-release ]]; then
     DISTRO="redhat"
