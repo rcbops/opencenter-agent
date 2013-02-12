@@ -53,7 +53,6 @@ LOG = logging.getLogger('roush.output')
 #
 
 
-
 def _ok(code=0, message='success', data={}):
     return {'result_code': code,
             'result_str': message,
