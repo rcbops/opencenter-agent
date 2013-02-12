@@ -280,7 +280,7 @@ class OutputManager(manager.Manager):
             return _ok(code, message, data)
 
         action = input_data['action']
-        payload = input_data['payload']
+        payload = input_data.get('payload')
 
         if action == 'modules.list':
             return _ok(data={'name': 'roush_agent_output_modules',
@@ -289,13 +289,15 @@ class OutputManager(manager.Manager):
             return _ok(data={'name': 'roush_agent_actions',
                              'value': self.actions()})
         elif action == 'modules.load':
+            if not payload:
+                return _fail(message='no payload specified')
             if not 'path' in payload:
                 return _fail(message='no "path" specified in payload')
-            elif not os.path.isfile(payload['path']):
+            if not os.path.isfile(payload['path']):
                 return _fail(message='specified module does not exist')
-            else:
-                # any exceptions we'll bubble up from the manager
-                self.loadfile(payload['path'])
+
+            # any exceptions we'll bubble up from the manager
+            self.loadfile(payload['path'])
         elif action == 'modules.reload':
             pass
         return _ok()
