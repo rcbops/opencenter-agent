@@ -100,7 +100,7 @@ class OutputManager(manager.Manager):
             d[action] = {'plugin': params['plugin'],
                          'constraints': params['constraints'],
                          'consequences': params['consequences'],
-                         'args': params['args']}
+                         'args': params['arguments']}
         return d
 
     def dispatch(self, input_data):
