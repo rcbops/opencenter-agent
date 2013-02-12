@@ -89,6 +89,43 @@ class TestModuleOutputManager(testtools.TestCase):
             self.assertEqual(out['result_code'], 0)
             self.assertEqual(out['result_str'], 'success')
 
+    def test_xter_to_eof(self):
+        class FileLikeObject(object):
+            def __init__(self, good_reads):
+                self.good_reads = good_reads
+
+            def read(self, size):
+                self.good_reads -= 1
+                if self.good_reads > 0:
+                    return '!' * size
+                return ''
+
+        class SocketLikeObject(object):
+            def __init__(self, good_writes):
+                self.good_writes = good_writes
+
+            def send(self, size):
+                self.good_writes -= 1
+                if self.good_writes > 0:
+                    return len(size)
+                return 0
+
+        class ExceptionalSocketLikeObject(object):
+            def send(self, data):
+                raise Exception('Unexpected banana!')
+
+        f = FileLikeObject(2)
+        s = SocketLikeObject(100)
+        self.assertTrue(output_manager._xfer_to_eof(f, s))
+
+        f = FileLikeObject(100)
+        s = SocketLikeObject(1)
+        self.assertFalse(output_manager._xfer_to_eof(f, s))
+
+        f = FileLikeObject(100)
+        s = ExceptionalSocketLikeObject()
+        self.assertFalse(output_manager._xfer_to_eof(f, s))
+
 
 if __name__ == '__main__':
     unittest.main()

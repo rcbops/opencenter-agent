@@ -64,6 +64,23 @@ def _fail(code=1, message='unknown failure', data={}):
     return _ok(code, message, data)
 
 
+def _xfer_to_eof(fd_in, sock_out):
+    while True:
+        bytes_read = fd_in.read(1024)
+        if len(bytes_read) == 0:
+            # fd_in EOF.
+            return True
+
+        try:
+            bytes_sent = sock_out.send(bytes_read)
+        except:
+            return False
+
+        if bytes_sent == 0:
+            # remote socket shut down
+            return False
+
+
 class OutputManager(manager.Manager):
     def __init__(self, path, config={}):
         super(OutputManager, self).__init__(path, config=config)
@@ -180,24 +197,8 @@ class OutputManager(manager.Manager):
     def handle_logfile(self, input_data):
         offset = 0
 
-        def _xfer_to_eof(fd_in, sock_out):
-            while True:
-                bytes_read = fd_in.read(1024)
-                if len(bytes_read) == 0:
-                    # fd_in EOF.
-                    return True
-
-                try:
-                    bytes_sent = sock_out.send(bytes_read)
-                except:
-                    return False
-
-                if bytes_sent == 0:
-                    # remote socket shut down
-                    return False
-
         action = input_data['action']
-        payload = input_data['payload']
+        payload = input_data.get('payload', {})
         timeout = payload.get('timeout', 0)
 
         if not 'task_id' in payload or \
