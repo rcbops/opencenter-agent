@@ -258,10 +258,11 @@ class OutputManager(manager.Manager):
             # we're polling to end of file.  Socket and fd are open,
             # fd is at EOF.  Wait for file size to change
             pos = fd.tell()
+            remaining_timeout = timeout
 
-            while timeout > 0:
+            while remaining_timeout > 0:
                 time.sleep(1)
-                timeout -= 1
+                remaining_timeout -= 1
 
                 # would be nice to be able to detect remote socket
                 # disconnected.  Sadly this doesn't seem trivially
@@ -269,12 +270,13 @@ class OutputManager(manager.Manager):
                 fd.seek(0, os.SEEK_END)
                 if fd.tell() != pos:
                     # new data in file
-                    fd.seek(pos)
+                    fd.seek(pos, os.SEEK_SET)
                     result = _xfer_to_eof(fd, sock)
                     if not result:
                         return _fail(message='remote socket disconnect')
 
                     pos = fd.tell()
+                    remaining_timeout = timeout
 
         finally:
             try:

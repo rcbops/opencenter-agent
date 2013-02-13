@@ -227,8 +227,9 @@ class TestModuleOutputManager(testtools.TestCase):
 
     def fake_sleep(self, duration):
         self.sleep_count += 1
-        self.sleep_writes_to.write('This is more data!\n')
-        self.sleep_writes_to.flush()
+        if self.sleep_count < 11:
+            self.sleep_writes_to.write('This is more data!\n')
+            self.sleep_writes_to.flush()
 
     def test_handle_logfile_watch(self):
         sock = FakeSocket(socket.AF_INET, socket.SOCK_STREAM)
@@ -253,7 +254,13 @@ class TestModuleOutputManager(testtools.TestCase):
                                      'timeout': 10}},
                         sock=sock)
                     self.assertEqual(out['result_code'], 0)
-                    self.assertEqual(self.sleep_count, 10)
+
+                    # NOTE(mikal): this one is a little complicated. The
+                    # timeout is from the last bit of seen data... So, because
+                    # we return data for the first ten sleeps, we expect to
+                    # sleep 20 times before we timeout.
+                    self.assertEqual(self.sleep_count, 20)
+
                     self.assertNotEqual(sock.sent, [])
                     self.assertEqual(len(sock.sent), 10)
 
