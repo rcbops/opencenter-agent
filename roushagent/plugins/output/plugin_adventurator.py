@@ -27,15 +27,15 @@ from state import StateMachine, StateMachineState
 from primitives import OrchestratorTasks
 
 name = 'adventurator'
-endpoint = 'http://localhost:8080'
+endpoint = 'http://localhost:8080/admin'
 
 
 def setup(config={}):
     global endpoint
-    endpoint = 'http://localhost:8080'
+    endpoint = 'http://localhost:8080/admin'
 
-    if 'endpoint' in config:
-        endpoint = config['endpoint']
+    if 'admin_endpoint' in global_config.get('roush', {}):
+        endpoint = global_config['roush']['admin_endpoint']
 
     LOG.debug('doing setup for %s handler' % name)
     register_action('adventurate', handle_adventurate)
