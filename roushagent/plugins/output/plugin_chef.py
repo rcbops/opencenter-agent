@@ -60,7 +60,8 @@ def setup(config={}):
     register_action('subscribe_cookbook_channel',
                     chef.dispatch,
                     [],
-                    ['facts.subscribed_channels := "{channel_name}"'],
+                    ['facts.chef_server_cookbook_channels := '
+                     '"{channel_name}"'],
                     {'channel_name': {'type': 'string',
                                       'name': 'channel-name',
                                       'required': True}})
