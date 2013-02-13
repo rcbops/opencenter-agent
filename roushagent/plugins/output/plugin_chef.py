@@ -54,14 +54,19 @@ def setup(config={}):
     register_action('get_chef_info', chef.dispatch)
     register_action('get_cookbook_channels', chef.dispatch)
     register_action(
+        'get_latest_channel_version', chef.dispatch, [], [],
+        {'channel_name': {'type': 'string',
+                          'name': 'channel-name',
+                          'required': True}})
+    register_action(
         'download_cookbooks', chef.dispatch, [], [],
         {'chef_server': {'type': 'interface',
                          'name': 'chef-server',
                          'required': True},
-         'CHEF_SERVER_COOKBOOK_CHANNELS': {
-             'type': 'evaluated',
-             'expression': 'nodes.{chef_server}.'
-                           'facts.chef_server_cookbook_channels'}})
+        'CHEF_SERVER_COOKBOOK_CHANNELS': {
+            'type': 'evaluated',
+            'expression': 'nodes.{chef_server}.'
+                          'facts.chef_server_cookbook_channels'}})
     register_action('uninstall_chef', chef.dispatch)
     register_action('rollback_install_chef', chef.dispatch)
     register_action('update_cookbooks', chef.dispatch)
@@ -148,6 +153,30 @@ class ChefThing(object):
             return retval(e.errno, str(e), None)
 
         return retval(0, 'success', manifest['channels'])
+
+    def get_latest_channel_version(self, input_data):
+        payload = input_data['payload']
+
+        channels = {}
+        manifest = {}
+        channel_name = payload.get('channel_name')
+        response = self.get_cookbook_channels(input_data)
+
+        if response['result_code'] == 0:
+            channels = response['result_data']
+
+        if channel_name not in channels:
+            return retval(100, "Channel '%s' not available" % channel_name, {})
+
+        url = channels[channel_name]['url']
+
+        try:
+            content = urllib2.urlopen(url).read()
+            manifest = json.loads(content)
+        except Exception as e:
+            return retval(e.errno, str(e), None)
+
+        return retval(0, 'success', manifest['current'])
 
     def subscribe_cookbook_channel(self, input_data):
         payload = input_data['payload']
