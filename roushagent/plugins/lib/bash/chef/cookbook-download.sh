@@ -14,9 +14,15 @@ knife_file=${CHEF_KNIFE_FILE:-/root/.chef/knife.rb}
 # Include the cookbook-functions.sh file
 source $ROUSH_BASH_DIR/chef/cookbook-functions.sh
 
+# Include the roush functions
+source $ROUSH_BASH_DIR/roush.sh
+
 get_prereqs
 #checkout_master "${destdir}" "${repo}" "${branch}"
 download_cookbooks "${destdir}" "${version}" "${url}"
 update_submodules "${destdir}"
 upload_cookbooks "${destdir}" "${knife_file}"
 upload_roles "${destdir}" "${knife_file}"
+
+return_fact "chef_server_cookbook_version" "'${version}'"
+
