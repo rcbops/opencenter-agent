@@ -53,14 +53,23 @@ def setup(config={}):
     register_action('install_chef_server', chef.dispatch)
     register_action('get_chef_info', chef.dispatch)
     register_action('get_cookbook_channels', chef.dispatch)
-    register_action('download_cookbooks', chef.dispatch)
+    register_action(
+        'download_cookbooks', chef.dispatch, [], [],
+        {'chef_server': {'type': 'interface',
+                         'name': 'chef-server',
+                         'required': True},
+         'CHEF_SERVER_COOKBOOK_CHANNELS': {
+             'type': 'evaluated',
+             'expression': 'nodes.{chef_server}.'
+                           'facts.chef_server_cookbook_channels'}})
     register_action('uninstall_chef', chef.dispatch)
     register_action('rollback_install_chef', chef.dispatch)
     register_action('update_cookbooks', chef.dispatch)
     register_action('subscribe_cookbook_channel',
                     chef.dispatch,
                     [],
-                    ['facts.subscribed_channels := "{channel_name}"'],
+                    ['facts.chef_server_cookbook_channels := '
+                     '"{channel_name}"'],
                     {'channel_name': {'type': 'string',
                                       'name': 'channel-name',
                                       'required': True}})
@@ -164,13 +173,30 @@ class ChefThing(object):
     def download_cookbooks(self, input_data):
         payload = input_data['payload']
         action = input_data['action']
-        good, env = get_environment([],
+        good, env = get_environment(['CHEF_SERVER_COOKBOOK_CHANNELS'],
                                     ['CHEF_REPO_DIR', 'CHEF_REPO',
                                      'CHEF_REPO_BRANCH'],
                                     payload)
 
         if not good:
             return env
+
+        channel = payload['CHEF_SERVER_COOKBOOK_CHANNELS']
+        url = "%s/%s.manifest" % (self.cdn_url,  channel.upper())
+        manifest = {}
+
+        try:
+            content = urllib2.urlopen(url).read()
+            manifest = json.loads(content)
+        except Exception as e:
+            return retval(e.errno, str(e), None)
+
+        version = manifest['current']
+        url = manifest['versions'][version]['url']
+
+        env['CHEF_CURRENT_COOKBOOK_VERSION'] = version
+        env['CHEF_CURRENT_COOKBOOK_URL'] = url
+
         return self.script.run_env('cookbook-download.sh', env, '')
 
     def update_cookbooks(self, input_data):
