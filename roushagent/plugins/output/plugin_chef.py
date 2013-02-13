@@ -1,6 +1,22 @@
 #!/usr/bin/env python
+#
+# Copyright 2012, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import netifaces
+import json
+import urllib2
 
 from bashscriptrunner import BashScriptRunner
 import os
@@ -36,10 +52,18 @@ def setup(config={}):
     register_action('run_chef', chef.dispatch)
     register_action('install_chef_server', chef.dispatch)
     register_action('get_chef_info', chef.dispatch)
+    register_action('get_cookbook_channels', chef.dispatch)
     register_action('download_cookbooks', chef.dispatch)
     register_action('uninstall_chef', chef.dispatch)
     register_action('rollback_install_chef', chef.dispatch)
     register_action('update_cookbooks', chef.dispatch)
+    register_action('subscribe_cookbook_channel',
+                    chef.dispatch,
+                    [],
+                    ['facts.subscribed_channels := "{channel_name}"'],
+                    {'channel_name': {'type': 'string',
+                                      'name': 'channel-name',
+                                      'required': True}})
 
 
 def get_environment(required, optional, payload):
@@ -67,6 +91,9 @@ class ChefThing(object):
     def __init__(self, script, config):
         self.script = script
         self.config = config
+        self.cdn_url = 'http://8a8313241d245d72fc52-' \
+                       'b3448c2b169a7d986fbb3d4c6b88e559' \
+                       '.r9.cf1.rackcdn.com'
 
     def install_chef(self, input_data):
         payload = input_data['payload']
@@ -100,6 +127,39 @@ class ChefThing(object):
         if not good:
             return env
         return self.script.run_env('install-chef-server.sh', env, '')
+
+    def get_cookbook_channels(self, input_data):
+        url = "%s/CHANNELS.manifest" % self.cdn_url
+        manifest = {}
+
+        try:
+            content = urllib2.urlopen(url).read()
+            manifest = json.loads(content)
+        except Exception as e:
+            return retval(e.errno, str(e), None)
+
+        return retval(0, 'success', manifest['channels'])
+
+    def subscribe_cookbook_channel(self, input_data):
+        payload = input_data['payload']
+        action = input_data['action']
+        good, env = get_environment([],
+                                    ['channel_name'],
+                                    payload)
+        if not good:
+            return env
+
+        channels = []
+        channel_name = payload['channel_name']
+        response = self.get_cookbook_channels(input_data)
+
+        if response['result_code'] == 0:
+            channels = response['result_data'].keys()
+
+        if channel_name in channels:
+            return retval(0, 'success', {})
+        else:
+            return retval(100, "Channel '%s' not available" % channel_name, {})
 
     def download_cookbooks(self, input_data):
         payload = input_data['payload']

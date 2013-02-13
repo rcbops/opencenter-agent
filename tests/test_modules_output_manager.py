@@ -1,7 +1,22 @@
 #!/usr/bin/env python
+#
+# Copyright 2013, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import fixtures
 import os
+import socket
 import testtools
 import unittest
 
@@ -11,7 +26,7 @@ from roushagent import utils
 
 class FakeSocket(object):
     def __init__(self, protocol, transport):
-        pass
+        self.sent = []
 
     def connect(self, ip_port):
         pass
@@ -23,6 +38,7 @@ class FakeSocket(object):
         pass
 
     def send(self, data):
+        self.sent.append(data)
         return len(data)
 
 
@@ -186,8 +202,7 @@ class TestModuleOutputManager(testtools.TestCase):
                                  '[Errno 111] Connection refused')
 
     def test_handle_logfile_tail(self):
-        self.useFixture(fixtures.MonkeyPatch('socket.socket', FakeSocket))
-
+        sock = FakeSocket(socket.AF_INET, socket.SOCK_STREAM)
         with utils.temporary_directory() as path:
             with utils.temporary_directory() as logdir:
                 om = output_manager.OutputManager(path)
@@ -199,8 +214,10 @@ class TestModuleOutputManager(testtools.TestCase):
                 out = om.handle_logfile({'action': 'logfile.tail',
                                          'payload': {'task_id': '42',
                                                      'dest_ip': '127.0.0.1',
-                                                     'dest_port': 4242}})
+                                                     'dest_port': 4242}},
+                                        sock=sock)
                 self.assertEqual(out['result_code'], 0)
+                self.assertNotEqual(sock.sent, [])
 
     def test_handle_logfile_tail_socket_fail(self):
         self.useFixture(fixtures.MonkeyPatch('socket.socket',
@@ -221,6 +238,45 @@ class TestModuleOutputManager(testtools.TestCase):
                 self.assertEqual(out['result_code'], 1)
                 self.assertEqual(out['result_str'],
                                  'remote socket disconnect')
+
+    def fake_sleep(self, duration):
+        self.sleep_count += 1
+        if self.sleep_count < 11:
+            self.sleep_writes_to.write('This is more data!\n')
+            self.sleep_writes_to.flush()
+
+    def test_handle_logfile_watch(self):
+        sock = FakeSocket(socket.AF_INET, socket.SOCK_STREAM)
+        self.useFixture(fixtures.MonkeyPatch('time.sleep', self.fake_sleep))
+
+        with utils.temporary_directory() as path:
+            with utils.temporary_directory() as logdir:
+                om = output_manager.OutputManager(path)
+                om.config = {'main': {'trans_log_dir': logdir}}
+
+                with open(os.path.join(logdir, 'trans_42.log'), 'w') as f:
+                    f.write('This\nis\na\nlog\nfile')
+
+                    self.sleep_count = 0
+                    self.sleep_writes_to = f
+
+                    out = om.handle_logfile(
+                        {'action': 'logfile.watch',
+                         'payload': {'task_id': '42',
+                                     'dest_ip': '127.0.0.1',
+                                     'dest_port': 4242,
+                                     'timeout': 10}},
+                        sock=sock)
+                    self.assertEqual(out['result_code'], 0)
+
+                    # NOTE(mikal): this one is a little complicated. The
+                    # timeout is from the last bit of seen data... So, because
+                    # we return data for the first ten sleeps, we expect to
+                    # sleep 20 times before we timeout.
+                    self.assertEqual(self.sleep_count, 20)
+
+                    self.assertNotEqual(sock.sent, [])
+                    self.assertEqual(len(sock.sent), 10)
 
 
 if __name__ == '__main__':

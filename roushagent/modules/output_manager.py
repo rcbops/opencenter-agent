@@ -1,4 +1,18 @@
 #!/usr/bin/env python
+#
+# Copyright 2012, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import os
 import logging
@@ -193,7 +207,15 @@ class OutputManager(manager.Manager):
         return result
 
     # some internal methods to provide some agent introspection
-    def handle_logfile(self, input_data):
+    def handle_logfile(self, input_data, sock=None):
+        """Handle logfile reading.
+
+        :param: input_data: dictionary of inputs to the handler
+        :param: sock:       a socket. Only set this if you're a unit test.
+
+        :returns: a result dictionary
+        """
+
         offset = 0
 
         action = input_data['action']
@@ -223,60 +245,60 @@ class OutputManager(manager.Manager):
         fd.seek(offset)
 
         # open the socket and jet it out
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if not sock:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         try:
-            sock.connect((payload['dest_ip'],
-                          int(payload['dest_port'])))
-        except socket.error as e:
-            fd.close()
+            try:
+                sock.connect((payload['dest_ip'],
+                              int(payload['dest_port'])))
+            except socket.error as e:
+                fd.close()
+                sock.close()
+                return _fail(message='%s' % str(e))
+
+            result = _xfer_to_eof(fd, sock)
+            if timeout == 0:
+                fd.close()
+                sock.shutdown(socket.SHUT_RDWR)
+                sock.close()
+
+            if result is False:
+                return _fail(code=1, message='remote socket disconnect')
+
+            if timeout == 0:
+                return _ok()
+
+            # we're polling to end of file.  Socket and fd are open,
+            # fd is at EOF.  Wait for file size to change
+            pos = fd.tell()
+            remaining_timeout = timeout
+
+            while remaining_timeout > 0:
+                time.sleep(1)
+                remaining_timeout -= 1
+
+                # would be nice to be able to detect remote socket
+                # disconnected.  Sadly this doesn't seem trivially
+                # doable.
+                fd.seek(0, os.SEEK_END)
+                if fd.tell() != pos:
+                    # new data in file
+                    fd.seek(pos, os.SEEK_SET)
+                    result = _xfer_to_eof(fd, sock)
+                    if not result:
+                        return _fail(message='remote socket disconnect')
+
+                    pos = fd.tell()
+                    remaining_timeout = timeout
+
+        finally:
+            try:
+                # This will fail if the socket isn't open
+                sock.shutdown(socket.SHUT_RDWR)
+            except:
+                pass
             sock.close()
-            return _fail(message='%s' % str(e))
-
-        result = _xfer_to_eof(fd, sock)
-        if timeout == 0:
-            fd.close()
-            sock.shutdown(socket.SHUT_RDWR)
-            sock.close()
-
-        if result is False:
-            return _fail(code=1, message='remote socket disconnect')
-
-        if timeout == 0:
-            return _ok()
-
-        # we're polling to end of file.  Socket and fd are open,
-        # fd is at EOF.  Wait for file size to change
-        pos = fd.tell()
-        success = True
-
-        remaining_timeout = timeout
-
-        while remaining_timeout > 0:
-            time.sleep(1)
-            remaining_timeout -= 1
-
-            # would be nice to be able to detect remote socket
-            # disconnected.  Sadly this doesn't seem trivially
-            # doable.
-            fd.seek(0, os.SEEK_END)
-            if fd.tell() != pos:
-                # new data in file
-                fd.seek(pos, os.SEEK_SET)
-                result = _xfer_to_eof(fd, sock)
-
-                if not result:
-                    success = False
-                    break
-
-                pos = fd.tell()
-                remaining_timeout = timeout
-
-        sock.shutdown(socket.SHUT_RDWR)
-        sock.close()
-
-        if not success:
-            return _fail(message='remote socket disconnect')
 
         return _ok()
 
