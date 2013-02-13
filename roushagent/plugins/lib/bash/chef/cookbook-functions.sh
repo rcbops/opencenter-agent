@@ -11,6 +11,35 @@ function get_prereqs() {
     apt-get install -y git-core wget
 }
 
+function download_cookbooks() {
+    # $1 directory to download into
+    # $2 cookbook version
+    # $3 cookbook tgz url
+
+    local destdir=$1
+    local version=$2
+    local url=$3
+
+    filename=$(basename "$url")
+    topdir=$(dirname ${destdir})
+    mkdir -p ${topdir}
+
+    pushd ${topdir}
+
+    wget ${url}
+    tar -xvzf ${filename}
+
+    if [ -L ${destdir} ]; then
+        rm ${destdir}
+    elif [ -e ${destdir} ]; then
+        echo "${destdir} exists and is not a symlink"
+        exit 1
+    fi
+
+    ln -s chef-cookbooks-${version} ${destdir}
+    popd
+}
+
 function checkout_master() {
     # $1 - directory to check out into
     # $2 - repo
@@ -31,7 +60,7 @@ function checkout_master() {
 
     pushd ${topdir}
 
-    wget http://8a8313241d245d72fc52-b3448c2b169a7d986fbb3d4c6b88e559.r9.cf1.rackcdn.com/chef-cookbooks-v${version}.tgz
+    wget http://j8a8313241d245d72fc52-b3448c2b169a7d986fbb3d4c6b88e559.r9.cf1.rackcdn.com/chef-cookbooks-v${version}.tgz
     tar -xvzf chef-cookbooks-v${version}.tgz
 
     if [ -L ${destdir} ]; then
