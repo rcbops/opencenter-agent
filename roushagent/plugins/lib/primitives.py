@@ -82,10 +82,16 @@ class OrchestratorTasks:
         """
 
         nodelist_length = len(state_data['nodes'])
+        result_data = {}
 
+        # we're serializing on this.  when we shift to multi-target
+        # adventures in the ui, we probably want to do this in parallel,
+        # _particularly_ in the case of run_task
+        #
         for node in state_data['nodes']:
-            result = fn(api, node, *args, **kwargs)
-            if not result:
+            task_result = fn(state_data, api, node, *args, **kwargs)
+            result_data[node] = task_result
+            if task_result['result_code'] != 0:
                 self._fail_node(state_data, node)
 
         log_entry = 'ran primitive %s: %d/%d completed successfully' % (
@@ -94,11 +100,11 @@ class OrchestratorTasks:
         if len(state_data['nodes']) > 0:
             return self._success(state_data,
                                  result_str=log_entry,
-                                 result_data={})
+                                 result_data=result_data)
         else:
-            return self._success(state_data,
+            return self._failure(state_data,
                                  result_str=log_entry,
-                                 result_data={})
+                                 result_data=result_data)
 
     def sm_eval(self, plan, input_state):
         def be_task(prim_name, fn, api, **kwargs):
