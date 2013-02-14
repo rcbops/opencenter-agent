@@ -198,8 +198,12 @@ class TestModuleOutputManager(testtools.TestCase):
                                                      'dest_ip': '127.0.0.1',
                                                      'dest_port': 4242}})
                 self.assertEqual(out['result_code'], 1)
-                self.assertEqual(out['result_str'],
-                                 '[Errno 111] Connection refused')
+                #
+                # Symbolic errnos are specified by posix.  Values are not.
+                # Neither is the actual text of strerror(3).
+                #
+                # self.assertEqual(out['result_str'],
+                #                  '[Errno 111] Connection refused')
 
     def test_handle_logfile_tail(self):
         sock = FakeSocket(socket.AF_INET, socket.SOCK_STREAM)

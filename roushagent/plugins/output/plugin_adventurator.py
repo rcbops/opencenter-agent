@@ -126,20 +126,31 @@ def handle_adventurate(input_data):
     if 'state_data' in ns and \
             'history' in ns['state_data']:
         output_data['result_data']['history'] = ns['state_data']['history']
+    else:
+        output_data['result_data']['history'] = []
 
     # clean up any failed tasks.
     LOG.debug('Adventure terminated with state: %s' % ns['state_data'])
 
+    rollbacks = {}
+
+    for entry in output_data['result_data']['history']:
+        # walk through the history and assemble rollback plans
+        for k, v in entry['result_data'].items():
+            if not k in rollbacks:
+                rollbacks[k] = []
+            if 'rollback' in v['result_data']:
+                rollbacks[k].append(v['result_data']['rollback'])
+
     state_data = ns['state_data']
+    output_data['result_data']['rollbacks'] = rollbacks
 
     if 'fails' in state_data:
         # we need to walk through all the failed nodes.
         for node in map(lambda x: int(x), state_data['fails']):
-            if 'rollback_plan' in state_data and (
-                    node in state_data['rollback_plan']):
-
+            if node in rollbacks:
                 LOG.debug('Running rollback plan for node %d' % node)
-                ns['sm_description'] = state_data['rollback_plan'][node]
+                ns['sm_description'] = rollbacks[node]
                 ns['input_data'] = {'nodes': [node]}
 
                 try:
