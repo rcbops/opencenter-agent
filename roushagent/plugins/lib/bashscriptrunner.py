@@ -128,7 +128,8 @@ class BashExec(object):
             output_variables = []
 
         # Wait for process to run
-        ret_code = os.waitpid(self.child_pid, 0)[1]
+        status_code = os.waitpid(self.child_pid, 0)[1]
+        ret_code = status_code >> 8
 
         fl = fcntl.fcntl(self.pipe_read, fcntl.F_GETFL)
         fcntl.fcntl(self.pipe_read, fcntl.F_SETFL, fl | os.O_NONBLOCK)
