@@ -11,6 +11,8 @@ if ! [[ -e /etc/debian_version ]] ; then
     exit 1
 fi
 
+CHEF_SERVER_VERSION=${CHEF_SERVER_VERSION:-11.0.4-1}
+
 locale-gen en_US.UTF-8
 
 apt-get install -y --force-yes pwgen wget lsb-release
@@ -55,7 +57,7 @@ fi
 HOMEDIR=$(getent passwd ${CHEF_UNIX_USER} | cut -d: -f6)
 export HOME=${HOMEDIR}
 if ! dpkg -s chef-server &>/dev/null; then
-    curl -L "http://www.opscode.com/chef/download-server?p=ubuntu&pv=12.04&m=x86_64&v=latest" > /tmp/chef-server.deb
+    curl -L "http://www.opscode.com/chef/download-server?p=ubuntu&pv=12.04&m=x86_64&v=${CHEF_SERVER_VERSION}" > /tmp/chef-server.deb
     dpkg -i /tmp/chef-server.deb
     chef-server-ctl reconfigure
     rm -f /tmp/chef-server.deb
