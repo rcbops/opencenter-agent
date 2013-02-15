@@ -23,9 +23,11 @@ from roushclient.client import RoushEndpoint
 
 name = 'agent_restart'
 
+
 def setup(config={}):
     LOG.debug('Setting up restart_agent plugin')
     register_action('agent_restart', restart_agent)
+
 
 def restart_agent(input_data):
     payload = input_data['payload']
@@ -54,10 +56,12 @@ def _return(result_code, result_str, result_data=None):
             'result_str': result_str,
             'result_data': result_data}
 
+
 def _success(result_str='success', result_data=None):
     if result_data is None:
         result_data = {}
     return _return(0, result_str, result_data)
+
 
 def _respawn():
     args = sys.argv[:]
