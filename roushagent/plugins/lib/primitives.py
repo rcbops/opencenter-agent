@@ -135,9 +135,13 @@ class OrchestratorTasks:
                 if not backend_fn:
                     msg = 'cannot find backend primitive "%s"' % primitive
                     self.logger.debug(msg)
+                    input_state['fails'] = input_state['nodes']
+                    input_state['nodes'] = []
+
                     return({'result_code': 1,
                             'result_str': msg,
-                            'result_data': {}})
+                            'result_data': {}}, input_state)
+
                 fn = be_task(primitive, backend_fn, self.api, **parameters)
             else:
                 # this primitive comes from node tasks.

@@ -127,18 +127,18 @@ def handle_adventurate(input_data):
     if 'result_data' in ns:
         output_data = ns['result_data']
 
+    history = []
+
     if 'state_data' in ns and \
             'history' in ns['state_data']:
-        output_data['result_data']['history'] = ns['state_data']['history']
-    else:
-        output_data['result_data']['history'] = []
+        history = ns['state_data']['history']
 
     # clean up any failed tasks.
     LOG.debug('Adventure terminated with state: %s' % ns['state_data'])
 
     rollbacks = {}
 
-    for entry in output_data['result_data']['history']:
+    for entry in history:
         # walk through the history and assemble rollback plans
         for k, v in entry['result_data'].items():
             k = int(k)
@@ -148,7 +148,7 @@ def handle_adventurate(input_data):
                 rollbacks[k].append(v['result_data']['rollback'])
 
     state_data = ns['state_data']
-    output_data['result_data']['rollbacks'] = rollbacks
+    # output_data['result_data']['rollbacks'] = rollbacks
 
     if 'fails' in state_data:
         # we need to walk through all the failed nodes.

@@ -18,6 +18,8 @@ import copy
 import logging
 import time
 
+from roushagent.utils import detailed_exception
+
 
 class StateMachine:
     def __init__(self, state_data={}, logger=None):
@@ -60,13 +62,26 @@ class StateMachine:
     # or false otherwise
     def advance(self):
         if not self.current_state in self.states.keys():
-            raise ValueError('no state "%s" in state machine' % state)
+            raise ValueError('no state "%s" in state machine' %
+                             self.current_state)
 
         self.logger.debug('Running state %s' % self.current_state)
 
         # run and go
-        self.result, self.state_data = self.states[self.current_state].advance(
-            self.state_data)
+        try:
+            self.result, self.state_data = \
+                self.states[self.current_state].advance(self.state_data)
+        except:
+            # don't care why... we'll fail this state machine, as well
+            # as mark all the nodes failed.
+            for node in self.state_data['nodes']:
+                self.state_data['fails'].append(node)
+            self.state_data['nodes'] = []
+
+            self.result = {'result_code': 253,
+                           'result_str': 'Exception!',
+                           'result_data': detailed_exception()}
+            return False
 
         if self.states[self.current_state].terminal:
             return False
