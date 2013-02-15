@@ -7,5 +7,5 @@ function return_attr {
 }
 
 function return_consequence {
-    echo -ne "consequences\0\0$1\0"
+    echo -ne "consequences\0\0$1\0">&3
 }
