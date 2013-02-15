@@ -42,13 +42,20 @@ node.override["chef_server"]["nginx"]["url"] = "${CHEF_URL}"
 node.override["chef_server"]["nginx"]["ssl_port"] = ${CHEF_FE_SSL_PORT}
 node.override["chef_server"]["nginx"]["non_ssl_port"] = ${CHEF_FE_PORT}
 node.override["chef_server"]["nginx"]["enable_non_ssl"] = true
+if (node['memory']['total'].to_i / 4) > ((node['chef_server']['postgresql']['shmmax'].to_i / 1024) - 2097152)
+  # guard against setting shared_buffers > shmmax on hosts with installed RAM > 64GB
+  # use 2GB less than shmmax as the default for these large memory machines
+  node.override['chef_server']['postgresql']['shared_buffers'] = "14336MB"
+else
+  node.override['chef_server']['postgresql']['shared_buffers'] = "#{(node['memory']['total'].to_i / 4) / (1024)}MB"
+end
 EOF
 fi
 
 HOMEDIR=$(getent passwd ${CHEF_UNIX_USER} | cut -d: -f6)
 export HOME=${HOMEDIR}
 if ! dpkg -s chef-server &>/dev/null; then
-    curl https://opscode-omnitruck-release.s3.amazonaws.com/ubuntu/12.04/x86_64/chef-server_11.0.4-1.ubuntu.12.04_amd64.deb > /tmp/chef-server.deb
+    curl -L "http://www.opscode.com/chef/download-server?p=ubuntu&pv=12.04&m=x86_64&v=latest" > /tmp/chef-server.deb
     dpkg -i /tmp/chef-server.deb
     chef-server-ctl reconfigure
     rm -f /tmp/chef-server.deb
