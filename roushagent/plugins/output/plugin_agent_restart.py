@@ -29,8 +29,7 @@ def setup(config={}):
 
 def restart_agent(input_data):
     payload = input_data['payload']
-    try:
-        _respawn()
+    _respawn()
     return _success()
 
 def _success(result_str='success', result_data=None):
