@@ -19,18 +19,40 @@ import subprocess
 import sys
 import time
 
+from roushclient.client import RoushEndpoint
+
 name = 'agent_restart'
 
 def setup(config={}):
     LOG.debug('Setting up restart_agent plugin')
-
     register_action('agent_restart', restart_agent)
-
 
 def restart_agent(input_data):
     payload = input_data['payload']
-    _respawn()
-    return _success()
+    pid = os.fork()
+    if pid != 0:
+        # Parent Process
+        _respawn()
+
+    else:
+        # Child Process
+        result = _success()
+        task_id = input_data['id']
+        endpoint_url = global_config['roush']['admin_endpoint']
+        ep = RoushEndpoint(endpoint_url)
+        task = ep.tasks[task_id]
+        task._request_get()
+        task.state = 'done'
+        task.result = result
+        task.save()
+
+
+def _return(result_code, result_str, result_data=None):
+    if result_data is None:
+        result_data = {}
+    return {'result_code': result_code,
+            'result_str': result_str,
+            'result_data': result_data}
 
 def _success(result_str='success', result_data=None):
     if result_data is None:
