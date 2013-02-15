@@ -97,22 +97,26 @@ def handle_adventurate(input_data):
 
     LOG.debug('About to run the following dsl: %s' % adventure_dsl)
 
-    node_list = []
-    # let's mark all the nodes as running adventure...
+    node_list = {}
+
     for node in initial_state['nodes']:
-        node_list.append(node)
-        node_obj = ep.nodes[node]
-        node_obj.adventure_id = adventure_id
-        node_obj.save()
+        node_list[int(node)] = 'ok'
+        attr_obj = ep.attrs.new()
+        attr_obj.node_id = node
+        attr_obj.key = 'last_task'
+        attr_obj.value = 'ok'
+        attr_obj.save()
 
     try:
         exec '(result_data, state_data) = ' \
             'tasks.sm_eval(sm_description, input_data)' in ns, ns
     except Exception as e:
-        for node in node_list:
-            node_obj._request_get()
-            node_obj.adventure_id = None
-            node_obj.save()
+        for node in node_list.keys():
+            attr_obj = ep.attrs.new()
+            attr_obj.node_id = node
+            attr_obj.key = 'last_task'
+            attr_obj.value = 'failed'
+            attr_obj.save()
 
         return _retval(1, result_data=detailed_exception())
 
@@ -137,6 +141,7 @@ def handle_adventurate(input_data):
     for entry in output_data['result_data']['history']:
         # walk through the history and assemble rollback plans
         for k, v in entry['result_data'].items():
+            k = int(k)
             if not k in rollbacks:
                 rollbacks[k] = []
             if 'rollback' in v['result_data']:
@@ -148,24 +153,32 @@ def handle_adventurate(input_data):
     if 'fails' in state_data:
         # we need to walk through all the failed nodes.
         for node in map(lambda x: int(x), state_data['fails']):
+            node_list[node] = 'failed'
             if node in rollbacks:
                 LOG.debug('Running rollback plan for node %d' % node)
                 ns['sm_description'] = rollbacks[node]
                 ns['input_data'] = {'nodes': [node]}
 
                 try:
-                    exec 'tasks.sm_eval(sm_description, input_data)' in ns, ns
+                    exec '(rollback_result, _) = tasks.sm_eval(' \
+                        'sm_description, input_data)' in ns, ns
+
+                    if 'rollback_result' in ns and \
+                            'result_code' in ns['rollback_result']:
+                        if ns['rollback_result']['result_code'] == 0:
+                            node_list[node] = 'rollback'
+
                 except Exception as e:
                     pass
             else:
                 LOG.debug('No rollback plan for failed node %d' % node)
 
-    for node in node_list:
-        node_obj = ep.nodes[node]
-        # force a refresh - need to set up partial puts
-        node_obj._request_get()
-        node_obj.adventure_id = None
-        node_obj.save()
+    for node in node_list.keys():
+        attr_obj = ep.attrs.new()
+        attr_obj.node_id = int(node)
+        attr_obj.key = 'last_task'
+        attr_obj.value = node_list[node]
+        attr_obj.save()
 
     return output_data
 
