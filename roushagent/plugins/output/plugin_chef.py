@@ -37,7 +37,8 @@ def setup(config={}):
     chef = ChefThing(script, config)
     register_action(
         'install_chef', chef.dispatch, [],
-        ['facts.backends := union(facts.backends, "chef-client")'],
+        ['facts.backends := union(facts.backends, "chef-client")',
+         'facts.chef_server_consumed := {chef_server}'],
         {'chef_server': {'type': 'interface',
                          'name': 'chef-server',
                          'required': True},
@@ -56,7 +57,6 @@ def setup(config={}):
     register_action(
         'get_latest_channel_version', chef.dispatch, [], [],
         {'channel_name': {'type': 'string',
-                          'name': 'channel-name',
                           'required': True}})
     register_action(
         'download_cookbooks', chef.dispatch, [], [],
@@ -76,7 +76,6 @@ def setup(config={}):
                     ['facts.chef_server_cookbook_channels := '
                      '"{channel_name}"'],
                     {'channel_name': {'type': 'string',
-                                      'name': 'channel-name',
                                       'required': True}})
 
 

@@ -99,6 +99,8 @@ def handle_adventurate(input_data):
 
     node_list = {}
 
+    ns['input_data']['fails'] = []
+
     for node in initial_state['nodes']:
         node_list[int(node)] = 'ok'
         attr_obj = ep.attrs.new()

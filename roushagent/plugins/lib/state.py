@@ -68,20 +68,8 @@ class StateMachine:
         self.logger.debug('Running state %s' % self.current_state)
 
         # run and go
-        try:
-            self.result, self.state_data = \
-                self.states[self.current_state].advance(self.state_data)
-        except:
-            # don't care why... we'll fail this state machine, as well
-            # as mark all the nodes failed.
-            for node in self.state_data['nodes']:
-                self.state_data['fails'].append(node)
-            self.state_data['nodes'] = []
-
-            self.result = {'result_code': 253,
-                           'result_str': 'Exception!',
-                           'result_data': detailed_exception()}
-            return False
+        self.result, self.state_data = \
+            self.states[self.current_state].advance(self.state_data)
 
         if self.states[self.current_state].terminal:
             return False
