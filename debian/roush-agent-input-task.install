@@ -1,2 +1,2 @@
 usr/share/roush-agent/plugins/input/task_input.py
-debian/roush-agent-roush.conf /etc/roush/agent.conf.d
+debian/roush-agent-endpoints.conf /etc/roush/agent.conf.d
