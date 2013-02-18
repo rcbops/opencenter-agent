@@ -89,7 +89,13 @@ class OrchestratorTasks:
         # _particularly_ in the case of run_task
         #
         for node in state_data['nodes']:
-            task_result = fn(state_data, api, node, *args, **kwargs)
+            try:
+                task_result = fn(state_data, api, node, *args, **kwargs)
+            except Exception as e:
+                task_result = {'result_code': 1,
+                               'result_str': '%s: %s' % (prim_name, str(e)),
+                               'result_data': {}}
+
             result_data[node] = task_result
             if task_result['result_code'] != 0:
                 self._fail_node(state_data, node)
