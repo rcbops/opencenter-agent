@@ -118,7 +118,8 @@ class OutputManager(manager.Manager):
         LOG.debug('Dispatch methods: %s' % self.dispatch_table.keys())
 
     def register_action(self, plugin, shortpath, action, method,
-                        constraints=[], consequences=[], args={}):
+                        constraints=[], consequences=[], args={},
+                        timeout=30):
         LOG.debug('Registering handler for action %s' % action)
         # First handler wins
         if action in self.dispatch_table:
@@ -133,7 +134,8 @@ class OutputManager(manager.Manager):
                                            'plugin': plugin,
                                            'constraints': constraints,
                                            'consequences': consequences,
-                                           'arguments': args}
+                                           'arguments': args,
+                                           'timeout': timeout}
 
     def actions(self):
         d = {}
@@ -141,7 +143,8 @@ class OutputManager(manager.Manager):
             d[action] = {'plugin': params['plugin'],
                          'constraints': params['constraints'],
                          'consequences': params['consequences'],
-                         'args': params['arguments']}
+                         'args': params['arguments'],
+                         'timeout': params['timeout']}
         return d
 
     def dispatch(self, input_data):

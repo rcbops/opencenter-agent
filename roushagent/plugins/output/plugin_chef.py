@@ -49,9 +49,10 @@ def setup(config={}):
                              'expression': 'nodes.{chef_server}.'
                              'facts.chef_server_pem'},
          'CHEF_SERVER_HOSTNAME': {'type': 'evaluated',
-                                  'expression': 'nodes.{chef_server}.name'}})
-    register_action('run_chef', chef.dispatch)
-    register_action('install_chef_server', chef.dispatch)
+                                  'expression': 'nodes.{chef_server}.name'}},
+        timeout=300)
+    register_action('run_chef', chef.dispatch, timeout=600)
+    register_action('install_chef_server', chef.dispatch, timeout=600)
     register_action('get_chef_info', chef.dispatch)
     register_action('get_cookbook_channels', chef.dispatch)
     register_action(
@@ -66,7 +67,8 @@ def setup(config={}):
         'CHEF_SERVER_COOKBOOK_CHANNELS': {
             'type': 'evaluated',
             'expression': 'nodes.{chef_server}.'
-                          'facts.chef_server_cookbook_channels'}})
+                          'facts.chef_server_cookbook_channels'}},
+        timeout=120)
     register_action('uninstall_chef', chef.dispatch)
     register_action('rollback_install_chef', chef.dispatch)
     register_action('update_cookbooks', chef.dispatch)

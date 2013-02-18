@@ -31,8 +31,8 @@ def setup(config={}):
     script = BashScriptRunner(script_path=script_path, log=LOG,
                               environment=env)
     packages = PackageThing(script, config)
-    register_action('get_updates', packages.dispatch)
-    register_action('do_updates', packages.dispatch)
+    register_action('get_updates', packages.dispatch, timeout=300)  # 5 min
+    register_action('do_updates', packages.dispatch, timeout=600)   # 10 min
 
 
 def get_environment(required, optional, payload):
