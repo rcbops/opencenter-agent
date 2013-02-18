@@ -169,7 +169,7 @@ class ChefThing(object):
             channels = response['result_data']
 
         if channel_name not in channels:
-            return retval(100, "Channel '%s' not available" % channel_name, {})
+            return retval(100, 'Channel "%s" not available' % channel_name, {})
 
         url = channels[channel_name]['url']
 
@@ -200,7 +200,7 @@ class ChefThing(object):
         if channel_name in channels:
             return retval(0, 'success', {})
         else:
-            return retval(100, "Channel '%s' not available" % channel_name, {})
+            return retval(100, 'Channel "%s" not available' % channel_name, {})
 
     def download_cookbooks(self, input_data):
         payload = input_data['payload']
@@ -221,7 +221,7 @@ class ChefThing(object):
             channels = response['result_data']
 
         if channel_name not in channels:
-            return retval(100, "Channel '%s' not available" % channel_name, {})
+            return retval(100, 'Channel "%s" not available' % channel_name, {})
 
         url = channels[channel_name]['url']
 
