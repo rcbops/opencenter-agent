@@ -40,7 +40,7 @@ def restart_agent(input_data):
         # Child Process
         result = _success()
         task_id = input_data['id']
-        endpoint_url = global_config['roush']['admin_endpoint']
+        endpoint_url = global_config['endpoints']['admin']
         ep = RoushEndpoint(endpoint_url)
         task = ep.tasks[task_id]
         task._request_get()

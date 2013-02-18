@@ -35,7 +35,7 @@ def setup(config={}):
     endpoint = 'http://localhost:8080/admin'
 
     if 'admin_endpoint' in global_config.get('roush', {}):
-        endpoint = global_config['roush']['admin_endpoint']
+        endpoint = global_config['endpoints']['admin']
 
     LOG.debug('doing setup for %s handler' % name)
     register_action('adventurate', handle_adventurate)
