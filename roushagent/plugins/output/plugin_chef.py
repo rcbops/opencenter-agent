@@ -38,7 +38,7 @@ def setup(config={}):
     register_action(
         'install_chef', chef.dispatch, [],
         ['facts.backends := union(facts.backends, "chef-client")',
-         'facts.chef_server_consumed := chef_server' ],
+         'facts.chef_server_consumed := {chef_server}' ],
         {'chef_server': {'type': 'interface',
                          'name': 'chef-server',
                          'required': True},
