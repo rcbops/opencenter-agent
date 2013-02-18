@@ -31,7 +31,7 @@ def setup(config={}):
         LOG.error('bash_path is not set')
         raise ValueError('bash_path not set')
 
-    if not 'cookbook_channels_manifest_url' in global_config['main']:
+    if not 'cookbook_channels_manifest_url' in global_config['chef']:
         LOG.error('cookbook_channels_manifest_url is not set')
         raise ValueError('cookbook_channels_manifest_url not set')
 
@@ -40,7 +40,7 @@ def setup(config={}):
     script = BashScriptRunner(script_path=script_path, log=LOG,
                               environment=env)
     config['cookbook_channels_manifest_url'] \
-        = global_config['main']['cookbook_channels_manifest_url']
+        = global_config['chef']['cookbook_channels_manifest_url']
     chef = ChefThing(script, config)
     register_action(
         'install_chef', chef.dispatch, [],
