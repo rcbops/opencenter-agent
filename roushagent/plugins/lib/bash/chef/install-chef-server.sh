@@ -30,6 +30,8 @@ if [ ! -e "/etc/chef-server/chef-server.rb" ]; then
   CHEF_AMQP_PASSWORD=${CHEF_AMQP_PASSWORD:-$(pwgen -1)}
   CHEF_POSTGRESQL_PASSWORD=${CHEF_POSTGRESQL_PASSWORD:-$(pwgen -1)}
   CHEF_POSTGRESQL_RO_PASSWORD=${CHEF_POSTGRESQL_PASSWORD:-$(pwgen -1)}
+
+  # due to http://tickets.opscode.com/browse/CHEF-3849 CHEF_FE_PORT is not used yet
   CHEF_FE_PORT=${CHEF_FE_PORT:-80}
   CHEF_FE_SSL_PORT=${CHEF_FE_SSL_PORT:-443}
   CHEF_URL=${CHEF_URL:-https://${MY_IP}:${CHEF_FE_SSL_PORT}}
@@ -52,23 +54,22 @@ else
   node.override['chef_server']['postgresql']['shared_buffers'] = "#{(node['memory']['total'].to_i / 4) / (1024)}MB"
 end
 EOF
-fi
 
-HOMEDIR=$(getent passwd ${CHEF_UNIX_USER} | cut -d: -f6)
-export HOME=${HOMEDIR}
-if ! dpkg -s chef-server &>/dev/null; then
-    curl -L "http://www.opscode.com/chef/download-server?p=ubuntu&pv=12.04&m=x86_64&v=${CHEF_SERVER_VERSION}" > /tmp/chef-server.deb
-    dpkg -i /tmp/chef-server.deb
-    chef-server-ctl reconfigure
-    rm -f /tmp/chef-server.deb
-fi
+    HOMEDIR=$(getent passwd ${CHEF_UNIX_USER} | cut -d: -f6)
+    export HOME=${HOMEDIR}
+    if ! dpkg -s chef-server &>/dev/null; then
+        curl -L "http://www.opscode.com/chef/download-server?p=ubuntu&pv=12.04&m=x86_64&v=${CHEF_SERVER_VERSION}" > /tmp/chef-server.deb
+        dpkg -i /tmp/chef-server.deb
+        chef-server-ctl reconfigure
+        rm -f /tmp/chef-server.deb
+    fi
 
-mkdir -p ${HOMEDIR}/.chef
-cp /etc/chef-server/{chef-validator.pem,chef-webui.pem,admin.pem} ${HOMEDIR}/.chef
-chown -R ${CHEF_UNIX_USER}: ${HOMEDIR}/.chef
+    mkdir -p ${HOMEDIR}/.chef
+    cp /etc/chef-server/{chef-validator.pem,chef-webui.pem,admin.pem} ${HOMEDIR}/.chef
+    chown -R ${CHEF_UNIX_USER}: ${HOMEDIR}/.chef
 
-if [[ ! -e ${HOMEDIR}/.chef/knife.rb ]]; then
-cat <<EOF | /opt/chef-server/bin/knife configure -i
+    if [[ ! -e ${HOMEDIR}/.chef/knife.rb ]]; then
+       cat <<EOF | /opt/chef-server/bin/knife configure -i
 ${HOMEDIR}/.chef/knife.rb
 ${CHEF_URL}
 admin
@@ -78,14 +79,15 @@ chef-validator
 ${HOMEDIR}/.chef/chef-validator.pem
 
 EOF
+        # setup the path
+        echo 'export PATH=${PATH}:/opt/chef-server/bin' >> ${HOMEDIR}/.profile
+    fi
+
+    # these are only returned on a run where we actually install chef-server
+    return_fact "chef_server_client_name" "'admin'"
+    return_fact "chef_server_client_pem" "'$(cat /root/.chef/admin.pem)'"
+    return_fact "chef_server_uri" "'${CHEF_URL}'"
+    return_fact "chef_server_pem" "'$(cat /etc/chef-server/chef-validator.pem)'"
+    return_fact "chef_server_cookbook_channels" "'current'"
+    return_attr "chef_webui_password" "'${CHEF_WEBUI_PASSWORD}'"
 fi
-
-# setup the path
-echo 'export PATH=${PATH}:/opt/chef-server/bin' >> ${HOMEDIR}/.profile
-
-return_fact "chef_server_client_name" "'admin'"
-return_fact "chef_server_client_pem" "'$(cat /root/.chef/admin.pem)'"
-return_fact "chef_server_uri" "'${CHEF_URL}'"
-return_fact "chef_server_pem" "'$(cat /etc/chef-server/chef-validator.pem)'"
-return_fact "chef_server_cookbook_channels" "'current'"
-return_attr "chef_webui_password" "'${CHEF_WEBUI_PASSWORD}'"
