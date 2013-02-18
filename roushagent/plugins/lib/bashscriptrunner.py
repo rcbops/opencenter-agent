@@ -94,7 +94,9 @@ class BashScriptRunner(object):
         ret_code, outputs = c.wait()
         response['result_data'].update(outputs)
         response['result_code'] = ret_code
-        response['result_str'] = os.strerror(ret_code)
+        # not os.strerror... bash return values are not posix errnos
+        response['result_str'] = 'Success' if ret_code == 0 else \
+            'Failure'
         return response
 
 
