@@ -30,10 +30,17 @@ def setup(config={}):
     if not 'bash_path' in global_config['main']:
         LOG.error('bash_path is not set')
         raise ValueError('bash_path not set')
+
+    if not 'cookbook_channels_manifest_url' in global_config['main']:
+        LOG.error('cookbook_channels_manifest_url is not set')
+        raise ValueError('cookbook_channels_manifest_url not set')
+
     script_path = [os.path.join(global_config['main']['bash_path'], name)]
     env = {'ROUSH_BASH_DIR': global_config['main']['bash_path']}
     script = BashScriptRunner(script_path=script_path, log=LOG,
                               environment=env)
+    config['cookbook_channels_manifest_url'] \
+        = global_config['main']['cookbook_channels_manifest_url']
     chef = ChefThing(script, config)
     register_action(
         'install_chef', chef.dispatch, [],
@@ -104,9 +111,6 @@ class ChefThing(object):
     def __init__(self, script, config):
         self.script = script
         self.config = config
-        self.cdn_url = 'http://8a8313241d245d72fc52-' \
-                       'b3448c2b169a7d986fbb3d4c6b88e559' \
-                       '.r9.cf1.rackcdn.com'
 
     def install_chef(self, input_data):
         payload = input_data['payload']
@@ -142,7 +146,7 @@ class ChefThing(object):
         return self.script.run_env('install-chef-server.sh', env, '')
 
     def get_cookbook_channels(self, input_data):
-        url = "%s/CHANNELS.manifest" % self.cdn_url
+        url = self.config['cookbook_channels_manifest_url']
         manifest = {}
 
         try:
@@ -209,9 +213,17 @@ class ChefThing(object):
         if not good:
             return env
 
-        channel = payload['CHEF_SERVER_COOKBOOK_CHANNELS']
-        url = "%s/%s.manifest" % (self.cdn_url,  channel.upper())
-        manifest = {}
+        channels = {}
+        channel_name = payload['CHEF_SERVER_COOKBOOK_CHANNELS']
+        response = self.get_cookbook_channels(input_data)
+
+        if response['result_code'] == 0:
+            channels = response['result_data']
+
+        if channel_name not in channels:
+            return retval(100, "Channel '%s' not available" % channel_name, {})
+
+        url = channels[channel_name]['url']
 
         try:
             content = urllib2.urlopen(url).read()
