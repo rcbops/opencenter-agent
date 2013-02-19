@@ -222,8 +222,10 @@ class TaskGetter:
         return self.server_thread.result(txid, result)
 
 
-def setup(config={}):
+def setup(config=None):
     global task_getter
+    if config is None:
+        config = {}
 
     name = config.get('hostname', os.popen('hostname -f').read().strip())
     endpoint = global_config.get('endpoints', {}).get(
