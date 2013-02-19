@@ -226,8 +226,8 @@ def setup(config={}):
     global task_getter
 
     name = config.get('hostname', os.popen('hostname -f').read().strip())
-    endpoint = global_config.get('roush', {}).get(
-        'admin_endpoint', 'http://localhost:8080/admin')
+    endpoint = global_config.get('endpoints', {}).get(
+        'admin', 'http://localhost:8080/admin')
 
     task_getter = TaskGetter(endpoint, name)
     task_getter.run()
