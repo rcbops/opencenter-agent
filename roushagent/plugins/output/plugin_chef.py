@@ -31,7 +31,7 @@ def setup(config={}):
         LOG.error('bash_path is not set')
         raise ValueError('bash_path not set')
 
-    if not 'cookbook_channels_manifest_url' in global_config['chef']:
+    if 'cookbook_channels_manifest_url' not in global_config['chef']:
         LOG.error('cookbook_channels_manifest_url is not set')
         raise ValueError('cookbook_channels_manifest_url not set')
 

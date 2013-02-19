@@ -34,7 +34,7 @@ def setup(config={}):
     global endpoint
     endpoint = 'http://localhost:8080/admin'
 
-    if 'admin_endpoint' in global_config.get('roush', {}):
+    if 'admin_endpoint' in global_config.get('endpoints', {}):
         endpoint = global_config['endpoints']['admin']
 
     LOG.debug('doing setup for %s handler' % name)
