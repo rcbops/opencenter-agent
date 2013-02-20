@@ -18,8 +18,6 @@ import copy
 import logging
 import time
 
-from roushagent.utils import detailed_exception
-
 
 class StateMachine:
     def __init__(self, state_data={}, logger=None):
