@@ -6,6 +6,7 @@ set -x
 
 destdir=${CHEF_REPO_DIR:-/root/chef-cookbooks}
 url=${CHEF_CURRENT_COOKBOOK_URL}
+md5=${CHEF_CURRENT_COOKBOOK_MD5}
 version=${CHEF_CURRENT_COOKBOOK_VERSION}
 #repo=${CHEF_REPO:-https://github.com/rcbops/chef-cookbooks}
 #branch=${CHEF_REPO_BRANCH:-master}
@@ -19,7 +20,7 @@ source $ROUSH_BASH_DIR/roush.sh
 
 get_prereqs
 #checkout_master "${destdir}" "${repo}" "${branch}"
-download_cookbooks "${destdir}" "${version}" "${url}"
+download_cookbooks "${destdir}" "${version}" "${url}" "${md5}"
 update_submodules "${destdir}"
 upload_cookbooks "${destdir}" "${knife_file}"
 upload_roles "${destdir}" "${knife_file}"

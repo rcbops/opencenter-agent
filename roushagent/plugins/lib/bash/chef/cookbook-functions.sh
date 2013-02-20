@@ -15,10 +15,12 @@ function download_cookbooks() {
     # $1 directory to download into
     # $2 cookbook version
     # $3 cookbook tgz url
+    # $4 cookbook tgz md5
 
     local destdir=$1
     local version=$2
     local url=$3
+    local md5=$4
 
     filename=$(basename "$url")
     topdir=$(dirname ${destdir})
@@ -27,6 +29,13 @@ function download_cookbooks() {
     pushd ${topdir}
 
     wget ${url}
+    pkg_md5=`md5sum ${filename} | awk '{ print $1 }'`
+
+    if [ "${pkg_md5}" != "${md5}" ]; then
+      echo "Downloaded cookbook MD5 '${pkg_md5}' does not match expected MD5 '${md5}'" 1>&2
+      exit 1
+    fi
+
     tar -xvzf ${filename}
 
     if [ -L ${destdir} ]; then
