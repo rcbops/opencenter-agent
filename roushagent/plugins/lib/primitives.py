@@ -18,6 +18,8 @@ import time
 import logging
 
 from roushclient.client import RoushEndpoint
+from roushagent.utils import detailed_exception
+
 from state import StateMachine, StateMachineState
 
 import roush.backends
@@ -94,7 +96,7 @@ class OrchestratorTasks:
             except Exception as e:
                 task_result = {'result_code': 1,
                                'result_str': '%s: %s' % (prim_name, str(e)),
-                               'result_data': {}}
+                               'result_data': detailed_exception()}
 
             result_data[node] = task_result
             if task_result['result_code'] != 0:
