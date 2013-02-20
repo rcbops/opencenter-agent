@@ -235,9 +235,11 @@ class ChefThing(object):
 
         version = manifest['current']
         url = manifest['versions'][version]['url']
+        md5 = manifest['versions'][version]['md5']
 
         env['CHEF_CURRENT_COOKBOOK_VERSION'] = version
         env['CHEF_CURRENT_COOKBOOK_URL'] = url
+        env['CHEF_CURRENT_COOKBOOK_MD5'] = md5
 
         return self.script.run_env('cookbook-download.sh', env, '')
 
