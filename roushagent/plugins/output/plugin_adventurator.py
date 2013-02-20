@@ -148,7 +148,7 @@ def handle_adventurate(input_data):
                 rollbacks[k] = []
             if 'rollback' in v['result_data']:
                 rollbacks[k].append(v['result_data']['rollback'])
-                v['result_data'].pop('history')
+                # v['result_data'].pop('history')
 
     state_data = ns['state_data']
     output_data['result_data']['history'] = history
