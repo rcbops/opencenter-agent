@@ -70,17 +70,15 @@ def setup(config={}):
                           'required': True}})
     register_action(
         'download_cookbooks', chef.dispatch, [], [],
-        {'chef_server': {'type': 'interface',
-                         'name': 'chef-server',
-                         'required': True},
-        'CHEF_SERVER_COOKBOOK_CHANNELS': {
+        {'CHEF_SERVER_COOKBOOK_CHANNELS': {
             'type': 'evaluated',
-            'expression': 'nodes.{chef_server}.'
-                          'facts.chef_server_cookbook_channels'}},
+            'expression': 'facts.chef_server_cookbook_channels'}},
         timeout=120)
     register_action('uninstall_chef', chef.dispatch)
     register_action('rollback_install_chef', chef.dispatch)
-    register_action('update_cookbooks', chef.dispatch)
+    register_action('update_cookbooks', chef.dispatch,
+                    [],
+                    ['facts.chef_server_ready := true'])
     register_action('subscribe_cookbook_channel',
                     chef.dispatch,
                     [],
