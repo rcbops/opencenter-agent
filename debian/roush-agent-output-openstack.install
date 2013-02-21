@@ -1,0 +1,2 @@
+usr/share/roush-agent/plugins/lib/bash/openstack/*
+usr/share/roush-agent/plugins/output/plugin_openstack.py
