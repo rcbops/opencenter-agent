@@ -80,7 +80,9 @@ def setup(config={}):
         timeout=120)
     register_action('uninstall_chef', chef.dispatch)
     register_action('rollback_install_chef', chef.dispatch)
-    register_action('update_cookbooks', chef.dispatch)
+    register_action('update_cookbooks', chef.dispatch,
+                    [],
+                    ['facts.chef_server_ready := true'])
     register_action('subscribe_cookbook_channel',
                     chef.dispatch,
                     [],
