@@ -47,6 +47,14 @@ Depends: roush-agent (= ${binary:Version}),
 Provides: ${python:Provides}
 Description: an output plugin to run package tasks
 
+Package: roush-agent-output-openstack
+Architecture: all
+Section: python
+Depends: roush-agent (= ${binary:Version}),
+ roush-agent-lib-bash (= ${binary:Version})
+Provides: ${python:Provides}
+Description: an output plugin to run simple OpenStack tasks
+
 Package: roush-agent-lib-bash
 Architecture: all
 Section: python
