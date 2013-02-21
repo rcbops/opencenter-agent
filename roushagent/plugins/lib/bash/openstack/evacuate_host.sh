@@ -54,7 +54,7 @@ nova-manage service disable --service=nova-compute --host=$(hostname -f)
 
 for (( try_migrate=1; try_migrate <= 5; try_migrate++ )) do
     echo "-- sleeping for 60 seconds"
-    #sleep 60s
+    sleep 60s
     echo ""
 
     echo "-- migrate loop ${try_migrate}"
