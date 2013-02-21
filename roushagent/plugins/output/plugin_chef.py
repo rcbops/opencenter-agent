@@ -72,6 +72,8 @@ def setup(config={}):
         'download_cookbooks', chef.dispatch, [], [],
         {'chef_server': {'type': 'interface',
                          'name': 'chef-server',
+                         'friendly': 'Chef Server Node ID',
+                         'description': 'Chef Server Node ID',
                          'required': True},
         'CHEF_SERVER_COOKBOOK_CHANNELS': {
             'type': 'evaluated',
