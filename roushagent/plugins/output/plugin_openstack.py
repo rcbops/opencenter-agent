@@ -34,7 +34,7 @@ def setup(config={}):
     register_action('upload_images', openstack.dispatch, timeout=300)  # 5 min
     register_action('disable_host', openstack.dispatch, timeout=30)  # 1/2 min
     register_action('enable_host', openstack.dispatch, timeout=30)  # 1/2 min
-    register_action('evacuate_host', openstack.dispatch, timeout=1200)  # 20 min
+    register_action('evacuate_host', openstack.dispatch, timeout=1200)  # 20min
 
 
 def get_environment(required, optional, payload):
