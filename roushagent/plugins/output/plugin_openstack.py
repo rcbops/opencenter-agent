@@ -32,6 +32,9 @@ def setup(config={}):
                               environment=env)
     openstack = OpenStackThing(script, config)
     register_action('upload_images', openstack.dispatch, timeout=300)  # 5 min
+    register_action('disable_host', openstack.dispatch, timeout=30)  # 1/2 min
+    register_action('enable_host', openstack.dispatch, timeout=30)  # 1/2 min
+    register_action('evacuate_host', openstack.dispatch, timeout=1200)  # 20min
 
 
 def get_environment(required, optional, payload):
@@ -66,6 +69,36 @@ class OpenStackThing(object):
         if not good:
             return env
         return self.script.run_env("upload_images.sh", env, "")
+
+    def enable_host(self, input_data):
+        payload = input_data['payload']
+        action = input_data['action']
+        required = []
+        optional = []
+        good, env = get_environment(required, optional, payload)
+        if not good:
+            return env
+        return self.script.run_env("enable_host.sh", env, "")
+
+    def disable_host(self, input_data):
+        payload = input_data['payload']
+        action = input_data['action']
+        required = []
+        optional = []
+        good, env = get_environment(required, optional, payload)
+        if not good:
+            return env
+        return self.script.run_env("disable_host.sh", env, "")
+
+    def evacuate_host(self, input_data):
+        payload = input_data['payload']
+        action = input_data['action']
+        required = []
+        optional = []
+        good, env = get_environment(required, optional, payload)
+        if not good:
+            return env
+        return self.script.run_env("evacuate_host.sh", env, "")
 
     def dispatch(self, input_data):
         self.script.log = LOG
