@@ -20,9 +20,6 @@ Depends: ${python:Depends}, ${misc:Depends},
  python-requests
 Provides: ${python:Provides}
 Description: Yet another pluggable host-based agent
-Recommends: roush-agent-input-task, roush-agent-output-chef,
- roush-agent-output-packages, roush-agent-output-service,
- roush-agent-output-adventurator, roush-agent-output-openstack
 
 Package: roush-agent-input-task
 Architecture: all
