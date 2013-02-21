@@ -60,6 +60,8 @@ def setup(config={}):
         timeout=300)
     register_action('run_chef', chef.dispatch, timeout=600)
     register_action('install_chef_server', chef.dispatch, timeout=600)
+    register_action('uninstall_chef_server', chef.dispatch)
+    register_action('rollback_install_chef_server', chef.dispatch)
     register_action('get_chef_info', chef.dispatch)
     register_action('get_cookbook_channels', chef.dispatch)
     register_action(
@@ -146,6 +148,12 @@ class ChefThing(object):
         if not good:
             return env
         return self.script.run_env('install-chef-server.sh', env, '')
+
+    def rollback_install_chef_server(self, input_data):
+        return self.uninstall_chef_server(input_data)
+
+    def uninstall_chef_server(self, input_data):
+        return self.script.run('uninstall-chef-server.sh')
 
     def get_cookbook_channels(self, input_data):
         url = self.config['cookbook_channels_manifest_url']
