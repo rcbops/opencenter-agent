@@ -1,6 +1,6 @@
 Format-Specification: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?op=file&rev=135
 Name: opencenter-agent
-Source: https://github.com/rpedde/opencenter-agent
+Source: https://github.com/rcbops/opencenter-agent
 Files: *
 Copyright: 2012 Rackspace US, Inc.
 License: Apache-2

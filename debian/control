@@ -9,7 +9,7 @@ Build-Depends: debhelper (>= 7.0.50~),
  python-requests
 Standards-Version: 3.9.1
 XS-Python-Version: >= 2.6
-Homepage: https://github.com/rpedde/opencenter-agent
+Homepage: https://github.com/rcbops/opencenter-agent
 XCBS-RCB-Component: rcb-utils
 
 Package: opencenter-agent
@@ -50,14 +50,6 @@ Description: an output plugin to run package tasks
 Package: opencenter-agent-lib-bash
 Architecture: all
 Section: python
-Depends: opencenter-agent (= ${binary:Version}),
- opencenter-agent-lib-bash (= ${binary:Version})
-Provides: ${python:Provides}
-Description: an output plugin to run simple OpenStack tasks
-
-Package: opencenter-agent-lib-bash
-Architecture: all
-Section: python
 Depends: opencenter-agent (= ${binary:Version})
 Provides: ${python:Provides}
 Description: libraries necessary for output tasks to do bash-y things
@@ -72,7 +64,9 @@ Description: a simple file management plugin.  very very unsafe.
 Package: opencenter-agent-output-adventurator
 Architecture: all
 Section: python
-Depends: opencenter-agent(= ${binary:Version}), opencenter-agent-input-task(= ${binary:Version}), python-opencenter
+Depends: opencenter-agent(= ${binary:Version}),
+ opencenter-agent-input-task(= ${binary:Version}),
+ python-opencenter
 Provides: ${python:Provides}
 Description: an output plugin to run adventures
 
@@ -82,3 +76,11 @@ Section: python
 Depends: opencenter-agent(= ${binary:Version})
 Provides: ${python:Provides}
 Description: an output plugin to start/stop/restart services
+
+Package: opencenter-agent-output-openstack
+Architecture: all
+Section: python
+Depends: opencenter-agent (= ${binary:Version}),
+ opencenter-agent-lib-bash (= ${binary:Version})
+Provides: ${python:Provides}
+Description: an output plugin to do openstack-ish things
