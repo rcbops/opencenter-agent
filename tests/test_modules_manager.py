@@ -19,8 +19,8 @@ import os
 import testtools
 import unittest
 
-from roushagent.modules import manager
-from roushagent import utils
+from opencenteragent.modules import manager
+from opencenteragent import utils
 
 
 class TestModuleManager(testtools.TestCase):

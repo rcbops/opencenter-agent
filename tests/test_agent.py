@@ -23,9 +23,9 @@ import sys
 import testtools
 import unittest
 
-from roushagent import exceptions
-from roushagent import RoushAgent
-from roushagent import utils
+from opencenteragent import exceptions
+from opencenteragent import OpenCenterAgent
+from opencenteragent import utils
 
 
 # Suppress WARNING logs
@@ -33,9 +33,9 @@ LOG = logging.getLogger('output')
 LOG.setLevel(logging.ERROR)
 
 
-class TestRoushAgentWorking(unittest.TestCase):
+class TestOpenCenterAgentWorking(unittest.TestCase):
     def setUp(self):
-        self.agent = RoushAgent(['-c', 'tests/roush-agent-test-working.conf'],
+        self.agent = OpenCenterAgent(['-c', 'tests/opencenter-agent-test-working.conf'],
                                 'test')
         self.output_handler = self.agent.output_handler
         self.input_handler = self.agent.input_handler
@@ -84,10 +84,10 @@ class TestRoushAgentWorking(unittest.TestCase):
         self.assertTrue(self.output_state.output_teardown_called)
 
 
-class TestRoushAgentInputBroken(unittest.TestCase):
+class TestOpenCenterAgentInputBroken(unittest.TestCase):
     def setUp(self):
-        self.agent = RoushAgent(['-c',
-                                 'tests/roush-agent-test-input-broken.conf'],
+        self.agent = OpenCenterAgent(['-c',
+                                 'tests/opencenter-agent-test-input-broken.conf'],
                                 'test')
         self.output_handler = self.agent.output_handler
         self.input_handler = self.agent.input_handler
@@ -140,10 +140,10 @@ class TestRoushAgentInputBroken(unittest.TestCase):
         self.assertTrue(self.output_state.output_teardown_called)
 
 
-class TestRoushAgentOutputBroken(unittest.TestCase):
+class TestOpenCenterAgentOutputBroken(unittest.TestCase):
     def setUp(self):
-        self.agent = RoushAgent(['-c',
-                                 'tests/roush-agent-test-output-broken.conf'],
+        self.agent = OpenCenterAgent(['-c',
+                                 'tests/opencenter-agent-test-output-broken.conf'],
                                 'test')
         self.output_handler = self.agent.output_handler
         self.input_handler = self.agent.input_handler
@@ -193,7 +193,7 @@ class TestRoushAgentOutputBroken(unittest.TestCase):
         self.assertTrue(self.output_state.output_teardown_called)
 
 
-class RoushAgentNoInitialization(RoushAgent):
+class OpenCenterAgentNoInitialization(OpenCenterAgent):
     """Turn off initialization to make unit testing easier."""
     def _initialize(self, argv, config_section):
         self.logger = logging.getLogger()
@@ -231,7 +231,7 @@ class TestInfrastructure(testtools.TestCase):
         self.exit_code_set = None
         self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
 
-        agent = RoushAgentNoInitialization([])
+        agent = OpenCenterAgentNoInitialization([])
 
         def no_cleanup():
             pass
@@ -244,7 +244,7 @@ class TestInfrastructure(testtools.TestCase):
         self.exit_code_set = None
         self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
 
-        agent = RoushAgentNoInitialization([])
+        agent = OpenCenterAgentNoInitialization([])
 
         def no_cleanup():
             pass
@@ -263,7 +263,7 @@ class TestInfrastructure(testtools.TestCase):
         self.assertEqual(self.exit_code_set, 1)
 
     def test_cleanup_no_exceptions(self):
-        agent = RoushAgentNoInitialization([])
+        agent = OpenCenterAgentNoInitialization([])
         agent.input_handler = FakeHandler(False)
         agent.output_handler = FakeHandler(False)
         agent._cleanup()
@@ -271,7 +271,7 @@ class TestInfrastructure(testtools.TestCase):
         self.assertTrue(agent.output_handler.stop_called)
 
     def test_cleanup_exceptions(self):
-        agent = RoushAgentNoInitialization([])
+        agent = OpenCenterAgentNoInitialization([])
         agent.input_handler = FakeHandler(True)
         agent.output_handler = FakeHandler(True)
         agent._cleanup()
@@ -282,7 +282,7 @@ class TestInfrastructure(testtools.TestCase):
         io = StringIO.StringIO()
         self.useFixture(fixtures.MonkeyPatch('sys.stdout', io))
 
-        agent = RoushAgentNoInitialization([])
+        agent = OpenCenterAgentNoInitialization([])
         agent._usage()
 
         self.assertNotEqual(io.getvalue().find('verbose'), -1)
@@ -294,7 +294,7 @@ class TestInfrastructure(testtools.TestCase):
         self.exit_code_set = None
         self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
 
-        agent = RoushAgentNoInitialization([])
+        agent = OpenCenterAgentNoInitialization([])
 
         try:
             agent._parse_opts(['--banana'])
@@ -311,7 +311,7 @@ class TestInfrastructure(testtools.TestCase):
         self.exit_code_set = None
         self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
 
-        agent = RoushAgentNoInitialization([])
+        agent = OpenCenterAgentNoInitialization([])
         background, debug, config_file = agent._parse_opts(
             ['--config', 'gerkin', '--verbose', '-d'])
 
@@ -323,11 +323,11 @@ class TestInfrastructure(testtools.TestCase):
         self.assertEqual(config_file, 'gerkin')
 
     def test_configure_logs_no_config(self):
-        agent = RoushAgentNoInitialization([])
+        agent = OpenCenterAgentNoInitialization([])
         agent._configure_logs(None)
 
     def test_configure_logs_bogus_config(self):
-        agent = RoushAgentNoInitialization([])
+        agent = OpenCenterAgentNoInitialization([])
 
         # If we pass a bogus config we should end up with the same handlers
         # at the end as we did beforehand.
@@ -336,7 +336,7 @@ class TestInfrastructure(testtools.TestCase):
         self.assertEquals(len(agent.logger.handlers), handlers_before)
 
     def test_read_config_missing(self):
-        agent = RoushAgentNoInitialization([])
+        agent = OpenCenterAgentNoInitialization([])
         agent.config_section = 'taskerator'
         with utils.temporary_file() as config_file:
             os.remove(config_file)
@@ -344,14 +344,14 @@ class TestInfrastructure(testtools.TestCase):
                               config_file)
 
     def test_read_config_empty(self):
-        agent = RoushAgentNoInitialization([])
+        agent = OpenCenterAgentNoInitialization([])
         agent.config_section = 'taskerator'
         with utils.temporary_file() as config_file:
             self.assertRaises(exceptions.NoConfigFound, agent._read_config,
                               config_file)
 
     def test_read_config_simple_with_default(self):
-        agent = RoushAgentNoInitialization([])
+        agent = OpenCenterAgentNoInitialization([])
         with utils.temporary_file() as config_file:
             with open(config_file, 'w') as f:
                 f.write("""[taskerator]
@@ -366,7 +366,7 @@ banana = False""")
                              'http://127.0.0.1:8080/admin')
 
     def test_read_config_with_included_file(self):
-        agent = RoushAgentNoInitialization([])
+        agent = OpenCenterAgentNoInitialization([])
         with utils.temporary_directory() as path:
             config_file = os.path.join(path, 'config')
             included_file = os.path.join(path, 'included')
@@ -389,7 +389,7 @@ included_value = fish""")
             self.assertEqual(config['taskerator']['included_value'], 'fish')
 
     def test_read_config_with_included_directory(self):
-        agent = RoushAgentNoInitialization([])
+        agent = OpenCenterAgentNoInitialization([])
         with utils.temporary_directory() as path:
             config_file = os.path.join(path, 'config')
             included_dir = os.path.join(path, 'included')
@@ -427,7 +427,7 @@ endpoint = butthis""")
             with open(pid_file, 'a+') as pidfile:
                 fcntl.flock(pidfile.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
 
-                agent = RoushAgentNoInitialization([])
+                agent = OpenCenterAgentNoInitialization([])
                 agent.config_section = 'testing'
                 agent.config = {'testing': {'pidfile': pid_file}}
 
@@ -437,7 +437,7 @@ endpoint = butthis""")
         self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
 
         with utils.temporary_file() as pid_file:
-            agent = RoushAgentNoInitialization([])
+            agent = OpenCenterAgentNoInitialization([])
             agent.config_section = 'testing'
             agent.config = {'testing': {'pidfile': pid_file}}
             agent._handle_pidfile()
@@ -456,7 +456,7 @@ endpoint = butthis""")
         self.useFixture(fixtures.MonkeyPatch('os.chdir', self.fake_noop))
         self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
 
-        agent = RoushAgentNoInitialization([])
+        agent = OpenCenterAgentNoInitialization([])
         agent._parse_opts = fake_parse_opts
         agent._setup_scaffolding([])
         self.assertNotEqual(agent.logger.getEffectiveLevel(), logging.DEBUG)
@@ -472,7 +472,7 @@ endpoint = butthis""")
         self.useFixture(fixtures.MonkeyPatch('os.chdir', self.fake_noop))
         self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
 
-        agent = RoushAgentNoInitialization([])
+        agent = OpenCenterAgentNoInitialization([])
         agent._parse_opts = fake_parse_opts
         agent._setup_scaffolding([])
 
@@ -490,7 +490,7 @@ endpoint = butthis""")
         self.useFixture(fixtures.MonkeyPatch('os.chdir', self.fake_noop))
         self.useFixture(fixtures.MonkeyPatch('sys.exit', self.fake_exit))
 
-        agent = RoushAgentNoInitialization([])
+        agent = OpenCenterAgentNoInitialization([])
         agent._parse_opts = fake_parse_opts
         agent._setup_scaffolding([])
 

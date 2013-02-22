@@ -40,14 +40,14 @@ def find_files(path_tuples):
     return output_array
 
 setup(
-    name='roushagent',
+    name='opencenteragent',
     version='0.1',
     author='Rackspace US, Inc.',
     description=('Yet another pluggable, modular host agent'),
     license='Apache2',
-    url='https://github.com/rpedde/roush-agent',
+    url='https://github.com/rpedde/opencenter-agent',
     long_description=read('README'),
     packages=find_packages(),
-    data_files=find_files([['roushagent/plugins', 'share/roush-agent/plugins'],
-                           ['roush-agent.py', 'bin']])
+    data_files=find_files([['opencenteragent/plugins', 'share/opencenter-agent/plugins'],
+                           ['opencenter-agent.py', 'bin']])
 )
