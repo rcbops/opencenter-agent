@@ -1,0 +1,3 @@
+usr/share/opencenter-agent/plugins/lib/primitives.py
+usr/share/opencenter-agent/plugins/lib/state.py
+usr/share/opencenter-agent/plugins/output/plugin_adventurator.py

@@ -1,0 +1,3 @@
+usr/share/opencenter-agent/plugins/lib/bash/packages/*
+usr/share/opencenter-agent/plugins/output/plugin_packages.py
+debian/opencenter-agent-packages.conf etc/opencenter/agent.conf.d

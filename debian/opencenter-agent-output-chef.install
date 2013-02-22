@@ -1,0 +1,3 @@
+usr/share/opencenter-agent/plugins/lib/bash/chef/*
+usr/share/opencenter-agent/plugins/output/plugin_chef.py
+debian/opencenter-agent-chef.conf etc/opencenter/agent.conf.d

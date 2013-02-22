@@ -1,0 +1,5 @@
+usr/lib/python*/dist-packages/*
+debian/log.cfg etc/opencenter
+usr/bin/*
+debian/opencenter-agent.conf etc/opencenter
+debian/conf.d.readme etc/opencenter/agent.conf.d
