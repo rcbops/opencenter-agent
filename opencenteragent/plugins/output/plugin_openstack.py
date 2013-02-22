@@ -31,10 +31,10 @@ def setup(config={}):
     script = BashScriptRunner(script_path=script_path, log=LOG,
                               environment=env)
     openstack = OpenStackThing(script, config)
-    register_action('upload_images', openstack.dispatch, timeout=300)  # 5 min
-    register_action('disable_host', openstack.dispatch, timeout=30)  # 1/2 min
-    register_action('enable_host', openstack.dispatch, timeout=30)  # 1/2 min
-    register_action('evacuate_host', openstack.dispatch, timeout=1200)  # 20min
+    register_action('openstack_upload_images', openstack.dispatch, timeout=300)  # 5 min
+    register_action('openstack_disable_host', openstack.dispatch, timeout=30)  # 1/2 min
+    register_action('openstack_enable_host', openstack.dispatch, timeout=30)  # 1/2 min
+    register_action('openstack_evacuate_host', openstack.dispatch, timeout=1200)  # 20min
 
 
 def get_environment(required, optional, payload):
@@ -60,7 +60,7 @@ class OpenStackThing(object):
         self.script = script
         self.config = config
 
-    def upload_images(self, input_data):
+    def openstack_upload_images(self, input_data):
         payload = input_data['payload']
         action = input_data['action']
         required = []
@@ -70,7 +70,7 @@ class OpenStackThing(object):
             return env
         return self.script.run_env("upload_images.sh", env, "")
 
-    def enable_host(self, input_data):
+    def openstack_enable_host(self, input_data):
         payload = input_data['payload']
         action = input_data['action']
         required = []
@@ -80,7 +80,7 @@ class OpenStackThing(object):
             return env
         return self.script.run_env("enable_host.sh", env, "")
 
-    def disable_host(self, input_data):
+    def openstack_disable_host(self, input_data):
         payload = input_data['payload']
         action = input_data['action']
         required = []
@@ -90,7 +90,7 @@ class OpenStackThing(object):
             return env
         return self.script.run_env("disable_host.sh", env, "")
 
-    def evacuate_host(self, input_data):
+    def openstack_evacuate_host(self, input_data):
         payload = input_data['payload']
         action = input_data['action']
         required = []
