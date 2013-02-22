@@ -153,7 +153,8 @@ class OrchestratorTasks:
                 fn = be_task(primitive, backend_fn, self.api, **parameters)
             else:
                 # this primitive comes from node tasks.
-                backend_fn = opencenter.backends.primitive_by_name('agent.run_task')
+                run_task = 'agent.run_task'
+                backend_fn = opencenter.backends.primitive_by_name(run_task)
                 fn = be_task('agent.run_task', backend_fn, self.api,
                              **{'action': primitive,
                                 'payload': parameters})

@@ -48,6 +48,7 @@ setup(
     url='https://github.com/rpedde/opencenter-agent',
     long_description=read('README'),
     packages=find_packages(),
-    data_files=find_files([['opencenteragent/plugins', 'share/opencenter-agent/plugins'],
+    data_files=find_files([['opencenteragent/plugins',
+                            'share/opencenter-agent/plugins'],
                            ['opencenter-agent.py', 'bin']])
 )

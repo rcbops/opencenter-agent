@@ -35,8 +35,10 @@ LOG.setLevel(logging.ERROR)
 
 class TestOpenCenterAgentWorking(unittest.TestCase):
     def setUp(self):
-        self.agent = OpenCenterAgent(['-c', 'tests/opencenter-agent-test-working.conf'],
-                                'test')
+        self.agent = OpenCenterAgent(['-c',
+                                     'tests/'
+                                     'opencenter-agent-test-working.conf'],
+                                     'test')
         self.output_handler = self.agent.output_handler
         self.input_handler = self.agent.input_handler
         self.result = self.agent.input_handler.fetch()
@@ -87,8 +89,9 @@ class TestOpenCenterAgentWorking(unittest.TestCase):
 class TestOpenCenterAgentInputBroken(unittest.TestCase):
     def setUp(self):
         self.agent = OpenCenterAgent(['-c',
-                                 'tests/opencenter-agent-test-input-broken.conf'],
-                                'test')
+                                     'tests/opencenter-agent-test-input'
+                                     '-broken.conf'],
+                                     'test')
         self.output_handler = self.agent.output_handler
         self.input_handler = self.agent.input_handler
         self.result = self.agent.input_handler.fetch()
@@ -143,8 +146,9 @@ class TestOpenCenterAgentInputBroken(unittest.TestCase):
 class TestOpenCenterAgentOutputBroken(unittest.TestCase):
     def setUp(self):
         self.agent = OpenCenterAgent(['-c',
-                                 'tests/opencenter-agent-test-output-broken.conf'],
-                                'test')
+                                     'tests/opencenter-agent-test-output-'
+                                     'broken.conf'],
+                                     'test')
         self.output_handler = self.agent.output_handler
         self.input_handler = self.agent.input_handler
         self.result = self.agent.input_handler.fetch()

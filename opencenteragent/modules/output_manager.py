@@ -170,7 +170,8 @@ class OutputManager(manager.Manager):
             LOG.debug('Plugin_manager: dispatching action %s from plugin %s' %
                       (action, plugin))
             LOG.debug('Received input_data %s' % (input_data))
-            base = self.config['main'].get('trans_log_dir', '/var/log/opencenter')
+            base = self.config['main'].get('trans_log_dir',
+                                           '/var/log/opencenter')
 
             if not os.path.isdir(base):
                 raise OSError(2, 'Specified path "%s" ' % (base) +

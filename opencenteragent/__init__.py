@@ -370,8 +370,8 @@ class OpenCenterAgent():
 
                     # Apply to the pool
                     worker = OpenCenterAgentDispatchWorker(input_handler,
-                                                      output_handler,
-                                                      result)
+                                                           output_handler,
+                                                           result)
                     worker.setDaemon(True)
                     worker.start()
         except KeyboardInterrupt:
