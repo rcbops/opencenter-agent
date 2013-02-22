@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source "$ROUSH_BASH_DIR/roush.sh"
+source "$OPENCENTER_BASH_DIR/opencenter.sh"
 set -x
 
 chef-server-ctl uninstall

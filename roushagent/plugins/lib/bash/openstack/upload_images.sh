@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -o errexit
-source "$ROUSH_BASH_DIR/roush.sh"
+source "$OPENCENTER_BASH_DIR/opencenter.sh"
 
 if [[ -f /etc/redhat-release ]]; then
     DISTRO="redhat"

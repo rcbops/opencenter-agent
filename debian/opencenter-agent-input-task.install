@@ -1,0 +1,2 @@
+usr/share/opencenter-agent/plugins/input/task_input.py
+debian/opencenter-agent-endpoints.conf /etc/opencenter/agent.conf.d

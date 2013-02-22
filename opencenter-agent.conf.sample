@@ -1,0 +1,38 @@
+[main]
+# base_dir defaults to os.path.realpath(os.path.dirname(__file__))
+
+# plugin_dir probably /usr/share/opencenter-agent
+plugin_dir = %(base_dir)s/opencenteragent/plugins
+
+# comma separated list of files or dirs
+input_handlers = %(plugin_dir)s/input/task_input.py
+
+# comma separated list of files or dirs
+output_handlers = %(plugin_dir)s/output
+
+trans_log_dir = %(base_dir)s/trans_logs
+
+log_config = %(base_dir)s/log.cfg
+
+bash_path = %(base_dir)s/opencenteragent/plugins/lib/bash
+
+# pidfile.  Only gets dropped if run as daemon, and with
+# no pidfile specified, no pidfile will be generated
+#
+# pidfile = /var/run/opencenter-agent.pid
+
+[chef]
+cookbook_channels_manifest_url = http://8a8313241d245d72fc52-b3448c2b169a7d986fbb3d4c6b88e559.r9.cf1.rackcdn.com/CHANNELS.manifest
+
+[restish]
+bind_address = 0.0.0.0
+bind_port = 8000
+
+[endpoints]
+# Anonymous
+root = http://127.0.0.1:8080
+admin = http://127.0.0.1:8080/admin
+
+# With Authentication:
+# root = http://admin:demo@127.0.0.1:8080
+# admin = http://admin:demo@127.0.0.1:8080/admin

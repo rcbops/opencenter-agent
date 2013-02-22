@@ -18,14 +18,14 @@ import logging
 import os
 import unittest
 
-from roushagent import utils
+from opencenteragent import utils
 
 # Suppress WARNING logs
 LOG = logging.getLogger('output')
 LOG.setLevel(logging.ERROR)
 
 
-class TestRoushUtils(unittest.TestCase):
+class TestOpenCenterUtils(unittest.TestCase):
     def test_detailed_exception(self):
         class FakeExceptionForTest(Exception):
             pass

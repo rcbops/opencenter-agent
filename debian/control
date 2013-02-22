@@ -1,4 +1,4 @@
-Source: roush-agent
+Source: opencenter-agent
 Section: net
 Priority: optional
 Maintainer: Ron Pedde <ron@pedde.com>
@@ -9,10 +9,10 @@ Build-Depends: debhelper (>= 7.0.50~),
  python-requests
 Standards-Version: 3.9.1
 XS-Python-Version: >= 2.6
-Homepage: https://github.com/rpedde/roush-agent
+Homepage: https://github.com/rpedde/opencenter-agent
 XCBS-RCB-Component: rcb-utils
 
-Package: roush-agent
+Package: opencenter-agent
 Architecture: all
 Section: python
 Depends: ${python:Depends}, ${misc:Depends},
@@ -21,64 +21,64 @@ Depends: ${python:Depends}, ${misc:Depends},
 Provides: ${python:Provides}
 Description: Yet another pluggable host-based agent
 
-Package: roush-agent-input-task
+Package: opencenter-agent-input-task
 Architecture: all
 Section: python
-Depends: roush-agent (= ${binary:Version}),
- roush-client,
+Depends: opencenter-agent (= ${binary:Version}),
+ opencenter-client,
  python-requests
 Provides: ${python:Provides}
 Description: the input task plug-in
 
-Package: roush-agent-output-chef
+Package: opencenter-agent-output-chef
 Architecture: all
 Section: python
-Depends: roush-agent (= ${binary:Version}),
- roush-agent-lib-bash (= ${binary:Version}),
+Depends: opencenter-agent (= ${binary:Version}),
+ opencenter-agent-lib-bash (= ${binary:Version}),
  python-netifaces
 Provides: ${python:Provides}
 Description: an output plugin to run chef tasks
 
-Package: roush-agent-output-packages
+Package: opencenter-agent-output-packages
 Architecture: all
 Section: python
-Depends: roush-agent (= ${binary:Version}),
- roush-agent-lib-bash (= ${binary:Version})
+Depends: opencenter-agent (= ${binary:Version}),
+ opencenter-agent-lib-bash (= ${binary:Version})
 Provides: ${python:Provides}
 Description: an output plugin to run package tasks
 
-Package: roush-agent-output-openstack
+Package: opencenter-agent-lib-bash
 Architecture: all
 Section: python
-Depends: roush-agent (= ${binary:Version}),
- roush-agent-lib-bash (= ${binary:Version})
+Depends: opencenter-agent (= ${binary:Version}),
+ opencenter-agent-lib-bash (= ${binary:Version})
 Provides: ${python:Provides}
 Description: an output plugin to run simple OpenStack tasks
 
-Package: roush-agent-lib-bash
+Package: opencenter-agent-lib-bash
 Architecture: all
 Section: python
-Depends: roush-agent (= ${binary:Version})
+Depends: opencenter-agent (= ${binary:Version})
 Provides: ${python:Provides}
 Description: libraries necessary for output tasks to do bash-y things
 
-Package: roush-agent-output-files
+Package: opencenter-agent-output-files
 Architecture: all
 Section: python
-Depends: roush-agent (= ${binary:Version})
+Depends: opencenter-agent (= ${binary:Version})
 Provides: ${python:Provides}
 Description: a simple file management plugin.  very very unsafe.
 
-Package: roush-agent-output-adventurator
+Package: opencenter-agent-output-adventurator
 Architecture: all
 Section: python
-Depends: roush-agent(= ${binary:Version}), roush-agent-input-task(= ${binary:Version}), python-roush
+Depends: opencenter-agent(= ${binary:Version}), opencenter-agent-input-task(= ${binary:Version}), python-opencenter
 Provides: ${python:Provides}
 Description: an output plugin to run adventures
 
-Package: roush-agent-output-service
+Package: opencenter-agent-output-service
 Architecture: all
 Section: python
-Depends: roush-agent(= ${binary:Version})
+Depends: opencenter-agent(= ${binary:Version})
 Provides: ${python:Provides}
 Description: an output plugin to start/stop/restart services

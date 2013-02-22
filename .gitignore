@@ -1,4 +1,5 @@
 *.pyc
+*bak
 dist
 coverage.xml
 nosetests.xml

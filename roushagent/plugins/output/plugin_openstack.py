@@ -27,7 +27,7 @@ def setup(config={}):
         LOG.error("bash_path not configured")
         raise ValueError("Expecting bash_path in configuration")
     script_path = [os.path.join(global_config['main']['bash_path'], name)]
-    env = {"ROUSH_BASH_DIR": global_config['main']['bash_path']}
+    env = {"OPENCENTER_BASH_DIR": global_config['main']['bash_path']}
     script = BashScriptRunner(script_path=script_path, log=LOG,
                               environment=env)
     openstack = OpenStackThing(script, config)

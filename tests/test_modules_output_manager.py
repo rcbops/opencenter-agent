@@ -20,8 +20,8 @@ import socket
 import testtools
 import unittest
 
-from roushagent.modules import output_manager
-from roushagent import utils
+from opencenteragent.modules import output_manager
+from opencenteragent import utils
 
 
 class FakeSocket(object):
@@ -74,7 +74,7 @@ class TestModuleOutputManager(testtools.TestCase):
             self.assertEqual(out['result_str'], 'success')
             self.assertTrue('name' in out['result_data'])
             self.assertEqual(out['result_data']['name'],
-                             'roush_agent_output_modules')
+                             'opencenter_agent_output_modules')
             self.assertTrue('value' in out['result_data'])
 
     def test_handle_modules_actions(self):
@@ -85,7 +85,7 @@ class TestModuleOutputManager(testtools.TestCase):
             self.assertEqual(out['result_str'], 'success')
             self.assertTrue('name' in out['result_data'])
             self.assertEqual(out['result_data']['name'],
-                             'roush_agent_actions')
+                             'opencenter_agent_actions')
             self.assertTrue('value' in out['result_data'])
 
     def fake_loadfile(self, path):

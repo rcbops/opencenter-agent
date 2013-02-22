@@ -2,7 +2,7 @@
 
 function usage {
   echo "Usage: $0 [OPTION]..."
-  echo "Run the RoushAgent test suite(s)"
+  echo "Run the OpenCenterAgent test suite(s)"
   echo ""
   echo "  -V, --virtual-env        Always use virtualenv.  Install automatically if not present"
   echo "  -N, --no-virtual-env     Don't use virtualenv.  Run tests in local environment"
@@ -54,7 +54,7 @@ done
 
 # If enabled, tell nose to collect coverage data
 if [ $coverage -eq 1 ]; then
-    noseopts="$noseopts --with-coverage --cover-package=roushagent"
+    noseopts="$noseopts --with-coverage --cover-package=opencenteragent"
 fi
 
 function run_tests {
@@ -128,6 +128,6 @@ run_tests
 if [ $coverage -eq 1 ]; then
     echo "Generating coverage report in coverage/"
     # Don't compute coverage for common code, which is tested elsewhere
-    [ $html -eq 1 ] && ${wrapper} coverage html --include='roushagent/*' -d coverage -i
-    ${wrapper} coverage xml --include='roushagent/*' -i
+    [ $html -eq 1 ] && ${wrapper} coverage html --include='opencenteragent/*' -d coverage -i
+    ${wrapper} coverage xml --include='opencenteragent/*' -i
 fi
