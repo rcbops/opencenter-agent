@@ -50,12 +50,12 @@ Description: an output plugin to run package tasks
 Package: opencenter-agent-lib-bash
 Architecture: all
 Section: python
-Depends: roush-agent (= ${binary:Version}),
- roush-agent-lib-bash (= ${binary:Version})
+Depends: opencenter-agent (= ${binary:Version}),
+ opencenter-agent-lib-bash (= ${binary:Version})
 Provides: ${python:Provides}
 Description: an output plugin to run simple OpenStack tasks
 
-Package: roush-agent-lib-bash
+Package: opencenter-agent-lib-bash
 Architecture: all
 Section: python
 Depends: opencenter-agent (= ${binary:Version})

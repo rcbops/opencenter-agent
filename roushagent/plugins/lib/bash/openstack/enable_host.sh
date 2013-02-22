@@ -1,6 +1,6 @@
 #!/bin/bash
 set -o errexit
-source "$ROUSH_BASH_DIR/roush.sh"
+source "$OPENCENTER_BASH_DIR/opencenter.sh"
 
 if [[ ! -e /root/openrc ]]; then
     echo "/root/openrc does not exist and I cannot continue.  Good bye."

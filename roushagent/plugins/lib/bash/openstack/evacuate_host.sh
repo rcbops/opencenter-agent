@@ -1,6 +1,6 @@
 #!/bin/bash
 set -o errexit
-source "$ROUSH_BASH_DIR/roush.sh"
+source "$OPENCENTER_BASH_DIR/opencenter.sh"
 
 # wait up to x seconds from the start of the migration to the second try
 WAIT_FOR_BUILD_TIMEOUT=300
