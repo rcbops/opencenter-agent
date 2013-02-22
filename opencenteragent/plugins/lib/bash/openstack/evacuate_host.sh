@@ -17,13 +17,21 @@ fi
 if [ ! -e /usr/bin/nova-manage ]; then
     echo "nova-manage does not exist.  We cannot continue"
     return_fact "maintenance_mode" "'failed'"
-    exit 1
+    exit 2
 fi
 
 if [ ! -e /usr/bin/nova ]; then
     echo "nova does not exist.  We cannot continue"
-    exit 1
+    exit 3
 fi
+
+if [ ! -e /root/openrc ]; then
+    echo "/root/openrc does not exist.  We cannot continue"
+    return_fact "maintenance_mode" "'failed'"
+    exit 4
+fi
+
+. /root/openrc
 
 CURRENT_AZ=$(grep node_availability_zone /etc/nova/nova.conf | awk -F "=" '{print $2}')
 echo "Current AZ"
@@ -45,16 +53,17 @@ echo ""
 if [[ ${#AZ_HOSTS[@]} = 0 ]]; then
     echo "!! There are no hosts available to migrate instances to"
     return_fact "maintenance_mode" "'failed'"
-    exit 2
+    exit 5
 fi
 
 echo "-- disabling nova-compute service on "$(hostname -f)
 nova-manage service disable --service=nova-compute --host=$(hostname -f)
 
 
-for (( try_migrate=1; try_migrate <= 5; try_migrate++ )) do
-    echo "-- sleeping for 60 seconds"
-    sleep 60s
+for (( try_migrate=0; try_migrate < 5; try_migrate++ )) do
+    sleep_timer=$((60 - ( 12 * try_migrate ) ))
+    echo "-- sleeping for $sleep_timer seconds"
+    sleep $sleep_timer
     echo ""
 
     echo "-- migrate loop ${try_migrate}"
@@ -97,10 +106,10 @@ done
 
 # see if anything remains
 MIGRATE_INSTANCES=$(nova list --host $(hostname -f) --all-tenants 1 | awk '{if(length($1)==1 && $2!="ID") print $2","$6}')
-if [[ ${#MIGRATE_INSTANCES[@]} -gt 0 ]]; then
+if [[ ${#MIGRATE_INSTANCES[@]} -gt 1 ]]; then
     echo "There are still hosts remaining on the box and we have entered the DANGER ZONE.  We need MANUAL INTERVENTION"
     return_fact "maintenance_mode" "'failed'"
-    exit 3
+    exit 6
 else
     echo "There are no more instances remaining on the box.  SUCCESS IS MINE!"
 fi
