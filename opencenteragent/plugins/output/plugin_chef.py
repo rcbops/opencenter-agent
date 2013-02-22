@@ -60,6 +60,8 @@ def setup(config={}):
         timeout=300)
     register_action('run_chef', chef.dispatch, timeout=600)
     register_action('install_chef_server', chef.dispatch, timeout=600)
+    register_action('uninstall_chef_server', chef.dispatch)
+    register_action('rollback_install_chef_server', chef.dispatch)
     register_action('get_chef_info', chef.dispatch)
     register_action('get_cookbook_channels', chef.dispatch)
     register_action(
@@ -68,17 +70,15 @@ def setup(config={}):
                           'required': True}})
     register_action(
         'download_cookbooks', chef.dispatch, [], [],
-        {'chef_server': {'type': 'interface',
-                         'name': 'chef-server',
-                         'required': True},
-        'CHEF_SERVER_COOKBOOK_CHANNELS': {
+        {'CHEF_SERVER_COOKBOOK_CHANNELS': {
             'type': 'evaluated',
-            'expression': 'nodes.{chef_server}.'
-                          'facts.chef_server_cookbook_channels'}},
+            'expression': 'facts.chef_server_cookbook_channels'}},
         timeout=120)
     register_action('uninstall_chef', chef.dispatch)
     register_action('rollback_install_chef', chef.dispatch)
-    register_action('update_cookbooks', chef.dispatch)
+    register_action('update_cookbooks', chef.dispatch,
+                    [],
+                    ['facts.chef_server_ready := true'])
     register_action('subscribe_cookbook_channel',
                     chef.dispatch,
                     [],
@@ -146,6 +146,12 @@ class ChefThing(object):
         if not good:
             return env
         return self.script.run_env('install-chef-server.sh', env, '')
+
+    def rollback_install_chef_server(self, input_data):
+        return self.uninstall_chef_server(input_data)
+
+    def uninstall_chef_server(self, input_data):
+        return self.script.run('uninstall-chef-server.sh')
 
     def get_cookbook_channels(self, input_data):
         url = self.config['cookbook_channels_manifest_url']
