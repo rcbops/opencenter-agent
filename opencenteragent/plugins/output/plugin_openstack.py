@@ -31,10 +31,14 @@ def setup(config={}):
     script = BashScriptRunner(script_path=script_path, log=LOG,
                               environment=env)
     openstack = OpenStackThing(script, config)
-    register_action('openstack_upload_images', openstack.dispatch, timeout=300)  # 5 min
-    register_action('openstack_disable_host', openstack.dispatch, timeout=30)  # 1/2 min
-    register_action('openstack_enable_host', openstack.dispatch, timeout=30)  # 1/2 min
-    register_action('openstack_evacuate_host', openstack.dispatch, timeout=1200)  # 20min
+    register_action('openstack_upload_images', openstack.dispatch, 
+                    timeout=300)
+    register_action('openstack_disable_host', openstack.dispatch,
+                    timeout=30)
+    register_action('openstack_enable_host', openstack.dispatch,
+                    timeout=30)
+    register_action('openstack_evacuate_host', openstack.dispatch,
+                    timeout=1200)
 
 
 def get_environment(required, optional, payload):
