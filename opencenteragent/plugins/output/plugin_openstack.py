@@ -31,7 +31,7 @@ def setup(config={}):
     script = BashScriptRunner(script_path=script_path, log=LOG,
                               environment=env)
     openstack = OpenStackThing(script, config)
-    register_action('openstack_upload_images', openstack.dispatch, 
+    register_action('openstack_upload_images', openstack.dispatch,
                     timeout=300)
     register_action('openstack_disable_host', openstack.dispatch,
                     timeout=30)
