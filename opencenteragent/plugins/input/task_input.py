@@ -231,6 +231,20 @@ def setup(config=None):
     endpoint = global_config.get('endpoints', {}).get(
         'admin', 'http://localhost:8080/admin')
 
+    # Check if agent is running on server
+    splitendpoint = endpoint.split('http://')
+    srv_addr = socket.gethostbyname(splitendpoint[1].split(':')[0])
+    for interface in netifaces.interfaces():
+        try:
+            addr = netifaces.ifaddresses(interface)[netifaces.AF_INET][0]['addr']
+            if interface_address == srv_addr:
+                newattr = self.endpoint.attrs.new(node_id=self.host_id,
+                                                  key='server-agent',
+                                                  value=True)
+                LOG.debug('INTERFACES: %s %s' % (interface, interface_address))
+        except:
+            pass
+
     task_getter = TaskGetter(endpoint, name)
     task_getter.run()
 
