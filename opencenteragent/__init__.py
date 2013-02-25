@@ -109,6 +109,8 @@ class OpenCenterAgent():
         except Exception:
             self._exit(True)
 
+        socket.setdefaulttimeout(30)
+
     def _exit(self, exception):
         """Terminate the agent.
 
