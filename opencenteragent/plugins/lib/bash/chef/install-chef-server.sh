@@ -3,6 +3,7 @@
 
 set -e
 set -u
+set -x
 export DEBIAN_FRONTEND=noninteractive
 source "$OPENCENTER_BASH_DIR/opencenter.sh"
 
