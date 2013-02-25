@@ -129,6 +129,7 @@ class OrchestratorTasks:
         for state_index, state in enumerate(plan):
             parameters = state['ns']
             primitive = state['primitive']
+            timeout = state.get('timeout', 30)
 
             self.logger.debug('padding globals %s' % self.adventure_globals)
 
@@ -153,6 +154,7 @@ class OrchestratorTasks:
                 fn = be_task(primitive, backend_fn, self.api, **parameters)
             else:
                 # this primitive comes from node tasks.
+                parameters['timeout'] = timeout
                 run_task = 'agent.run_task'
                 backend_fn = opencenter.backends.primitive_by_name(run_task)
                 fn = be_task('agent.run_task', backend_fn, self.api,
