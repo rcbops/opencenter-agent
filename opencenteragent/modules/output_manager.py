@@ -244,7 +244,7 @@ class OutputManager(manager.Manager):
         length = fd.tell()
 
         if action == 'logfile.tail':
-            offset = max(length - 1024, 0)
+            offset = max(length - payload['offset'], 0)
 
         fd.seek(offset)
 
