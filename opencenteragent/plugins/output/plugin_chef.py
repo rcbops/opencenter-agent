@@ -72,7 +72,7 @@ def setup(config={}):
         'download_cookbooks', chef.dispatch, [], [],
         {'CHEF_SERVER_COOKBOOK_CHANNELS': {
             'type': 'evaluated',
-            'expression': 'facts.chef_server_cookbook_channels'}},
+            'expression': 'self.facts.chef_server_cookbook_channels'}},
         timeout=120)
     register_action('uninstall_chef', chef.dispatch)
     register_action('rollback_install_chef', chef.dispatch)
