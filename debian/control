@@ -84,3 +84,10 @@ Depends: opencenter-agent (= ${binary:Version}),
  opencenter-agent-lib-bash (= ${binary:Version})
 Provides: ${python:Provides}
 Description: an output plugin to do openstack-ish things
+
+Package: opencenter-agent-output-update-actions
+Architecture: all
+Section: python
+Depends: opencenter-agent (= ${binary:Version})
+Provides: ${python:Provides}
+Description: an output plugin to handle restarting a running agent
