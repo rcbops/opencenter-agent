@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -o errexit
+set -x
 source "$OPENCENTER_BASH_DIR/opencenter.sh"
 
 # forcing chef-client install to 11.2.0-1
@@ -39,6 +40,11 @@ cat <<EOF >/etc/chef/client.rb
 chef_server_url "$CHEF_SERVER_URL"
 chef_environment "$CHEF_ENVIRONMENT"
 EOF
+cat <<EOF >/etc/chef/knife.rb
+chef_server_url "$CHEF_SERVER_URL"
+chef_environment "$CHEF_ENVIRONMENT"
+node_name "`hostname`"
+EOF
 if [ -n "${CHEF_VALIDATION_NAME}" ]; then
     echo "validation_client_name '$CHEF_VALIDATION_NAME'" >> /etc/chef/client.rb
 fi
@@ -66,3 +72,4 @@ chef-client
 # /etc/init.d/chef-client start
 
 return_attr "chef_client_version" "'${CHEF_CLIENT_VERSION}'"
+return_fact "chef_environment" "'${CHEF_ENVIRONMENT}'"
