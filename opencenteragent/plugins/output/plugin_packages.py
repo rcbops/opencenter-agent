@@ -124,10 +124,10 @@ class PackageThing(object):
             # This will kill this process
             #self.do_updates(input_data)
             ### DEBUG
-            time.sleep(10)
+            # time.sleep(10)
             # DEBUG Deleting opencenter pidfile
             os.remove(self.pidfile)
-            sys.exit(1)
+            sys.exit(0)
             ### END DEBUG
         else:
             # child
