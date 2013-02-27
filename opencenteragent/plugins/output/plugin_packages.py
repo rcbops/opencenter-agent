@@ -40,12 +40,6 @@ def setup(config={}):
     register_action('do_updates', packages.dispatch, timeout=600)   # 10 min
     register_action('upgrade_agent', packages.dispatch, timeout=300)  # 5 min
 
-    pidfile = '/tmp/opencenter-agent.pid'
-    pid = os.getpid()
-    f = open(pidfile, 'w')
-    f.write(str(pid))
-    f.close()
-
 
 def get_environment(required, optional, payload):
     env = dict([(k, v) for k, v in payload.iteritems()
