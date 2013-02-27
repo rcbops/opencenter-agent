@@ -62,13 +62,20 @@ class PackageThing(object):
         self.config = config
 
     def do_updates(self, input_data):
+        """
+        Supported payload options:
+
+        :PACKAGE_NAME: - this will update a specific package
+        :SLEEP: - the task will sleep for this many seconds before exiting
+        :DISABLE_RESTART: - disables auto-restart on package install
+        """
         payload = input_data['payload']
         # action = input_data['action']
         required = []
-        optional = ["PACKAGE_NAME"]
+        optional = ["PACKAGE_NAME", "SLEEP", "DISABLE_RESTART"]
 
-        if 'sleep' in payload:
-            sleep = payload['sleep']
+        if 'SLEEP' in payload:
+            sleep = payload['SLEEP']
 
         good, env = get_environment(required, optional, payload)
 
