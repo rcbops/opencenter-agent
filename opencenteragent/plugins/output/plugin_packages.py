@@ -16,10 +16,12 @@
 
 import json
 import os
+import subprocess
 import sys
 import time
 
 from bashscriptrunner import BashScriptRunner
+from opencenterclient.client import OpenCenterEndpoint
 
 name = 'packages'
 
@@ -36,6 +38,7 @@ def setup(config={}):
     packages = PackageThing(script, config)
     register_action('get_updates', packages.dispatch, timeout=300)  # 5 min
     register_action('do_updates', packages.dispatch, timeout=600)   # 10 min
+    register_action('upgrade_agent', packages.dispatch, timeout=300)  # 5 min
 
 
 def get_environment(required, optional, payload):
@@ -61,6 +64,23 @@ class PackageThing(object):
         self.script = script
         self.config = config
 
+    def _return(self, result_code, result_str, result_data=None):
+        if result_data is None:
+            result_data = {}
+        return {'result_code': result_code,
+                'result_str': result_str,
+                'result_data': result_data}
+
+    def _success(self, result_str='success', result_data=None):
+        if result_data is None:
+            result_data = {}
+        return self._return(0, result_str, result_data)
+
+    def _failure(self, result_str='fail', result_data=None):
+        if result_data is None:
+            result_data = {}
+        return self._return(1, result_str, result_data)
+
     def do_updates(self, input_data):
         """
         Supported payload options:
@@ -85,6 +105,62 @@ class PackageThing(object):
         if not good:
             return env
         return self.script.run_env("update-package.sh", env, "")
+
+    def upgrade_agent(self, input_data):
+        """Upgrades a running opencenter-agent, from packages"""
+        # payload = input_data['payload']
+        pid = os.fork()
+        if pid != 0:
+            # Parent
+            LOG.info('Upgrading agent')
+            # This will kill this process
+            #self.do_updates(input_data)
+            ### DEBUG
+            time.sleep(10)
+            sys.exit(1)
+            ### END DEBUG
+        else:
+            # child
+            ppid = os.getppid()
+            # Give the parent 10 seconds to restart
+            timer = 60  # check parent state for 60s then timeout
+            error = False  # initialize error state as False
+            alive = True
+            count = 0
+            while alive:
+                time.sleep(1)
+                try:
+                    os.kill(ppid, 0)
+                    count += 1
+                except OSError:
+                    alive = False
+                if count > timer:
+                    error = True
+                    break
+            if error:
+                # need to throw an error back at the task
+                result = self._failure()
+            else:
+                # package should have been installed
+                proc_name = sys.argv[0]
+                proc_list = subprocess.Popen(
+                    ['ps', 'x', '-U', '0'],
+                    stdout=subprocess.PIPE).communicate()[0]
+                if proc_list.find(proc_name) > 0:
+                    # process appears to have repawned
+                    result = self._success()
+                else:
+                    # process does not appear to have respawned
+                    # TODO(shep): should probably try to restart here
+                    result = self._failure()
+            task_id = input_data['id']
+            endpoint_url = global_config['endpoints']['admin']
+            ep = OpenCenterEndpoint(endpoint_url)
+            task = ep.tasks[task_id]
+            task._request_get()
+            task.state = 'done'
+            task.result = result
+            task.save()
 
     def get_updates(self, input_data):
         DISTROS = {
