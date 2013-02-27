@@ -179,7 +179,8 @@ class TestModuleOutputManager(testtools.TestCase):
                 out = om.handle_logfile({'action': 'modules.load',
                                          'payload': {'task_id': '42',
                                                      'dest_ip': '127.0.0.1',
-                                                     'dest_port': 4242}})
+                                                     'dest_port': 4242,
+                                                     'offset': 1024}})
                 self.assertEqual(out['result_code'], 1)
                 self.assertEqual(out['result_str'],
                                  'no such transaction log file')
@@ -196,7 +197,8 @@ class TestModuleOutputManager(testtools.TestCase):
                 out = om.handle_logfile({'action': 'logfile.tail',
                                          'payload': {'task_id': '42',
                                                      'dest_ip': '127.0.0.1',
-                                                     'dest_port': 4242}})
+                                                     'dest_port': 4242,
+                                                     'offset': 1024}})
                 self.assertEqual(out['result_code'], 1)
                 #
                 # Symbolic errnos are specified by posix.  Values are not.
@@ -218,7 +220,8 @@ class TestModuleOutputManager(testtools.TestCase):
                 out = om.handle_logfile({'action': 'logfile.tail',
                                          'payload': {'task_id': '42',
                                                      'dest_ip': '127.0.0.1',
-                                                     'dest_port': 4242}},
+                                                     'dest_port': 4242,
+                                                     'offset': 1024}},
                                         sock=sock)
                 self.assertEqual(out['result_code'], 0)
                 self.assertNotEqual(sock.sent, [])
@@ -238,7 +241,8 @@ class TestModuleOutputManager(testtools.TestCase):
                 out = om.handle_logfile({'action': 'logfile.tail',
                                          'payload': {'task_id': '42',
                                                      'dest_ip': '127.0.0.1',
-                                                     'dest_port': 4242}})
+                                                     'dest_port': 4242,
+                                                     'offset': 1024}})
                 self.assertEqual(out['result_code'], 1)
                 self.assertEqual(out['result_str'],
                                  'remote socket disconnect')
