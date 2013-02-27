@@ -1,5 +1,18 @@
 #! /bin/bash
-#Flagrantly stolen from rpedde (http://www.github.com/rpedde)
+#
+# Copyright 2012, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 set -e
 set -u
@@ -85,8 +98,9 @@ EOF
 
     # these are only returned on a run where we actually install chef-server
 fi
-    return_fact "chef_server_client_name" "'admin'"
-    return_fact "chef_server_client_pem" "'$(cat /root/.chef/admin.pem)'"
-    return_fact "chef_server_uri" "'${CHEF_URL}'"
-    return_fact "chef_server_pem" "'$(cat /etc/chef-server/chef-validator.pem)'"
-    return_fact "chef_server_cookbook_channels" "'current'"
+
+return_fact "chef_server_client_name" "'admin'"
+return_fact "chef_server_client_pem" "'$(cat /root/.chef/admin.pem)'"
+return_fact "chef_server_uri" "'${CHEF_URL}'"
+return_fact "chef_server_pem" "'$(cat /etc/chef-server/chef-validator.pem)'"
+return_fact "chef_server_cookbook_channels" "'current'"
