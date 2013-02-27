@@ -14,10 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-import os
-from bashscriptrunner import BashScriptRunner
 import json
+import os
+import sys
+import time
+
+from bashscriptrunner import BashScriptRunner
+
 name = 'packages'
 
 
@@ -60,10 +63,18 @@ class PackageThing(object):
 
     def do_updates(self, input_data):
         payload = input_data['payload']
-        action = input_data['action']
+        # action = input_data['action']
         required = []
         optional = ["PACKAGE_NAME"]
+
+        if 'sleep' in payload:
+            sleep = payload['sleep']
+
         good, env = get_environment(required, optional, payload)
+
+        if sleep:
+            time.sleep(int(sleep))
+
         if not good:
             return env
         return self.script.run_env("update-package.sh", env, "")

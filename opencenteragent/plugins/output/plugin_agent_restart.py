@@ -30,10 +30,11 @@ def setup(config={}):
 
 
 def restart_agent(input_data):
-    payload = input_data['payload']
+    # payload = input_data['payload']
     pid = os.fork()
     if pid != 0:
-        # Parent Process
+        # This is the Parent Process, sleep for 10s then respawn
+        time.sleep(10)
         _respawn()
 
     else:

@@ -1,8 +1,22 @@
 #! /bin/bash
-#Flagrantly stolen from rpedde (http://www.github.com/rpedde)
+#
+# Copyright 2012, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 set -e
 set -u
+set -x
 export DEBIAN_FRONTEND=noninteractive
 source "$OPENCENTER_BASH_DIR/opencenter.sh"
 
@@ -23,6 +37,10 @@ cp /tmp/rc /etc/resolv.conf
 PRIMARY_INTERFACE=$(ip route list match 0.0.0.0 | awk 'NR==1 {print $5}')
 MY_IP=$(ip addr show dev ${PRIMARY_INTERFACE} | awk 'NR==3 {print $2}' | cut -d '/' -f1)
 CHEF_UNIX_USER=${CHEF_UNIX_USER:-root}
+# due to http://tickets.opscode.com/browse/CHEF-3849 CHEF_FE_PORT is not used yet
+CHEF_FE_PORT=${CHEF_FE_PORT:-80}
+CHEF_FE_SSL_PORT=${CHEF_FE_SSL_PORT:-443}
+CHEF_URL=${CHEF_URL:-https://${MY_IP}:${CHEF_FE_SSL_PORT}}
 
 if [ ! -e "/etc/chef-server/chef-server.rb" ]; then
   # defaults if not set
@@ -30,11 +48,6 @@ if [ ! -e "/etc/chef-server/chef-server.rb" ]; then
   CHEF_AMQP_PASSWORD=${CHEF_AMQP_PASSWORD:-$(pwgen -1)}
   CHEF_POSTGRESQL_PASSWORD=${CHEF_POSTGRESQL_PASSWORD:-$(pwgen -1)}
   CHEF_POSTGRESQL_RO_PASSWORD=${CHEF_POSTGRESQL_PASSWORD:-$(pwgen -1)}
-
-  # due to http://tickets.opscode.com/browse/CHEF-3849 CHEF_FE_PORT is not used yet
-  CHEF_FE_PORT=${CHEF_FE_PORT:-80}
-  CHEF_FE_SSL_PORT=${CHEF_FE_SSL_PORT:-443}
-  CHEF_URL=${CHEF_URL:-https://${MY_IP}:${CHEF_FE_SSL_PORT}}
 
   mkdir -p /etc/chef-server
   cat > /etc/chef-server/chef-server.rb <<EOF
@@ -84,10 +97,10 @@ EOF
     fi
 
     # these are only returned on a run where we actually install chef-server
-    return_fact "chef_server_client_name" "'admin'"
-    return_fact "chef_server_client_pem" "'$(cat /root/.chef/admin.pem)'"
-    return_fact "chef_server_uri" "'${CHEF_URL}'"
-    return_fact "chef_server_pem" "'$(cat /etc/chef-server/chef-validator.pem)'"
-    return_fact "chef_server_cookbook_channels" "'current'"
-    return_attr "chef_webui_password" "'${CHEF_WEBUI_PASSWORD}'"
 fi
+
+return_fact "chef_server_client_name" "'admin'"
+return_fact "chef_server_client_pem" "'$(cat /root/.chef/admin.pem)'"
+return_fact "chef_server_uri" "'${CHEF_URL}'"
+return_fact "chef_server_pem" "'$(cat /etc/chef-server/chef-validator.pem)'"
+return_fact "chef_server_cookbook_channels" "'current'"
