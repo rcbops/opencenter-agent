@@ -40,6 +40,12 @@ def setup(config={}):
     register_action('do_updates', packages.dispatch, timeout=600)   # 10 min
     register_action('upgrade_agent', packages.dispatch, timeout=300)  # 5 min
 
+    pidfile = '/tmp/opencenter-agent.pid'
+    pid = os.getpid()
+    f = open(pidfile, 'w')
+    f.write(str(pid))
+    f.close()
+
 
 def get_environment(required, optional, payload):
     env = dict([(k, v) for k, v in payload.iteritems()
@@ -63,6 +69,8 @@ class PackageThing(object):
     def __init__(self, script, config):
         self.script = script
         self.config = config
+        self.pidfile = '/tmp/opencenter-agent.pid'
+
 
     def _return(self, result_code, result_str, result_data=None):
         if result_data is None:
@@ -112,11 +120,13 @@ class PackageThing(object):
         pid = os.fork()
         if pid != 0:
             # Parent
-            LOG.info('Upgrading agent')
+            LOG.info('**** Upgrading agent')
             # This will kill this process
             #self.do_updates(input_data)
             ### DEBUG
             time.sleep(10)
+            # DEBUG Deleting opencenter pidfile
+            os.remove(self.pidfile)
             sys.exit(1)
             ### END DEBUG
         else:
@@ -138,29 +148,58 @@ class PackageThing(object):
                     error = True
                     break
             if error:
+                LOG.info('**** FAILED due to timeout')
                 # need to throw an error back at the task
                 result = self._failure()
+                task_id = input_data['id']
+                endpoint_url = global_config['endpoints']['admin']
+                ep = OpenCenterEndpoint(endpoint_url)
+                task = ep.tasks[task_id]
+                task._request_get()
+                task.state = 'done'
+                task.result = result
+                task.save()
             else:
-                # package should have been installed
-                proc_name = sys.argv[0]
-                proc_list = subprocess.Popen(
-                    ['ps', 'x', '-U', '0'],
-                    stdout=subprocess.PIPE).communicate()[0]
-                if proc_list.find(proc_name) > 0:
-                    # process appears to have repawned
-                    result = self._success()
+                exists = os.path.isfile(self.pidfile)
+                if exists:
+                    f = open(self.pidfile, 'r')
+                    new_pid = int(f.read())
+                    f.close()
+                    if new_pid == ppid:
+                        LOG.info('**** FAILED pid did not change')
+                        # pidfile contains same pid as my parent pid
+                        result = self._failure()
+                        task_id = input_data['id']
+                        endpoint_url = global_config['endpoints']['admin']
+                        ep = OpenCenterEndpoint(endpoint_url)
+                        task = ep.tasks[task_id]
+                        task._request_get()
+                        task.state = 'done'
+                        task.result = result
+                        task.save()
+                    else:
+                        LOG.info('**** SUCCESS pid changed')
+                        # pidfile contains different pid than my parent pid
+                        result = self._success()
+                        task_id = input_data['id']
+                        endpoint_url = global_config['endpoints']['admin']
+                        ep = OpenCenterEndpoint(endpoint_url)
+                        task = ep.tasks[task_id]
+                        task._request_get()
+                        task.state = 'done'
+                        task.result = result
+                        task.save()
                 else:
-                    # process does not appear to have respawned
-                    # TODO(shep): should probably try to restart here
+                    LOG.info('**** FAILED pidfile does not exist')
                     result = self._failure()
-            task_id = input_data['id']
-            endpoint_url = global_config['endpoints']['admin']
-            ep = OpenCenterEndpoint(endpoint_url)
-            task = ep.tasks[task_id]
-            task._request_get()
-            task.state = 'done'
-            task.result = result
-            task.save()
+                    task_id = input_data['id']
+                    endpoint_url = global_config['endpoints']['admin']
+                    ep = OpenCenterEndpoint(endpoint_url)
+                    task = ep.tasks[task_id]
+                    task._request_get()
+                    task.state = 'done'
+                    task.result = result
+                    task.save()
 
     def get_updates(self, input_data):
         DISTROS = {
