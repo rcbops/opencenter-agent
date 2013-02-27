@@ -42,7 +42,7 @@ do_start()
     fi
     [ -x $DAEMON ] || exit 5
     echo -n $"Starting $NAME: "
-    daemon $DAEMON $DAEMON_ARGS
+    daemon --pidfile=$PIDFILE $DAEMON $DAEMON_ARGS
     retval=$?
     echo
     [ $retval -eq 0 ] && touch $lockfile
@@ -59,7 +59,7 @@ do_stop()
     fi
     echo -n $"Stopping $NAME: "
 	if [ -n "`pidfileofproc $exec`" ]; then
-		killproc -p /var/run/opencenter-agent.pid
+		killproc -p $PIDFILE
 		RETVAL=3
 	else
 		failure $"Stopping $NAME"
@@ -75,7 +75,7 @@ do_stop()
 do_reload() {
 	echo -n $"Reloading $NAME: "
 	if [ -n "`pidfileofproc $exec`" ]; then
-		killproc -p /var/run/opencenter-agent.pid -HUP
+		killproc -p $PIDFILE -HUP
 	else
 		failure $"Reloading $NAME"
 	fi
