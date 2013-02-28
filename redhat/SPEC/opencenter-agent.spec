@@ -29,7 +29,7 @@ Requires: opencenter-client >= %{version}
 Requires: python-requests
 Group: System
 
-%description
+%description input-task
 The input-task plugin for OpenCenter
 
 %package output-chef
@@ -39,7 +39,7 @@ Requires: opencenter-agent-lib-bash >= %{version}
 Requires: python-netifaces
 Group: System
 
-%description
+%description output-chef
 The Chef plugin for OpenCenter
 
 %package output-packages
@@ -48,7 +48,7 @@ Requires: opencenter-agent >= %{version}
 Requires: opencenter-agent-lib-bash >= %{version}
 Group: System
 
-%description
+%description output-packages
 The output plugin for OpenCenter
 
 %package lib-bash
@@ -56,7 +56,7 @@ Summary: libraries necessary for output tasks to do bash-y things
 Requires: opencenter-agent >= %{version}
 Group: System
 
-%description
+%description lib-bash
 The bash plugin for OpenCenter
 
 %package output-files
@@ -64,7 +64,7 @@ Summary: a simple file management plugin.  very very unsafe.
 Requires: opencenter-agent >= %{version}
 Group: System
 
-%description
+%description output-files
 The file management pluging for OpenCenter
 
 %package output-adventurator
@@ -74,7 +74,7 @@ Requires: opencenter-agent-input-task >= %{version}
 Requires: python-opencenter
 Group: System
 
-%description
+%description output-adventurator
 The adventure plugin for OpenCenter
 
 %package output-service
@@ -82,7 +82,7 @@ Summary: an output plugin to start/stop/restart services
 Requires: opencenter-agent >= %{version}
 Group: System
 
-%description
+%description output-service
 The service plugin for OpenCenter
 
 %package output-openstack
@@ -91,7 +91,7 @@ Requires: opencenter-agent >= %{version}
 Requires: opencenter-agent-lib-bash >= %{version}
 Group: System
 
-%description
+%description output-openstack
 The OpenStack plugin for OpenCenter
 
 %package output-update-actions
@@ -99,7 +99,7 @@ Summary: an output plugin to handle restarting a running agent
 Requires: opencenter-agent >= %{version}
 Group: System
 
-%description
+%description output-update-actions
 The agent updater plugin for OpenCenter
 
 %prep
