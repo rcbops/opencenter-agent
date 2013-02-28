@@ -18,6 +18,7 @@ Source3:	conf.d.readme
 Source4:	opencenter-agent-endpoints.conf
 Source5:	opencenter-agent-chef.conf
 Source6:	opencenter-agent-packages.conf
+Source6:	log.cfg
 
 BuildRequires:  python-setuptools
 Requires:	python-requests
@@ -120,6 +121,7 @@ mkdir -p $RPM_BUILD_ROOT/usr/bin
 mkdir -p $RPM_BUILD_ROOT/etc/init.d
 mkdir -p $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d
 install -m 644 $RPM_SOURCE_DIR/conf.d.readme $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d/conf.d.readme
+install -m 644 $RPM_SOURCE_DIR/log.cfg $RPM_BUILD_ROOT/etc/opencenter/log.cfg
 install -m 644 $RPM_SOURCE_DIR/opencenter-agent.conf $RPM_BUILD_ROOT/etc/opencenter-agent.conf
 install -m 755 $RPM_SOURCE_DIR/opencenter-agent.init $RPM_BUILD_ROOT/etc/init.d/opencenter-agent
 install -m 644 $RPM_SOURCE_DIR/opencenter-agent-endpoints.conf $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d/opencenter-agent-endpoints.conf
@@ -134,6 +136,7 @@ rm -f $RPM_BUILD_ROOT/usr/share/opencenter-agent/plugins/output/plugin_sleep.py
 %files
 %config(noreplace) /etc/opencenter-agent.conf
 %config(noreplace) /etc/opencenter/agent.conf.d/conf.d.readme
+%config(noreplace) /etc/opencenter/log.cfg
 %defattr(-,root,root)
 %{python_sitelib}/opencenteragent*
 /usr/bin/opencenter-agent.py
