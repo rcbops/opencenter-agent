@@ -33,7 +33,13 @@ if [ -f /etc/chef/knife.rb ]; then
     knife client delete `hostname` -y -c /etc/chef/knife.rb || :
 fi
 
-dpkg -P chef
+
+if [[ $OS_TYPE = "debian"  ]] || [[ $OS_TYPE = "ubuntu" ]]; then
+    dpkg -P chef
+    apt-get autoremove purge -y
+elif if [[ $OS_TYPE = "redhat"  ]] || [[ $OS_TYPE = "centos" ]] || [[ $OS_TYPE = "fedora" ]]; then
+    rpm -e chef
+fi
 rm -rf /etc/chef
 if ! [[ -e /opt ]]; then
     mkdir -p /opt

@@ -23,16 +23,17 @@
 #
 ##############################################################################
 
-# Make sure this is a debian derivative
-if ! [[ -e /etc/debian_version ]] ; then
-    echo "Attempted to run debian derivative script on non-debian distribution" 1>&2
-    exit 1
-fi
+source $OPENCENTER_BASH_DIR/opencenter.sh
 
+id_OS
 export DEBIAN_FRONTEND=noninteractive
 
 function get_prereqs() {
-    apt-get install -y git-core wget
+    if [[ $OS_TYPE = "debian"  ]] || [[ $OS_TYPE = "ubuntu" ]]; then
+        apt-get install -y git-core wget
+    else
+        yum -y install wget git
+    fi
 }
 
 function download_cookbooks() {

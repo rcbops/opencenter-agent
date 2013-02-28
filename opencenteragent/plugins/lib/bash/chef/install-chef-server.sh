@@ -30,19 +30,20 @@ set -x
 export DEBIAN_FRONTEND=noninteractive
 source "$OPENCENTER_BASH_DIR/opencenter.sh"
 
-if ! [[ -e /etc/debian_version ]] ; then
-    echo "Attempted to run debian derivative script on non-debian distribution" 1>&2
-    exit 1
-fi
+id_OS
 
 CHEF_SERVER_VERSION=${CHEF_SERVER_VERSION:-11.0.4-1}
 
 locale-gen en_US.UTF-8
 
-apt-get install -y --force-yes pwgen wget lsb-release
-cp /etc/resolv.conf /tmp/rc
-apt-get remove --purge resolvconf -y --force-yes
-cp /tmp/rc /etc/resolv.conf
+if [[ $OS_TYPE = "debian"  ]] || [[ $OS_TYPE = "ubuntu" ]]; then
+    apt-get install -y --force-yes pwgen wget lsb-release
+    cp /etc/resolv.conf /tmp/rc
+    apt-get remove --purge resolvconf -y --force-yes
+    cp /tmp/rc /etc/resolv.conf
+else
+    yum -y install pwgen wget
+fi
 
 PRIMARY_INTERFACE=$(ip route list match 0.0.0.0 | awk 'NR==1 {print $5}')
 MY_IP=$(ip addr show dev ${PRIMARY_INTERFACE} | awk 'NR==3 {print $2}' | cut -d '/' -f1)
@@ -80,11 +81,21 @@ EOF
 
     HOMEDIR=$(getent passwd ${CHEF_UNIX_USER} | cut -d: -f6)
     export HOME=${HOMEDIR}
-    if ! dpkg -s chef-server &>/dev/null; then
-        curl -L "http://www.opscode.com/chef/download-server?p=ubuntu&pv=12.04&m=x86_64&v=${CHEF_SERVER_VERSION}" > /tmp/chef-server.deb
-        dpkg -i /tmp/chef-server.deb
-        chef-server-ctl reconfigure
-        rm -f /tmp/chef-server.deb
+
+    if [[ $OS_TYPE = "debian"  ]] || [[ $OS_TYPE = "ubuntu" ]]; then
+        if ! dpkg -s chef-server &>/dev/null; then
+            curl -L "http://www.opscode.com/chef/download-server?p=ubuntu&pv=12.04&m=x86_64&v=${CHEF_SERVER_VERSION}" > /tmp/chef-server.deb
+            dpkg -i /tmp/chef-server.deb
+            chef-server-ctl reconfigure
+            rm -f /tmp/chef-server.deb
+        fi
+    else
+        if ! rpm -q chef-server &>/dev/null; then
+            curl -L "http://www.opscode.com/chef/download-server?p=el&pv=6&m=x86_64&v=${CHEF_SERVER_VERSION}"" > /tmp/chef-server.rpm
+            rpm -ivh /tmp/chef-server.rpm
+            chef-server-ctl reconfigure
+            rm -f /tmp/chef-server.rpm
+        fi
     fi
 
     mkdir -p ${HOMEDIR}/.chef
