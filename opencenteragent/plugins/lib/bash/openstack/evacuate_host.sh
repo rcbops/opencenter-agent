@@ -27,7 +27,13 @@
 set -o errexit
 source "$OPENCENTER_BASH_DIR/opencenter.sh"
 
-apt-get -y install bc
+id_OS
+
+if [[ $OS_TYPE = "debian"  ]] || [[ $OS_TYPE = "ubuntu" ]]; then
+    apt-get -y install bc
+else
+    yum -y install bc
+fi
 
 # wait up to x seconds from the start of the migration to the second try
 WAIT_FOR_BUILD_TIMEOUT=300

@@ -23,6 +23,8 @@
 #
 ##############################################################################
 
+OS_TYPE="undef"
+
 function return_fact {
     echo -ne "facts\0$1\0$2\0">&3
 }
@@ -33,4 +35,12 @@ function return_attr {
 
 function return_consequence {
     echo -ne "consequences\0\0$1\0">&3
+}
+
+function id_OS {
+    if [ -f "/etc/lsb-release" ]; then
+      OS_TYPE=$(grep "DISTRIB_ID" /etc/lsb-release | cut -d"=" -f2 | tr "[:upper:]" "[:lower:]")
+    elif [ -f "/etc/system-release-cpe" ]; then
+      OS_TYPE=$(cat /etc/system-release-cpe | cut -d ":" -f 3)
+    fi
 }

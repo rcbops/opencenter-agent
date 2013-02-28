@@ -31,11 +31,7 @@ source "$OPENCENTER_BASH_DIR/opencenter.sh"
 # forcing chef-client install to 11.2.0-1
 CHEF_CLIENT_VERSION=${CHEF_CLIENT_VERSION:-"11.2.0-1"}
 
-if [[ -f /etc/redhat-release ]]; then
-    DISTRO="redhat"
-else
-    DISTRO="debian"
-fi
+id_OS
 
 REQUIRED="CHEF_SERVER_URL CHEF_SERVER_PEM CHEF_SERVER_HOSTNAME"
 for r in $REQUIRED; do
@@ -81,10 +77,10 @@ $CHEF_SERVER_PEM
 EOF
 
 CHEF_CLIENT_VERSION=$(chef-client --version | awk -F": " '{print $2}')
-if [[ $DISTRO = "debian" ]]; then
+if [[ $OS_TYPE = "debian" ]] || [[ $OS_TYPE = "ubuntu" ]]; then
     cp /opt/chef/embedded/lib/ruby/gems/1.9.[0-9]/gems/chef-${CHEF_CLIENT_VERSION}/distro/debian/etc/default/chef-client /etc/default/chef-client
     cp /opt/chef/embedded/lib/ruby/gems/1.9.[0-9]/gems/chef-${CHEF_CLIENT_VERSION}/distro/debian/etc/init.d/chef-client /etc/init.d/chef-client
-elif [[ $DISTRO = "redhat" ]]; then
+elif [[ $OS_TYPE = "redhat" ]] || [[ $OS_TYPE = "centos" ]] || [[ $OS_TYPE = "fedora" ]]; then
     cp /opt/chef/embedded/./lib/ruby/gems/1.9.[0-9]/gems/chef-${CHEF_CLIENT_VERSION}/distro/redhat/etc/init.d/chef-client /etc/init.d/chef-client
     chkconfig --add /etc/init.d/chef-client
     chkconfig chef-client on

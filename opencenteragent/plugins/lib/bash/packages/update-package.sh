@@ -28,27 +28,24 @@ set -e
 set -u
 set -x
 
+source "$OPENCENTER_BASH_DIR/opencenter.sh"
+
 PACKAGE_NAME=${PACKAGE_NAME:-}
 RETVAL=0
 
-if [[ -f /etc/redhat-release ]]; then
-    DISTRO="redhat"
-else
-    DISTRO="debian"
-fi
-
+id_OS
 export DEBIAN_FRONTEND=noninteractive
 
 function do_single_package() {
-    if [[ $DISTRO = "debian" ]]; then
-	SKIP=$(echo ${DISABLE_RESTART} | tr '[:upper:]' '[:lower:]')
-	if [[ ${SKIP} = "true" ]]; then
-	    echo -e '#!/bin/sh \nexit 101' > /usr/sbin/policy-rc.d
+    if [[ $OS_TYPE = "debian"  ]] || [[ $OS_TYPE = "ubuntu" ]]; then
+	    SKIP=$(echo ${DISABLE_RESTART} | tr '[:upper:]' '[:lower:]')
+	    if [[ ${SKIP} = "true" ]]; then
+	        echo -e '#!/bin/sh \nexit 101' > /usr/sbin/policy-rc.d
             chmod +x /usr/sbin/policy-rc.d
         fi
         apt-get -o Dpkg::Options::='--force-confold' -o Dpkg::Options::='--force-confdef' -y install ${PACKAGE_NAME}
         RETVAL=$?
-	if [[ -e /usr/sbin/policy-rc.d ]]; then
+	    if [[ -e /usr/sbin/policy-rc.d ]]; then
             rm /usr/sbin/policy-rc.d
         fi
         return $RETVAL
@@ -59,7 +56,7 @@ function do_single_package() {
 }
 
 function do_update() {
-    if [[ $DISTRO = "debian" ]]; then
+    if [[ $OS_TYPE = "debian"  ]] || [[ $OS_TYPE = "ubuntu" ]]; then
         apt-get -o Dpkg::Options::='--force-confold' -o Dpkg::Options::='--force-confdef' -y upgrade
         RETVAL=$?
     else

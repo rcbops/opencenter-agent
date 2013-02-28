@@ -28,12 +28,18 @@ source "$OPENCENTER_BASH_DIR/opencenter.sh"
 set -x
 export DEBIAN_FRONTEND=noninteractive
 
+id_OS
+
 chef-server-ctl uninstall
-dpkg -P chef-server
+if [[ $OS_TYPE = "debian"  ]] || [[ $OS_TYPE = "ubuntu" ]]; then
+    dpkg -P chef-server
+    apt-get autoremove purge -y
+elif if [[ $OS_TYPE = "redhat"  ]] || [[ $OS_TYPE = "centos" ]] || [[ $OS_TYPE = "fedora" ]]; then
+    rpm -e chef-server
+fi
 rm -rf /etc/chef-server /etc/chef /opt/chef-server /opt/chef /root/.chef /var/opt/chef-server/
 rm -rf /var/chef /var/log/chef-server/
 sed -i  '/export PATH=\${PATH}:\/opt\/chef-server\/bin/d' /root/.profile
-apt-get autoremove purge -y
 pkill -f chef
 pkill -f beam
 pkill -f postgres
