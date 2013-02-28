@@ -89,13 +89,17 @@ def setup(config={}):
     register_action('update_cookbooks', chef.dispatch,
                     [],
                     ['facts.chef_server_ready := true'])
-    register_action('subscribe_cookbook_channel',
-                    chef.dispatch,
-                    [],
-                    ['facts.chef_server_cookbook_channels := '
-                     '"{channel_name}"'],
-                    {'channel_name': {'type': 'string',
-                                      'required': True}})
+    register_action(
+        'subscribe_cookbook_channel',
+        chef.dispatch,
+        [],
+        ['facts.chef_server_cookbook_channels := "{channel_name}"'],
+        {'channel_name': {
+            'type': 'string',
+            'friendly': 'Channel Name',
+            'description': 'The name of the cookbook channel to subscribe to.',
+            'default': 'current',
+            'required': True}})
 
 
 def get_environment(required, optional, payload):
