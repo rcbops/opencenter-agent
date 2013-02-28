@@ -1,0 +1,2 @@
+With the include_dir directive in the main opencenter-agent conf (/etc/opencenter/opencenter-agent.conf),
+this directory will be read and merged in lexically sorted order.

@@ -1,5 +1,8 @@
 %define ver 6
 
+# disable python byte compiling
+%global __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')
+
 Name:       opencenter-agent
 Version:    0.1.0
 Release:    %{ver}%{?dist}
@@ -22,64 +25,91 @@ BuildArch: noarch
 Pluggable, modular host-based agent.  See the output and input
 managers for docs on how to write plugins.
 
-%package opencenter-agent-input-task
+%package input-task
 Summary: the input task plug-in
 Requires: opencenter-agent >= %{version}
 Requires: opencenter-client >= %{version}
 Requires: python-requests
 Group: System
 
-%package opencenter-agent-output-chef
+%description input-task
+The input-task plugin for OpenCenter
+
+%package output-chef
 Summary: an output plugin to run chef tasks
 Requires: opencenter-agent >= %{version}
 Requires: opencenter-agent-lib-bash >= %{version}
 Requires: python-netifaces
 Group: System
 
-%package opencenter-agent-output-packages
+%description output-chef
+The Chef plugin for OpenCenter
+
+%package output-packages
 Summary: an output plugin to run package tasks
 Requires: opencenter-agent >= %{version}
 Requires: opencenter-agent-lib-bash >= %{version}
 Group: System
 
-%package opencenter-agent-lib-bash
+%description output-packages
+The output plugin for OpenCenter
+
+%package lib-bash
 Summary: libraries necessary for output tasks to do bash-y things
 Requires: opencenter-agent >= %{version}
 Group: System
 
-%package opencenter-agent-output-files
+%description lib-bash
+The bash plugin for OpenCenter
+
+%package output-files
 Summary: a simple file management plugin.  very very unsafe.
 Requires: opencenter-agent >= %{version}
 Group: System
 
-%package opencenter-agent-output-adventurator
+%description output-files
+The file management pluging for OpenCenter
+
+%package output-adventurator
 Summary: an output plugin to run adventures
 Requires: opencenter-agent >= %{version}
 Requires: opencenter-agent-input-task >= %{version}
 Requires: python-opencenter
 Group: System
 
-%package opencenter-agent-output-service
+%description output-adventurator
+The adventure plugin for OpenCenter
+
+%package output-service
 Summary: an output plugin to start/stop/restart services
 Requires: opencenter-agent >= %{version}
 Group: System
 
-%package opencenter-agent-output-openstack
+%description output-service
+The service plugin for OpenCenter
+
+%package output-openstack
 Summary: an output plugin to do openstack-ish things
 Requires: opencenter-agent >= %{version}
 Requires: opencenter-agent-lib-bash >= %{version}
 Group: System
 
-%package opencenter-agent-output-update-actions
+%description output-openstack
+The OpenStack plugin for OpenCenter
+
+%package output-update-actions
 Summary: an output plugin to handle restarting a running agent
 Requires: opencenter-agent >= %{version}
 Group: System
+
+%description output-update-actions
+The agent updater plugin for OpenCenter
 
 %prep
 %setup -q -n %{name}-%{version}
 
 %build
-CFLAGS="$RPM_OPT_FLAGS" %{__python} setup.py build
+CFLAGS="$RPM_OPT_FLAGS" %{__python} -B setup.py build
 
 %install
 mkdir -p $RPM_BUILD_ROOT/usr/bin
@@ -91,7 +121,11 @@ install -m 755 $RPM_SOURCE_DIR/opencenter-agent.init $RPM_BUILD_ROOT/etc/init.d/
 install -m 644 $RPM_SOURCE_DIR/opencenter-agent-endpoints.conf $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d/opencenter-agent-endpoints.conf
 install -m 644 $RPM_SOURCE_DIR/opencenter-agent-chef.conf $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d/opencenter-agent-chef.conf
 install -m 644 $RPM_SOURCE_DIR/opencenter-agent-packages.conf $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d/opencenter-agent-packages.conf
-%{__python} setup.py install --skip-build --root $RPM_BUILD_ROOT
+%{__python} -B setup.py install --skip-build --root $RPM_BUILD_ROOT
+# these things should not get packaged
+rm -f $RPM_BUILD_ROOT/usr/share/opencenter-agent/plugins/input/input_example.py
+rm -f $RPM_BUILD_ROOT/usr/share/opencenter-agent/plugins/output/plugin_example.py
+rm -f $RPM_BUILD_ROOT/usr/share/opencenter-agent/plugins/output/plugin_sleep.py
 
 %files
 %config(noreplace) /etc/opencenter-agent.conf
@@ -102,42 +136,42 @@ install -m 644 $RPM_SOURCE_DIR/opencenter-agent-packages.conf $RPM_BUILD_ROOT/et
 /etc/init.d/opencenter-agent
 %doc
 
-%files opencenter-agent-input-task
+%files input-task
 %config(noreplace) /etc/opencenter/agent.conf.d/opencenter-agent-endpoints.conf
 %defattr(-,root,root)
 /usr/share/opencenter-agent/plugins/input/task_input.py
 
-%files opencenter-agent-output-chef
+%files output-chef
 %config(noreplace) /etc/opencenter/agent.conf.d/opencenter-agent-chef.conf
 %defattr(-,root,root)
-/usr/share/opencenter-agent/plugins/lib/bash/chef/
+/usr/share/opencenter-agent/plugins/lib/bash/chef/*
 /usr/share/opencenter-agent/plugins/output/plugin_chef.py
 
-%files opencenter-agent-output-packages
+%files output-packages
 %config(noreplace) /etc/opencenter/agent.conf.d/opencenter-agent-packages.conf
-/usr/share/opencenter-agent/plugins/lib/bash/packages/
+/usr/share/opencenter-agent/plugins/lib/bash/packages/*
 /usr/share/opencenter-agent/plugins/output/plugin_packages.py
 
-%files opencenter-agent-lib-bash
+%files lib-bash
 /usr/share/opencenter-agent/plugins/lib/bashscriptrunner.py
 /usr/share/opencenter-agent/plugins/lib/bash/opencenter.sh
 
-%files opencenter-agent-output-files
+%files output-files
 /usr/share/opencenter-agent/plugins/output/plugin_files.py
 
-%files opencenter-agent-output-adventurator
+%files output-adventurator
 /usr/share/opencenter-agent/plugins/lib/primitives.py
 /usr/share/opencenter-agent/plugins/lib/state.py
 /usr/share/opencenter-agent/plugins/output/plugin_adventurator.py
 
-%files opencenter-agent-output-service
+%files output-service
 /usr/share/opencenter-agent/plugins/output/plugin_service.py
 
-%files opencenter-agent-output-openstack
-/usr/share/opencenter-agent/plugins/lib/bash/openstack/
+%files output-openstack
+/usr/share/opencenter-agent/plugins/lib/bash/openstack/*
 /usr/share/opencenter-agent/plugins/output/plugin_openstack.py
 
-%files opencenter-agent-output-update-actions
+%files output-update-actions
 /usr/share/opencenter-agent/plugins/output/plugin_agent_restart.py
 
 
