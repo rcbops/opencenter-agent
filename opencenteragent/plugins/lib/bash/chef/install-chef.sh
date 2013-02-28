@@ -26,9 +26,12 @@ CHEF_HOST_PARTS=(${CHEF_SERVER_HOSTNAME//./ })
 CHEF_SERVER_SHORTNAME=${CHEF_HOST_PARTS[0]}
 CHEF_SERVER_IP=$(echo ${CHEF_SERVER_URL} | sed -e 's#.*://\([0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+\).*#\1#')
 
-if ( ! grep -q "${CHEF_SERVER_SHORTNAME}" /etc/hosts ); then
-    echo -e "\n${CHEF_SERVER_IP}\t${CHEF_SERVER_SHORTNAME}\t${CHEF_SERVER_HOSTNAME}\n" >> /etc/hosts
-fi
+# clean out old entries before adding a new one
+fix_hosts() { sed -i -r "/^[^ \t]+[ \t]+(([^ \t]+[ \t]+)+$1([ \t]+[^ \t]+)*|([^ \t]+[ \t]+)*$1([ \t]+[^ \t]+)+)$/ s/^(.*)($1)(.*)$/\1\3/; /^[^ \t]+[ \t]+$1[ \t]*$/d" "$2"; }
+
+fix_hosts $CHEF_SERVER_SHORTNAME /etc/hosts
+fix_hosts $CHEF_SERVER_HOSTNAME /etc/hosts
+echo -e "\n${CHEF_SERVER_IP}\t${CHEF_SERVER_SHORTNAME}\t${CHEF_SERVER_HOSTNAME}\n" >> /etc/hosts
 
 CHEF_ENVIRONMENT=${CHEF_ENVIRONMENT:-_default}
 DEBIAN_FRONTEND=noninteractive apt-get install curl -y --force-yes
