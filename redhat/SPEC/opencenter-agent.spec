@@ -1,5 +1,8 @@
 %define ver 6
 
+# disable python byte compiling
+%global __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')
+
 Name:       opencenter-agent
 Version:    0.1.0
 Release:    %{ver}%{?dist}
@@ -106,7 +109,7 @@ The agent updater plugin for OpenCenter
 %setup -q -n %{name}-%{version}
 
 %build
-CFLAGS="$RPM_OPT_FLAGS" %{__python} setup.py build
+CFLAGS="$RPM_OPT_FLAGS" %{__python} -B setup.py build
 
 %install
 mkdir -p $RPM_BUILD_ROOT/usr/bin
@@ -118,7 +121,11 @@ install -m 755 $RPM_SOURCE_DIR/opencenter-agent.init $RPM_BUILD_ROOT/etc/init.d/
 install -m 644 $RPM_SOURCE_DIR/opencenter-agent-endpoints.conf $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d/opencenter-agent-endpoints.conf
 install -m 644 $RPM_SOURCE_DIR/opencenter-agent-chef.conf $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d/opencenter-agent-chef.conf
 install -m 644 $RPM_SOURCE_DIR/opencenter-agent-packages.conf $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d/opencenter-agent-packages.conf
-%{__python} setup.py install --skip-build --root $RPM_BUILD_ROOT
+%{__python} -B setup.py install --skip-build --root $RPM_BUILD_ROOT
+# these things should not get packaged
+rm -f $RPM_BUILD_ROOT/usr/share/opencenter-agent/plugins/input/input_example.py
+rm -f $RPM_BUILD_ROOT/usr/share/opencenter-agent/plugins/output/plugin_example.py
+rm -f $RPM_BUILD_ROOT/usr/share/opencenter-agent/plugins/output/plugin_sleep.py
 
 %files
 %config(noreplace) /etc/opencenter-agent.conf
@@ -137,12 +144,12 @@ install -m 644 $RPM_SOURCE_DIR/opencenter-agent-packages.conf $RPM_BUILD_ROOT/et
 %files output-chef
 %config(noreplace) /etc/opencenter/agent.conf.d/opencenter-agent-chef.conf
 %defattr(-,root,root)
-/usr/share/opencenter-agent/plugins/lib/bash/chef/
+/usr/share/opencenter-agent/plugins/lib/bash/chef/*
 /usr/share/opencenter-agent/plugins/output/plugin_chef.py
 
 %files output-packages
 %config(noreplace) /etc/opencenter/agent.conf.d/opencenter-agent-packages.conf
-/usr/share/opencenter-agent/plugins/lib/bash/packages/
+/usr/share/opencenter-agent/plugins/lib/bash/packages/*
 /usr/share/opencenter-agent/plugins/output/plugin_packages.py
 
 %files lib-bash
@@ -161,7 +168,7 @@ install -m 644 $RPM_SOURCE_DIR/opencenter-agent-packages.conf $RPM_BUILD_ROOT/et
 /usr/share/opencenter-agent/plugins/output/plugin_service.py
 
 %files output-openstack
-/usr/share/opencenter-agent/plugins/lib/bash/openstack/
+/usr/share/opencenter-agent/plugins/lib/bash/openstack/*
 /usr/share/opencenter-agent/plugins/output/plugin_openstack.py
 
 %files output-update-actions
