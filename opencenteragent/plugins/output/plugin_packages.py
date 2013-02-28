@@ -82,7 +82,7 @@ class PackageThing(object):
             result_data = {}
         return self._return(1, result_str, result_data)
 
-    def _update_task(self, result):
+    def _update_task(self, result, input_data):
         task_id = input_data['id']
         endpoint_url = global_config['endpoints']['admin']
         ep = OpenCenterEndpoint(endpoint_url)
@@ -145,7 +145,7 @@ class PackageThing(object):
                 LOG.info('**** FAILED due to timeout')
                 # need to throw an error back at the task
                 result = self._failure()
-                self._update_task(result)
+                self._update_task(result, input_data)
             else:
                 exists = os.path.isfile(self.pidfile)
                 if exists:
@@ -156,16 +156,16 @@ class PackageThing(object):
                         LOG.info('**** FAILED pid did not change')
                         # pidfile contains same pid as my parent pid
                         result = self._failure()
-                        self._update_task(result)
+                        self._update_task(result, input_data)
                     else:
                         LOG.info('**** SUCCESS pid changed')
                         # pidfile contains different pid than my parent pid
                         result = self._success()
-                        self._update_task(result)
+                        self._update_task(result, input_data)
                 else:
                     LOG.info('**** FAILED pidfile does not exist')
                     result = self._failure()
-                    self._update_task(result)
+                    self._update_task(result, input_data)
 
     def get_updates(self, input_data):
         DISTROS = {
