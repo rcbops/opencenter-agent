@@ -129,42 +129,42 @@ install -m 644 $RPM_SOURCE_DIR/opencenter-agent-packages.conf $RPM_BUILD_ROOT/et
 /etc/init.d/opencenter-agent
 %doc
 
-%files opencenter-agent-input-task
+%files input-task
 %config(noreplace) /etc/opencenter/agent.conf.d/opencenter-agent-endpoints.conf
 %defattr(-,root,root)
 /usr/share/opencenter-agent/plugins/input/task_input.py
 
-%files opencenter-agent-output-chef
+%files output-chef
 %config(noreplace) /etc/opencenter/agent.conf.d/opencenter-agent-chef.conf
 %defattr(-,root,root)
 /usr/share/opencenter-agent/plugins/lib/bash/chef/
 /usr/share/opencenter-agent/plugins/output/plugin_chef.py
 
-%files opencenter-agent-output-packages
+%files output-packages
 %config(noreplace) /etc/opencenter/agent.conf.d/opencenter-agent-packages.conf
 /usr/share/opencenter-agent/plugins/lib/bash/packages/
 /usr/share/opencenter-agent/plugins/output/plugin_packages.py
 
-%files opencenter-agent-lib-bash
+%files lib-bash
 /usr/share/opencenter-agent/plugins/lib/bashscriptrunner.py
 /usr/share/opencenter-agent/plugins/lib/bash/opencenter.sh
 
-%files opencenter-agent-output-files
+%files output-files
 /usr/share/opencenter-agent/plugins/output/plugin_files.py
 
-%files opencenter-agent-output-adventurator
+%files output-adventurator
 /usr/share/opencenter-agent/plugins/lib/primitives.py
 /usr/share/opencenter-agent/plugins/lib/state.py
 /usr/share/opencenter-agent/plugins/output/plugin_adventurator.py
 
-%files opencenter-agent-output-service
+%files output-service
 /usr/share/opencenter-agent/plugins/output/plugin_service.py
 
-%files opencenter-agent-output-openstack
+%files output-openstack
 /usr/share/opencenter-agent/plugins/lib/bash/openstack/
 /usr/share/opencenter-agent/plugins/output/plugin_openstack.py
 
-%files opencenter-agent-output-update-actions
+%files output-update-actions
 /usr/share/opencenter-agent/plugins/output/plugin_agent_restart.py
 
 
