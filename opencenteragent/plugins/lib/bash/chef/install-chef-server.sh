@@ -90,7 +90,7 @@ EOF
         fi
     else
         if ! rpm -q chef-server &>/dev/null; then
-            curl -L "http://www.opscode.com/chef/download-server?p=el&pv=6&m=x86_64&v=${CHEF_SERVER_VERSION}"" > /tmp/chef-server.rpm
+            curl -L "http://www.opscode.com/chef/download-server?p=el&pv=6&m=x86_64&v=${CHEF_SERVER_VERSION}" > /tmp/chef-server.rpm
             rpm -ivh /tmp/chef-server.rpm
             chef-server-ctl reconfigure
             rm -f /tmp/chef-server.rpm
