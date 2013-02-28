@@ -31,11 +31,13 @@ lockfile=/var/lock/subsys/opencenter-agent
 
 . /etc/rc.d/init.d/functions
 
+
 #
 # Function that starts the daemon/service
 #
 do_start()
 {
+    mkdir -p /var/log/opencenter || :
     if [ $UID -ne 0 ] ; then
         echo "User has insufficient privilege."
         exit 4
