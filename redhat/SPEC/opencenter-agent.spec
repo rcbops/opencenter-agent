@@ -22,58 +22,85 @@ BuildArch: noarch
 Pluggable, modular host-based agent.  See the output and input
 managers for docs on how to write plugins.
 
-%package opencenter-agent-input-task
+%package input-task
 Summary: the input task plug-in
 Requires: opencenter-agent >= %{version}
 Requires: opencenter-client >= %{version}
 Requires: python-requests
 Group: System
 
-%package opencenter-agent-output-chef
+%description
+The input-task plugin for OpenCenter
+
+%package output-chef
 Summary: an output plugin to run chef tasks
 Requires: opencenter-agent >= %{version}
 Requires: opencenter-agent-lib-bash >= %{version}
 Requires: python-netifaces
 Group: System
 
-%package opencenter-agent-output-packages
+%description
+The Chef plugin for OpenCenter
+
+%package output-packages
 Summary: an output plugin to run package tasks
 Requires: opencenter-agent >= %{version}
 Requires: opencenter-agent-lib-bash >= %{version}
 Group: System
 
-%package opencenter-agent-lib-bash
+%description
+The output plugin for OpenCenter
+
+%package lib-bash
 Summary: libraries necessary for output tasks to do bash-y things
 Requires: opencenter-agent >= %{version}
 Group: System
 
-%package opencenter-agent-output-files
+%description
+The bash plugin for OpenCenter
+
+%package output-files
 Summary: a simple file management plugin.  very very unsafe.
 Requires: opencenter-agent >= %{version}
 Group: System
 
-%package opencenter-agent-output-adventurator
+%description
+The file management pluging for OpenCenter
+
+%package output-adventurator
 Summary: an output plugin to run adventures
 Requires: opencenter-agent >= %{version}
 Requires: opencenter-agent-input-task >= %{version}
 Requires: python-opencenter
 Group: System
 
-%package opencenter-agent-output-service
+%description
+The adventure plugin for OpenCenter
+
+%package output-service
 Summary: an output plugin to start/stop/restart services
 Requires: opencenter-agent >= %{version}
 Group: System
 
-%package opencenter-agent-output-openstack
+%description
+The service plugin for OpenCenter
+
+%package output-openstack
 Summary: an output plugin to do openstack-ish things
 Requires: opencenter-agent >= %{version}
 Requires: opencenter-agent-lib-bash >= %{version}
 Group: System
 
-%package opencenter-agent-output-update-actions
+%description
+The OpenStack plugin for OpenCenter
+
+%package output-update-actions
 Summary: an output plugin to handle restarting a running agent
 Requires: opencenter-agent >= %{version}
 Group: System
+
+%description
+The agent updater plugin for OpenCenter
 
 %prep
 %setup -q -n %{name}-%{version}
