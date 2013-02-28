@@ -18,7 +18,7 @@ Source3:	conf.d.readme
 Source4:	opencenter-agent-endpoints.conf
 Source5:	opencenter-agent-chef.conf
 Source6:	opencenter-agent-packages.conf
-Source6:	log.cfg
+Source7:	log.cfg
 
 BuildRequires:  python-setuptools
 Requires:	python-requests
