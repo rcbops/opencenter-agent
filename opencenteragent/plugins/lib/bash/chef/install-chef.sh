@@ -54,7 +54,12 @@ fix_hosts $CHEF_SERVER_HOSTNAME /etc/hosts
 echo -e "\n${CHEF_SERVER_IP}\t${CHEF_SERVER_SHORTNAME}\t${CHEF_SERVER_HOSTNAME}\n" >> /etc/hosts
 
 CHEF_ENVIRONMENT=${CHEF_ENVIRONMENT:-_default}
-DEBIAN_FRONTEND=noninteractive apt-get install curl -y --force-yes
+if [[ $OS_TYPE = "debian"  ]] || [[ $OS_TYPE = "ubuntu" ]]; then
+    DEBIAN_FRONTEND=noninteractive apt-get install curl -y --force-yes
+else
+    yum -y install curl
+fi
+
 curl -skS -L http://www.opscode.com/chef/install.sh | bash -s - -v ${CHEF_CLIENT_VERSION}
 if ! [[ -e /etc/chef ]]; then
     mkdir -p /etc/chef
