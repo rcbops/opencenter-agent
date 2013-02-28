@@ -17,3 +17,12 @@ script
 
     /usr/bin/opencenter-agent.py ${DAEMON_ARGS}
 end script
+
+post-start script
+    PID=$(status opencenter-agent | egrep -oi '([0-9]+)$' | head -n1)
+    echo ${PID} > /var/run/opencenter-agent.pid
+end script
+
+post-stop script
+    rm -f /var/run/opencenter-agent.pid
+end script

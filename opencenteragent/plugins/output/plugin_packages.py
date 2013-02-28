@@ -16,10 +16,12 @@
 
 import json
 import os
+import subprocess
 import sys
 import time
 
 from bashscriptrunner import BashScriptRunner
+from opencenterclient.client import OpenCenterEndpoint
 
 name = 'packages'
 
@@ -36,6 +38,7 @@ def setup(config={}):
     packages = PackageThing(script, config)
     register_action('get_updates', packages.dispatch, timeout=300)  # 5 min
     register_action('do_updates', packages.dispatch, timeout=600)   # 10 min
+    register_action('upgrade_agent', packages.dispatch, timeout=300)  # 5 min
 
 
 def get_environment(required, optional, payload):
@@ -60,6 +63,34 @@ class PackageThing(object):
     def __init__(self, script, config):
         self.script = script
         self.config = config
+        self.pidfile = '/var/run/opencenter-agent.pid'
+
+    def _return(self, result_code, result_str, result_data=None):
+        if result_data is None:
+            result_data = {}
+        return {'result_code': result_code,
+                'result_str': result_str,
+                'result_data': result_data}
+
+    def _success(self, result_str='success', result_data=None):
+        if result_data is None:
+            result_data = {}
+        return self._return(0, result_str, result_data)
+
+    def _failure(self, result_str='fail', result_data=None):
+        if result_data is None:
+            result_data = {}
+        return self._return(1, result_str, result_data)
+
+    def _update_task(self, result):
+        task_id = input_data['id']
+        endpoint_url = global_config['endpoints']['admin']
+        ep = OpenCenterEndpoint(endpoint_url)
+        task = ep.tasks[task_id]
+        task._request_get()
+        task.state = 'done'
+        task.result = result
+        task.save()
 
     def do_updates(self, input_data):
         """
@@ -85,6 +116,56 @@ class PackageThing(object):
         if not good:
             return env
         return self.script.run_env("update-package.sh", env, "")
+
+    def upgrade_agent(self, input_data):
+        """Upgrades a running opencenter-agent, from packages"""
+        pid = os.fork()
+        if pid != 0:
+            # Parent
+            LOG.info('**** Upgrading agent')
+            self.do_updates(input_data)
+        else:
+            # child
+            ppid = os.getppid()
+            timer = 60  # check parent state for 60s then timeout
+            error = False  # initialize error state as False
+            alive = True
+            count = 0
+            while alive:
+                time.sleep(1)
+                try:
+                    os.kill(ppid, 0)
+                except OSError:
+                    alive = False
+                count += 1
+                if count > timer:
+                    error = True
+                    break
+            if error:
+                LOG.info('**** FAILED due to timeout')
+                # need to throw an error back at the task
+                result = self._failure()
+                self._update_task(result)
+            else:
+                exists = os.path.isfile(self.pidfile)
+                if exists:
+                    f = open(self.pidfile, 'r')
+                    new_pid = int(f.read())
+                    f.close()
+                    if new_pid == ppid:
+                        LOG.info('**** FAILED pid did not change')
+                        # pidfile contains same pid as my parent pid
+                        result = self._failure()
+                        self._update_task(result)
+                    else:
+                        LOG.info('**** SUCCESS pid changed')
+                        # pidfile contains different pid than my parent pid
+                        result = self._success()
+                        self._update_task(result)
+                else:
+                    LOG.info('**** FAILED pidfile does not exist')
+                    result = self._failure()
+                    self._update_task(result)
 
     def get_updates(self, input_data):
         DISTROS = {
