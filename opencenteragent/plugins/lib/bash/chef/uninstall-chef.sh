@@ -39,6 +39,9 @@ if [[ $OS_TYPE = "debian"  ]] || [[ $OS_TYPE = "ubuntu" ]]; then
     apt-get autoremove purge -y
 elif [[ $OS_TYPE = "redhat"  ]] || [[ $OS_TYPE = "centos" ]] || [[ $OS_TYPE = "fedora" ]]; then
     rpm -e chef
+else
+    echo "Your distribution is not supported"
+    exit 1
 fi
 rm -rf /etc/chef
 if ! [[ -e /opt ]]; then

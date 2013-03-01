@@ -42,6 +42,8 @@ source $OPENCENTER_BASH_DIR/chef/cookbook-functions.sh
 # Include the opencenter functions
 source $OPENCENTER_BASH_DIR/opencenter.sh
 
+id_OS
+
 get_prereqs
 #checkout_master "${destdir}" "${repo}" "${branch}"
 download_cookbooks "${destdir}" "${version}" "${url}" "${md5}"

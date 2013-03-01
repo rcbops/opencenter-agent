@@ -40,8 +40,11 @@ if [[ $OS_TYPE = "debian"  ]] || [[ $OS_TYPE = "ubuntu" ]]; then
     cp /etc/resolv.conf /tmp/rc
     apt-get remove --purge resolvconf -y --force-yes
     cp /tmp/rc /etc/resolv.conf
-else
+elif [[ $OS_TYPE = "redhat" ]] || [[ $OS_TYPE = "centos" ]] || [[ $OS_TYPE = "fedora" ]]; then
     yum -y install pwgen wget
+else
+    echo "Your distribution is not supported"
+    exit 1
 fi
 
 PRIMARY_INTERFACE=$(ip route list match 0.0.0.0 | awk 'NR==1 {print $5}')
