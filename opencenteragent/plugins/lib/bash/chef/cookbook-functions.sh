@@ -31,8 +31,11 @@ export DEBIAN_FRONTEND=noninteractive
 function get_prereqs() {
     if [[ $OS_TYPE = "debian"  ]] || [[ $OS_TYPE = "ubuntu" ]]; then
         apt-get install -y git-core wget
-    else
+    elif [[ $OS_TYPE = "redhat" ]] || [[ $OS_TYPE = "centos" ]] || [[ $OS_TYPE = "fedora" ]]; then
         yum -y install wget git
+    else
+        echo "Your distribution is not supported"
+        exit 1
     fi
 }
 

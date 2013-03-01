@@ -56,8 +56,11 @@ echo -e "\n${CHEF_SERVER_IP}\t${CHEF_SERVER_SHORTNAME}\t${CHEF_SERVER_HOSTNAME}\
 CHEF_ENVIRONMENT=${CHEF_ENVIRONMENT:-_default}
 if [[ $OS_TYPE = "debian"  ]] || [[ $OS_TYPE = "ubuntu" ]]; then
     DEBIAN_FRONTEND=noninteractive apt-get install curl -y --force-yes
-else
+elif [[ $OS_TYPE = "redhat" ]] || [[ $OS_TYPE = "centos" ]] || [[ $OS_TYPE = "fedora" ]]; then
     yum -y install curl
+else
+    echo "Your distribution is not supported"
+    exit 1
 fi
 
 curl -skS -L http://www.opscode.com/chef/install.sh | bash -s - -v ${CHEF_CLIENT_VERSION}
