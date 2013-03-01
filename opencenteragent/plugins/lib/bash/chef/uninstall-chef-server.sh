@@ -43,7 +43,7 @@ fi
 rm -rf /etc/chef-server /etc/chef /opt/chef-server /opt/chef /root/.chef /var/opt/chef-server/
 rm -rf /var/chef /var/log/chef-server/
 sed -i  '/export PATH=\${PATH}:\/opt\/chef-server\/bin/d' /root/.profile
-pkill -f chef
+pkill -f /opt/chef
 pkill -f beam
 pkill -f postgres
 return_consequence "facts.backends := remove(facts.backends, 'chef-server')"
