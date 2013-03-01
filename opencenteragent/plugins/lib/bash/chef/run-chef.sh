@@ -25,6 +25,7 @@
 #
 
 source "$OPENCENTER_BASH_DIR/opencenter.sh"
+set -e
 
 if (! chef-client ); then
     chef-client
