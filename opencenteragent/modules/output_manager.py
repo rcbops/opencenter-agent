@@ -200,8 +200,9 @@ class OutputManager(manager.Manager):
                 if 'id' in input_data:
                     ns['LOG'] = logging.getLogger(
                         'opencenter.output.trans_%s' % input_data['id'])
-                    h = logging.FileHandler(os.path.join(base, 'trans_%s.log' %
-                                                         input_data['id']))
+                    h = logging.FileHandler(
+                        os.path.join(base,
+                                     'trans_%s.log' % input_data['id']), 'w')
                     ns['LOG'].addHandler(h)
 
             # FIXME(rp): handle exceptions

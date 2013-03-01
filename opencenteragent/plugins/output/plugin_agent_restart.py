@@ -25,11 +25,8 @@
 #
 
 import os
-import subprocess
 import sys
 import time
-
-from opencenterclient.client import OpenCenterEndpoint
 
 name = 'agent_restart'
 
@@ -40,24 +37,19 @@ def setup(config={}):
 
 
 def restart_agent(input_data):
-    # payload = input_data['payload']
     pid = os.fork()
     if pid != 0:
-        # This is the Parent Process, sleep for 10s then respawn
-        time.sleep(10)
-        _respawn()
+        # Parent process, wait for child to finish.. then recycle
+        try:
+            os.wait()
+            time.sleep(15)
+            _respawn()
+        except OSError:
+            return _return(1, 'unable to wait on child process')
 
     else:
         # Child Process
-        result = _success()
-        task_id = input_data['id']
-        endpoint_url = global_config['endpoints']['admin']
-        ep = OpenCenterEndpoint(endpoint_url)
-        task = ep.tasks[task_id]
-        task._request_get()
-        task.state = 'done'
-        task.result = result
-        task.save()
+        return _success()
 
 
 def _return(result_code, result_str, result_data=None):
