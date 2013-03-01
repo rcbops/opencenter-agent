@@ -123,7 +123,7 @@ mkdir -p $RPM_BUILD_ROOT/etc/init
 mkdir -p $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d
 install -m 644 $RPM_SOURCE_DIR/conf.d.readme $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d/conf.d.readme
 install -m 644 $RPM_SOURCE_DIR/log.cfg $RPM_BUILD_ROOT/etc/opencenter/log.cfg
-install -m 644 $RPM_SOURCE_DIR/opencenter-agent.conf $RPM_BUILD_ROOT/etc/opencenter-agent.conf
+install -m 644 $RPM_SOURCE_DIR/opencenter-agent.conf $RPM_BUILD_ROOT/etc/opencenter/opencenter-agent.conf
 install -m 755 $RPM_SOURCE_DIR/opencenter-agent.upstart $RPM_BUILD_ROOT/etc/init/opencenter-agent.conf
 install -m 644 $RPM_SOURCE_DIR/opencenter-agent-endpoints.conf $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d/opencenter-agent-endpoints.conf
 install -m 644 $RPM_SOURCE_DIR/opencenter-agent-chef.conf $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d/opencenter-agent-chef.conf
@@ -135,7 +135,7 @@ rm -f $RPM_BUILD_ROOT/usr/share/opencenter-agent/plugins/output/plugin_example.p
 rm -f $RPM_BUILD_ROOT/usr/share/opencenter-agent/plugins/output/plugin_sleep.py
 
 %files
-%config(noreplace) /etc/opencenter-agent.conf
+%config(noreplace) /etc/opencenter/opencenter-agent.conf
 %config(noreplace) /etc/opencenter/agent.conf.d/conf.d.readme
 %config(noreplace) /etc/opencenter/log.cfg
 %defattr(-,root,root)
