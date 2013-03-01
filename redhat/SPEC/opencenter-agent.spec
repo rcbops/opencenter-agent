@@ -187,9 +187,6 @@ rm -f $RPM_BUILD_ROOT/usr/share/opencenter-agent/plugins/output/plugin_sleep.py
 rm -rf $RPM_BUILD_ROOT
 
 %post
-chkconfig --add opencenter-agent
-chkconfig opencenter-agent on
-
 
 %changelog
 * Mon Sep 10 2012 Joseph W. Breu (joseph.breu@rackspace.com) - 0.1.0
