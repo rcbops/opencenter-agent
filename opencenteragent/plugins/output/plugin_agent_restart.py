@@ -25,7 +25,7 @@
 #
 
 import os
-import subprocess
+# import subprocess
 import sys
 import time
 
@@ -40,24 +40,31 @@ def setup(config={}):
 
 
 def restart_agent(input_data):
-    # payload = input_data['payload']
+    import signal
+    signal.signal(signal.SIGCHLD, signal.SIG_IGN)
     pid = os.fork()
     if pid != 0:
         # This is the Parent Process, sleep for 10s then respawn
-        time.sleep(10)
-        _respawn()
+        LOG.info('** Parent process waiting for child')
+        try:
+            os.wait()
+            time.sleep(10)
+            _respawn()
+        except OSError:
+            return _return(1, 'failed to spawn child process')
 
     else:
         # Child Process
-        result = _success()
-        task_id = input_data['id']
-        endpoint_url = global_config['endpoints']['admin']
-        ep = OpenCenterEndpoint(endpoint_url)
-        task = ep.tasks[task_id]
-        task._request_get()
-        task.state = 'done'
-        task.result = result
-        task.save()
+        return _success()
+        #result = _success()
+        #task_id = input_data['id']
+        #endpoint_url = global_config['endpoints']['admin']
+        #ep = OpenCenterEndpoint(endpoint_url)
+        #task = ep.tasks[task_id]
+        #task._request_get()
+        #task.state = 'done'
+        #task.result = result
+        #task.save()
 
 
 def _return(result_code, result_str, result_data=None):
