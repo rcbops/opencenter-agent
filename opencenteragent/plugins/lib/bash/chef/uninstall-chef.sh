@@ -25,14 +25,15 @@
 #
 
 source "$OPENCENTER_BASH_DIR/opencenter.sh"
-
 set -x
+export DEBIAN_FRONTEND=noninteractive
+
+id_OS
 
 if [ -f /etc/chef/knife.rb ]; then
     knife node delete `hostname` -y -c /etc/chef/knife.rb || :
     knife client delete `hostname` -y -c /etc/chef/knife.rb || :
 fi
-
 
 if [[ $OS_TYPE = "debian"  ]] || [[ $OS_TYPE = "ubuntu" ]]; then
     dpkg -P chef
