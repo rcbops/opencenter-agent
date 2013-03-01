@@ -13,7 +13,7 @@ License:	Apache2
 URL:		https://github.com/rcbops/opencenter-agent
 Source0:	opencenter-agent-%{version}.tgz
 Source1:	opencenter-agent.conf
-Source2:	opencenter-agent.init
+Source2:	opencenter-agent.upstart
 Source3:	conf.d.readme
 Source4:	opencenter-agent-endpoints.conf
 Source5:	opencenter-agent-chef.conf
@@ -119,12 +119,12 @@ CFLAGS="$RPM_OPT_FLAGS" %{__python} -B setup.py build
 
 %install
 mkdir -p $RPM_BUILD_ROOT/usr/bin
-mkdir -p $RPM_BUILD_ROOT/etc/init.d
+mkdir -p $RPM_BUILD_ROOT/etc/init
 mkdir -p $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d
 install -m 644 $RPM_SOURCE_DIR/conf.d.readme $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d/conf.d.readme
 install -m 644 $RPM_SOURCE_DIR/log.cfg $RPM_BUILD_ROOT/etc/opencenter/log.cfg
 install -m 644 $RPM_SOURCE_DIR/opencenter-agent.conf $RPM_BUILD_ROOT/etc/opencenter-agent.conf
-install -m 755 $RPM_SOURCE_DIR/opencenter-agent.init $RPM_BUILD_ROOT/etc/init.d/opencenter-agent
+install -m 755 $RPM_SOURCE_DIR/opencenter-agent.upstart $RPM_BUILD_ROOT/etc/init/opencenter-agent.conf
 install -m 644 $RPM_SOURCE_DIR/opencenter-agent-endpoints.conf $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d/opencenter-agent-endpoints.conf
 install -m 644 $RPM_SOURCE_DIR/opencenter-agent-chef.conf $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d/opencenter-agent-chef.conf
 install -m 644 $RPM_SOURCE_DIR/opencenter-agent-packages.conf $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d/opencenter-agent-packages.conf
@@ -141,7 +141,7 @@ rm -f $RPM_BUILD_ROOT/usr/share/opencenter-agent/plugins/output/plugin_sleep.py
 %defattr(-,root,root)
 %{python_sitelib}/opencenteragent*
 /usr/bin/opencenter-agent.py
-/etc/init.d/opencenter-agent
+/etc/init/opencenter-agent.conf
 %doc
 
 %files input-task
