@@ -157,9 +157,10 @@ def handle_adventurate(input_data):
             if not k in rollbacks:
                 rollbacks[k] = []
             if 'rollback' in v['result_data']:
-                for rollback_entry in v['result_data']['rollback']:
-                    rollbacks[k].append(rollback_entry)
-                # rollbacks[k] += v['result_data']['rollback']
+                if isinstance(v['result_data']['rollback'], list):
+                    rollbacks[k] += v['result_data']['rollback']
+                else:
+                    rollbacks[k].append(v['result_data']['rollback'])
                 # v['result_data'].pop('history')
 
     state_data = ns['state_data']
