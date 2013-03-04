@@ -99,6 +99,7 @@ def setup(config={}):
             'friendly': 'Channel Name',
             'description': 'The name of the cookbook channel to subscribe to.',
             'default': 'current',
+            'placeholder': 'current',
             'required': True}})
 
 
