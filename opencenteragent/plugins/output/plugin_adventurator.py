@@ -170,7 +170,9 @@ def handle_adventurate(input_data):
         for node in map(lambda x: int(x), state_data['fails']):
             node_list[node] = 'failed'
             if node in rollbacks:
-                LOG.debug('Running rollback plan for node %d' % node)
+                LOG.debug('Running rollback plan for node %d: %s' %
+                          (node, rollbacks[node]))
+
                 ns['sm_description'] = rollbacks[node]
                 ns['input_data'] = {'nodes': [node]}
 
@@ -184,7 +186,8 @@ def handle_adventurate(input_data):
                             node_list[node] = 'rollback'
 
                 except Exception as e:
-                    pass
+                    LOG.debug('Exception running rollback: %s\n%s' %
+                              (str(e), detailed_exception()))
             else:
                 LOG.debug('No rollback plan for failed node %d' % node)
 
