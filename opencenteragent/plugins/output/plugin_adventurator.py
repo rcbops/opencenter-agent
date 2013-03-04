@@ -157,20 +157,25 @@ def handle_adventurate(input_data):
             if not k in rollbacks:
                 rollbacks[k] = []
             if 'rollback' in v['result_data']:
-                rollbacks[k] += v['result_data']['rollback']
+                if isinstance(v['result_data']['rollback'], list):
+                    rollbacks[k] += v['result_data']['rollback']
+                else:
+                    rollbacks[k].append(v['result_data']['rollback'])
                 # v['result_data'].pop('history')
 
     state_data = ns['state_data']
     output_data['result_data']['history'] = history
 
-    # output_data['result_data']['rollbacks'] = rollbacks
+    output_data['result_data']['rollbacks'] = rollbacks
 
     if 'fails' in state_data:
         # we need to walk through all the failed nodes.
         for node in map(lambda x: int(x), state_data['fails']):
             node_list[node] = 'failed'
             if node in rollbacks:
-                LOG.debug('Running rollback plan for node %d' % node)
+                LOG.debug('Running rollback plan for node %d: %s' %
+                          (node, rollbacks[node]))
+
                 ns['sm_description'] = rollbacks[node]
                 ns['input_data'] = {'nodes': [node]}
 
@@ -184,7 +189,8 @@ def handle_adventurate(input_data):
                             node_list[node] = 'rollback'
 
                 except Exception as e:
-                    pass
+                    LOG.debug('Exception running rollback: %s\n%s' %
+                              (str(e), detailed_exception()))
             else:
                 LOG.debug('No rollback plan for failed node %d' % node)
 
