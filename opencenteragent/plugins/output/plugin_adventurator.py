@@ -156,7 +156,8 @@ def handle_adventurate(input_data):
             k = int(k)
             if not k in rollbacks:
                 rollbacks[k] = []
-            if 'rollback' in v['result_data']:
+            if 'rollback' in v['result_data'] and \
+                    len(v['result_data']['rollback']) > 0:
                 if isinstance(v['result_data']['rollback'], list):
                     rollbacks[k] += v['result_data']['rollback']
                 else:
