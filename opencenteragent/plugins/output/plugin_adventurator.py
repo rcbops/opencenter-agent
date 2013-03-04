@@ -157,13 +157,15 @@ def handle_adventurate(input_data):
             if not k in rollbacks:
                 rollbacks[k] = []
             if 'rollback' in v['result_data']:
-                rollbacks[k] += v['result_data']['rollback']
+                for rollback_entry in v['result_data']['rollback']:
+                    rollbacks[k].append(rollback_entry)
+                # rollbacks[k] += v['result_data']['rollback']
                 # v['result_data'].pop('history')
 
     state_data = ns['state_data']
     output_data['result_data']['history'] = history
 
-    # output_data['result_data']['rollbacks'] = rollbacks
+    output_data['result_data']['rollbacks'] = rollbacks
 
     if 'fails' in state_data:
         # we need to walk through all the failed nodes.
