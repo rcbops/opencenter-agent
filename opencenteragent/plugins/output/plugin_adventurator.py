@@ -150,6 +150,7 @@ def handle_adventurate(input_data):
 
     rollbacks = {}
 
+    # walk through the history and assemble a rollback plan
     for entry in history:
         # walk through the history and assemble rollback plans
         for k, v in entry['result_data'].items():
@@ -173,7 +174,7 @@ def handle_adventurate(input_data):
         # we need to walk through all the failed nodes.
         for node in map(lambda x: int(x), state_data['fails']):
             node_list[node] = 'failed'
-            if node in rollbacks:
+            if node in rollbacks and len(rollbacks[node]) > 0:
                 LOG.debug('Running rollback plan for node %d: %s' %
                           (node, rollbacks[node]))
 
@@ -181,7 +182,7 @@ def handle_adventurate(input_data):
                 ns['input_data'] = {'nodes': [node]}
 
                 try:
-                    exec '(rollback_result, _) = tasks.sm_eval(' \
+                    exec '(rollback_result, rollback_state) = tasks.sm_eval(' \
                         'sm_description, input_data)' in ns, ns
 
                     if 'rollback_result' in ns and \
@@ -189,8 +190,9 @@ def handle_adventurate(input_data):
                         if ns['rollback_result']['result_code'] == 0:
                             node_list[node] = 'rollback'
                         else:
-                            LOG.debug('Error in rollback: %s' %
-                                      ns['rollback_result'])
+                            LOG.debug('Error in rollback: %s: %s' %
+                                      (ns['rollback_result'],
+                                       ns['rollback_state']))
 
                 except Exception as e:
                     LOG.debug('Exception running rollback: %s\n%s' %
