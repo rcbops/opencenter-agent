@@ -29,7 +29,7 @@ case "$1" in
         PORT=8443
         METHOD="https"
         USER="admin"
-        echo "[endponts]" > /etc/opencenter/agent.conf.d/opencenter-agent-endpoints.conf
+        echo "[endpoints]" > /etc/opencenter/agent.conf.d/opencenter-agent-endpoints.conf
         echo "root = ${METHOD}://${USER}:${PASSWORD}@${SERVER}:${PORT}" >> /etc/opencenter/agent.conf.d/opencenter-agent-endpoints.conf
         echo "admin = ${METHOD}://${USER}:${PASSWORD}@${SERVER}:${PORT}/admin" >> /etc/opencenter/agent.conf.d/opencenter-agent-endpoints.conf
 
