@@ -23,7 +23,11 @@ Source7:	log.cfg
 BuildRequires:  python-setuptools
 Requires:	python-requests
 Requires:	python >= 2.6
-Requires:   python-sqlalchemy0.7
+%if 0%{?rhel} == 6
+Requires:       python-sqlalchemy0.7
+%else
+Requires:       python-sqlalchemy >= 0.7
+%endif
 
 BuildArch: noarch
 
