@@ -1,0 +1,13 @@
+Template: opencenter/password
+Type: string
+Description: Enter the password for the opencenter admin user.
+
+Template: opencenter/server
+Type: string
+Description: Enter the fqdn or ip address for the opencenter server
+Default: 127.0.0.1
+
+Template: opencenter/port
+Type: string
+Description: Enter the opencenter server port
+Default: 8443
