@@ -72,7 +72,7 @@ echo "----------"
 echo ${CURRENT_AZ}
 echo ""
 
-AZ_HOSTS=$(nova-manage service list --service nova-compute | sort -R | awk '{if($3=="'${CURRENT_AZ}'" && $4=="enabled" && $5==":-)") print $2}')
+AZ_HOSTS=$(nova-manage service list --service nova-compute | sort -R | awk '{if($3=="'${CURRENT_AZ}'" && $4=="enabled" && $5==":-)") print $2}' | grep -v $(hostname -f))
 AZ_HOSTS_ARRAY=(${AZ_HOSTS// / })
 echo "Hosts available for Migration"
 echo "-----------------------------"
@@ -92,7 +92,6 @@ fi
 
 echo "-- disabling nova-compute service on "$(hostname -f)
 nova-manage service disable --service=nova-compute --host=$(hostname -f)
-
 
 for (( try_migrate=0; try_migrate < 5; try_migrate++ )) do
     sleep_timer=$((60 - ( 12 * try_migrate ) ))
