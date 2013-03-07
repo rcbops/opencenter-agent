@@ -1,0 +1,21 @@
+# opencenter-agent - a modular, pluggable host agent in python
+#
+
+[Unit]
+Description=Opencenter-agent daemon
+After=syslog.target
+
+[Service]
+Type=simple
+UMask=022
+TimeoutSec=0
+PIDFile=/var/run/opencenter-agent.pid
+EnvironmentFile=-/etc/sysconfig/opencenter-agent
+ExecStartPost=echo $(status opencenter-agent | egrep -oi '([0-9]+)$' | head -n1) > /var/run/opencenter-agent.pid
+ExecStartPre=mkdir -p /var/log/opencenter
+ExecStart=/usr/bin/opencenter-agent.py $DAEMON_ARGS
+ExecStopPost=rm -f /var/run/opencenter-agent.pid
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

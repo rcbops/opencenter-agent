@@ -19,6 +19,8 @@ Source4:	opencenter-agent-endpoints.conf
 Source5:	opencenter-agent-chef.conf
 Source6:	opencenter-agent-packages.conf
 Source7:	log.cfg
+Source8:>---opencenter-agent.systemd
+Source9:>---opencenter-agent.sysconfig
 
 BuildRequires:  python-setuptools
 Requires:	python-requests
@@ -128,7 +130,12 @@ mkdir -p $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d
 install -m 644 $RPM_SOURCE_DIR/conf.d.readme $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d/conf.d.readme
 install -m 644 $RPM_SOURCE_DIR/log.cfg $RPM_BUILD_ROOT/etc/opencenter/log.cfg
 install -m 644 $RPM_SOURCE_DIR/opencenter-agent.conf $RPM_BUILD_ROOT/etc/opencenter/opencenter-agent.conf
+%if 0%{?rhel} == 6
 install -m 755 $RPM_SOURCE_DIR/opencenter-agent.upstart $RPM_BUILD_ROOT/etc/init/opencenter-agent.conf
+%else
+install -m 755 $RPM_SOURCE_DIR/opencenter-agent.sysconfig $RPM_BUILD_ROOT/etc/sysconfig/opencenter-agent
+install -m 755 $RPM_SOURCE_DIR/opencenter-agent.systemd $RPM_BUILD_ROOT/etc/systemd/system/opencenter-agent.service
+%endif
 install -m 644 $RPM_SOURCE_DIR/opencenter-agent-endpoints.conf $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d/opencenter-agent-endpoints.conf
 install -m 644 $RPM_SOURCE_DIR/opencenter-agent-chef.conf $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d/opencenter-agent-chef.conf
 install -m 644 $RPM_SOURCE_DIR/opencenter-agent-packages.conf $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d/opencenter-agent-packages.conf
