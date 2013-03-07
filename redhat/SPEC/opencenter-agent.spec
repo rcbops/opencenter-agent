@@ -6,25 +6,25 @@
 Name:       opencenter-agent
 Version:    0.1.0
 Release:    %{ver}%{?dist}
-Summary:	Pluggable, modular host-based agent.
+Summary:        Pluggable, modular host-based agent.
 
-Group:		System
-License:	Apache2
-URL:		https://github.com/rcbops/opencenter-agent
-Source0:	opencenter-agent-%{version}.tgz
-Source1:	opencenter-agent.conf
-Source2:	opencenter-agent.upstart
-Source3:	conf.d.readme
-Source4:	opencenter-agent-endpoints.conf
-Source5:	opencenter-agent-chef.conf
-Source6:	opencenter-agent-packages.conf
-Source7:	log.cfg
-Source8:>---opencenter-agent.systemd
-Source9:>---opencenter-agent.sysconfig
+Group:          System
+License:        Apache2
+URL:            https://github.com/rcbops/opencenter-agent
+Source0:        opencenter-agent-%{version}.tgz
+Source1:        opencenter-agent.conf
+Source2:        opencenter-agent.upstart
+Source3:        conf.d.readme
+Source4:        opencenter-agent-endpoints.conf
+Source5:        opencenter-agent-chef.conf
+Source6:        opencenter-agent-packages.conf
+Source7:        log.cfg
+Source8:        opencenter-agent.systemd
+Source9:        opencenter-agent.sysconfig
 
 BuildRequires:  python-setuptools
-Requires:	python-requests
-Requires:	python >= 2.6
+Requires:       python-requests
+Requires:       python >= 2.6
 %if 0%{?rhel} == 6
 Requires:       python-sqlalchemy0.7
 %else
