@@ -152,7 +152,12 @@ rm -f $RPM_BUILD_ROOT/usr/share/opencenter-agent/plugins/output/plugin_sleep.py
 %defattr(-,root,root)
 %{python_sitelib}/opencenteragent*
 /usr/bin/opencenter-agent.py
+%if 0%{?rhel} == 6
 /etc/init/opencenter-agent.conf
+%else
+/etc/systemd/system/opencenter-agent.service
+/etc/sysconfig/opencenter-agent
+%endif
 %doc
 
 %files input-task
