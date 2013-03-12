@@ -68,6 +68,8 @@ if ! [[ -e /etc/chef ]]; then
     mkdir -p /etc/chef
 fi
 cat <<EOF >/etc/chef/client.rb
+Ohai::Config[:disabled_plugins] = ["passwd"]
+
 chef_server_url "$CHEF_SERVER_URL"
 chef_environment "$CHEF_ENVIRONMENT"
 EOF
