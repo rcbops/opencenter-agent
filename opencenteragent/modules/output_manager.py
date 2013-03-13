@@ -231,8 +231,6 @@ class OutputManager(manager.Manager):
         :returns: a result dictionary
         """
 
-        offset = 0
-
         action = input_data['action']
         payload = input_data.get('payload', {})
         timeout = payload.get('timeout', 0)
@@ -251,13 +249,22 @@ class OutputManager(manager.Manager):
 
         data = ''
         fd = open(log_path, 'r')
-        fd.seek(0, os.SEEK_END)
-        length = fd.tell()
 
-        if action == 'logfile.tail':
-            offset = max(length - payload['offset'], 0)
-
-        fd.seek(offset)
+        try:
+            position = payload['offset']['position']
+            length = payload['offset']['length']
+        except (KeyError, TypeError):
+            position = 'end'
+            length = 1024
+        sign = {'start': 1, 'end': -1}
+        whence = {'start': os.SEEK_SET, 'end': os.SEEK_END}
+        try:
+            fd.seek(sign[position] * abs(length), whence[position])
+        except IOError:
+            pass
+        except OverflowError:
+            position = {'start': 'end', 'end': 'start'}[position]
+            fd.seek(0, whence[position])
 
         # open the socket and jet it out
         if not sock:
