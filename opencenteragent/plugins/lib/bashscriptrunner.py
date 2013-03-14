@@ -60,7 +60,7 @@ class BashScriptRunner(object):
             env[key] = os.environ[key]
 
         env.update(self.environment)
-        env.update(dict([(name_mangle(k, prefix), v)
+        env.update(dict([(name_mangle(k, prefix), str(v))
                          for k, v in environment.iteritems()]))
         response = {"response": {}}
         path = find_script(script, self.script_path)
