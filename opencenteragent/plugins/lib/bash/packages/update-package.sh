@@ -30,6 +30,7 @@ set -x
 
 source "$OPENCENTER_BASH_DIR/opencenter.sh"
 
+DISABLE_RESTART=${DISABLE_RESTART:-}
 PACKAGE_NAME=${PACKAGE_NAME:-}
 RETVAL=0
 
@@ -38,14 +39,14 @@ export DEBIAN_FRONTEND=noninteractive
 
 function do_single_package() {
     if [[ $OS_TYPE = "debian"  ]] || [[ $OS_TYPE = "ubuntu" ]]; then
-	    SKIP=$(echo ${DISABLE_RESTART} | tr '[:upper:]' '[:lower:]')
-	    if [[ ${SKIP} = "true" ]]; then
-	        echo -e '#!/bin/sh \nexit 101' > /usr/sbin/policy-rc.d
+        SKIP=$(echo ${DISABLE_RESTART} | tr '[:upper:]' '[:lower:]')
+        if [[ ${SKIP} = "true" ]]; then
+            echo -e '#!/bin/sh \nexit 101' > /usr/sbin/policy-rc.d
             chmod +x /usr/sbin/policy-rc.d
         fi
         apt-get -o Dpkg::Options::='--force-confold' -o Dpkg::Options::='--force-confdef' -y install ${PACKAGE_NAME}
         RETVAL=$?
-	    if [[ -e /usr/sbin/policy-rc.d ]]; then
+        if [[ -e /usr/sbin/policy-rc.d ]]; then
             rm /usr/sbin/policy-rc.d
         fi
         return $RETVAL
@@ -66,9 +67,9 @@ function do_update() {
 }
 
 if [[ -z $PACKAGE_NAME ]]; then
-	do_update
+    do_update
 else
-	do_single_package
+    do_single_package
 fi
 
 exit $RETVAL
