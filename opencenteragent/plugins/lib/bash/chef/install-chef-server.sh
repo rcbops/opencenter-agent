@@ -36,12 +36,12 @@ CHEF_SERVER_VERSION=${CHEF_SERVER_VERSION:-11.0.4-1}
 
 if [[ $OS_TYPE = "debian"  ]] || [[ $OS_TYPE = "ubuntu" ]]; then
     locale-gen en_US.UTF-8
-    apt-get install -y --force-yes pwgen wget lsb-release
+    apt-get install -y --force-yes pwgen lsb-release
     cp /etc/resolv.conf /tmp/rc
     apt-get remove --purge resolvconf -y --force-yes
     cp /tmp/rc /etc/resolv.conf
 elif [[ $OS_TYPE = "redhat" ]] || [[ $OS_TYPE = "centos" ]] || [[ $OS_TYPE = "fedora" ]]; then
-    yum -y install pwgen wget
+    yum -y install pwgen curl
 else
     echo "Your distribution is not supported"
     exit 1
