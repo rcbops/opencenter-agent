@@ -39,6 +39,6 @@ fi
 
 . /root/openrc
 
-nova-manage service disable --service=nova-compute --host=$(hostname -f)
+nova-manage service disable --service=nova-compute --host=$(hostname)
 
 return_fact "maintenance_mode" "true"
