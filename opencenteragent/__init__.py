@@ -244,6 +244,7 @@ class OpenCenterAgent():
 
         config = self.config = dict([[s, dict(cp.items(s))]
                                      for s in cp.sections()])
+        config.setdefault('main', {})['hostidfile'] = '/etc/opencenter/hostid'
         config_section = self.config_section
 
         if config_section in config:
