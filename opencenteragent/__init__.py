@@ -39,7 +39,6 @@ import traceback
 from threading import Thread
 
 from ConfigParser import ConfigParser
-from logging.handlers import SysLogHandler
 
 from opencenteragent import exceptions
 from opencenteragent.modules import OutputManager
