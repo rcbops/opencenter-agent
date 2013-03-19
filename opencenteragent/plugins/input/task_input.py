@@ -24,8 +24,10 @@
 ##############################################################################
 #
 
+import errno
 import json
 import os
+import socket
 import threading
 import time
 from requests import ConnectionError
@@ -37,7 +39,7 @@ task_getter = None
 
 
 class TaskThread(threading.Thread):
-    def __init__(self, endpoint, name):
+    def __init__(self, endpoint, name, host_id, hostidfile):
         # python, I hate you.
         super(TaskThread, self).__init__()
 
@@ -48,7 +50,8 @@ class TaskThread(threading.Thread):
         self.producer_condition = threading.Condition(self.producer_lock)
         self.pending_tasks = []
         self.running_tasks = {}
-        self.host_id = None
+        self.host_id = host_id
+        self.hostidfile = hostidfile
         self._maybe_init()
 
     def _maybe_init(self):
@@ -70,7 +73,33 @@ class TaskThread(threading.Thread):
             #reasonable manner and fix this code up
             root = self.endpoint.nodes.filter(
                 'facts.parent_id = None and name = "workspace"').first()
-            self.host_id = root.whoami(self.name).json['node']['id']
+            resp = root.whoami(hostname=self.name).json
+            try:
+                host_id = resp['node_id']
+            except KeyError:
+                LOG.error('Unable to get node ID: %s' % resp['message'])
+                return False
+            reg_file = '.'.join((self.hostidfile, 'registering'))
+            dirs = reg_file.rpartition(os.sep)[0]
+            try:
+                os.makedirs(dirs)
+            except OSError:
+                pass
+
+            with open(reg_file, 'wb') as f:
+                f.write(str(host_id))
+            resp = root.whoami(node_id=host_id).json
+            try:
+                node = resp['node']
+            except KeyError:
+                LOG.error('Unable to get node ID: %s' % resp['message'])
+                return False
+            if node['id'] == host_id:
+                os.rename(reg_file, self.hostidfile)
+                self.host_id = node['id']
+            else:
+                LOG.error('Node ID mismatch.')
+                return False
 
         # update the module list
         self.producer_lock.acquire()
@@ -204,9 +233,11 @@ class TaskThread(threading.Thread):
 
 
 class TaskGetter:
-    def __init__(self, endpoint, name):
+    def __init__(self, endpoint, name, host_id, hostidfile):
         self.endpoint = endpoint
         self.name = name
+        self.host_id = host_id
+        self.hostidfile = hostidfile
         self.running = False
         self.server_thread = None
 
@@ -214,7 +245,8 @@ class TaskGetter:
         if self.running:
             raise RuntimeError
 
-        self.server_thread = TaskThread(self.endpoint, self.name)
+        self.server_thread = TaskThread(self.endpoint, self.name,
+                                        self.host_id, self.hostidfile)
         self.server_thread.setDaemon(True)
         self.server_thread.start()
         self.running = True
@@ -237,11 +269,20 @@ def setup(config=None):
     if config is None:
         config = {}
 
-    name = config.get('hostname', os.popen('hostname -f').read().strip())
+    hostidfile = global_config['main']['hostidfile']
+    name = config.get('hostname', socket.getfqdn().strip())
+    try:
+        with open(hostidfile) as f:
+            host_id = f.read()
+    except IOError as e:
+        if e.errno == errno.ENOENT:
+            host_id = None
+        else:
+            raise e
     endpoint = global_config.get('endpoints', {}).get(
         'admin', 'http://localhost:8080/admin')
 
-    task_getter = TaskGetter(endpoint, name)
+    task_getter = TaskGetter(endpoint, name, host_id, hostidfile)
     task_getter.run()
 
 
