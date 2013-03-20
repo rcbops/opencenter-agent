@@ -206,6 +206,17 @@ rm -rf $RPM_BUILD_ROOT
 
 %post
 
+# *******************************************************
+# ATTENTION: changelog is in reverse chronological order
+# *******************************************************
 %changelog
+* Wed Mar 20 2013 RCB Builder (rcb-deploy@lists.rackspace.com) - 0.2.0
+- Fixed Fedora packaging
+- Fixed defect with evacuate_hosts (da79833)
+- Fixed issue with http_proxy env var being
+  passed through to scipts
+- Disabled ohai passwd plugin (a408443)
+- Making sure curl is installed in setup (046ee33)
+
 * Mon Sep 10 2012 Joseph W. Breu (joseph.breu@rackspace.com) - 0.1.0
 - Initial build
