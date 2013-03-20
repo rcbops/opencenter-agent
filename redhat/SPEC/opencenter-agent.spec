@@ -127,13 +127,14 @@ CFLAGS="$RPM_OPT_FLAGS" %{__python} -B setup.py build
 mkdir -p $RPM_BUILD_ROOT/usr/bin
 mkdir -p $RPM_BUILD_ROOT/etc/init
 mkdir -p $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d
-mkdir -p $RPM_BUILD_ROOT/etc/sysconfig
 install -m 644 $RPM_SOURCE_DIR/conf.d.readme $RPM_BUILD_ROOT/etc/opencenter/agent.conf.d/conf.d.readme
 install -m 644 $RPM_SOURCE_DIR/log.cfg $RPM_BUILD_ROOT/etc/opencenter/log.cfg
 install -m 644 $RPM_SOURCE_DIR/opencenter-agent.conf $RPM_BUILD_ROOT/etc/opencenter/opencenter-agent.conf
 %if 0%{?rhel} == 6
 install -m 755 $RPM_SOURCE_DIR/opencenter-agent.upstart $RPM_BUILD_ROOT/etc/init/opencenter-agent.conf
 %else
+mkdir -p $RPM_BUILD_ROOT/etc/sysconfig
+mkdir -p $RPM_BUILD_ROOT/etc/systemd/system/
 install -m 755 $RPM_SOURCE_DIR/opencenter-agent.sysconfig $RPM_BUILD_ROOT/etc/sysconfig/opencenter-agent
 install -m 755 $RPM_SOURCE_DIR/opencenter-agent.systemd $RPM_BUILD_ROOT/etc/systemd/system/opencenter-agent.service
 %endif
@@ -150,14 +151,14 @@ rm -f $RPM_BUILD_ROOT/usr/share/opencenter-agent/plugins/output/plugin_sleep.py
 %config(noreplace) /etc/opencenter/opencenter-agent.conf
 %config(noreplace) /etc/opencenter/agent.conf.d/conf.d.readme
 %config(noreplace) /etc/opencenter/log.cfg
-%config(noreplace) /etc/sysconfig/opencenter-agent
 %defattr(-,root,root)
 %{python_sitelib}/opencenteragent*
 /usr/bin/opencenter-agent.py
 %if 0%{?rhel} == 6
 /etc/init/opencenter-agent.conf
 %else
-/etc/systemd/system/opencenter-agent.service
+%config(noreplace) /etc/sysconfig/opencenter-agent
+%config /etc/systemd/system/opencenter-agent.service
 %endif
 %doc
 
