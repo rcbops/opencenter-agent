@@ -53,8 +53,14 @@ class BashScriptRunner(object):
 
     def run_env(self, script, environment, prefix, *args):
         env = {"PATH": "/usr/sbin:/usr/bin:/sbin:/bin"}
+
+        keep_env = ['http_proxy', 'https_proxy', 'no_proxy']
+
+        for key in set(keep_env).intersection(os.environ):
+            env[key] = os.environ[key]
+
         env.update(self.environment)
-        env.update(dict([(name_mangle(k, prefix), v)
+        env.update(dict([(name_mangle(k, prefix), str(v))
                          for k, v in environment.iteritems()]))
         response = {"response": {}}
         path = find_script(script, self.script_path)

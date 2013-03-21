@@ -33,7 +33,8 @@ id_OS
 chef-server-ctl uninstall
 if [[ $OS_TYPE = "debian"  ]] || [[ $OS_TYPE = "ubuntu" ]]; then
     dpkg -P chef-server
-    apt-get autoremove purge -y
+    apt-get autoremove -y
+    apt-get purge -y
 elif [[ $OS_TYPE = "redhat"  ]] || [[ $OS_TYPE = "centos" ]] || [[ $OS_TYPE = "fedora" ]]; then
     rpm -e chef-server
 else

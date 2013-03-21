@@ -39,7 +39,6 @@ import traceback
 from threading import Thread
 
 from ConfigParser import ConfigParser
-from logging.handlers import SysLogHandler
 
 from opencenteragent import exceptions
 from opencenteragent.modules import OutputManager
@@ -245,6 +244,7 @@ class OpenCenterAgent():
 
         config = self.config = dict([[s, dict(cp.items(s))]
                                      for s in cp.sections()])
+        config.setdefault('main', {})['hostidfile'] = '/etc/opencenter/hostid'
         config_section = self.config_section
 
         if config_section in config:

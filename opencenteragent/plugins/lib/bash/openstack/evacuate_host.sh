@@ -72,7 +72,7 @@ echo "----------"
 echo ${CURRENT_AZ}
 echo ""
 
-AZ_HOSTS=$(nova-manage service list --service nova-compute | sort -R | awk '{if($3=="'${CURRENT_AZ}'" && $4=="enabled" && $5==":-)") print $2}')
+AZ_HOSTS=$(nova-manage service list --service nova-compute | sort -R | awk '{if($3=="'${CURRENT_AZ}'" && $4=="enabled" && $5==":-)") print $2}' | grep -v $(hostname))
 AZ_HOSTS_ARRAY=(${AZ_HOSTS// / })
 echo "Hosts available for Migration"
 echo "-----------------------------"
@@ -90,9 +90,8 @@ if [[ ${#AZ_HOSTS_ARRAY[@]} = 0 ]]; then
     exit 5
 fi
 
-echo "-- disabling nova-compute service on "$(hostname -f)
-nova-manage service disable --service=nova-compute --host=$(hostname -f)
-
+echo "-- disabling nova-compute service on "$(hostname)
+nova-manage service disable --service=nova-compute --host=$(hostname)
 
 for (( try_migrate=0; try_migrate < 5; try_migrate++ )) do
     sleep_timer=$((60 - ( 12 * try_migrate ) ))
@@ -101,7 +100,7 @@ for (( try_migrate=0; try_migrate < 5; try_migrate++ )) do
     echo ""
 
     echo "-- migrate loop ${try_migrate}"
-    MIGRATE_INSTANCES=$(nova list --host $(hostname -f) --all-tenants 1 | awk '{if(length($1)==1 && $2!="ID") print $2","$6}')
+    MIGRATE_INSTANCES=$(nova list --host $(hostname) --all-tenants 1 | awk '{if(length($1)==1 && $2!="ID") print $2","$6}')
 
     for host in ${MIGRATE_INSTANCES}; do
         hostinfo=(${host//,/ })
@@ -156,7 +155,7 @@ for (( try_migrate=0; try_migrate < 5; try_migrate++ )) do
                     fi
                     MIGRATION_LANDING_HOST=$(nova show ${UUID} | grep OS-EXT-SRV-ATTR:hypervisor_hostname | awk '{print $4}')
                     if [[ "${MIGRATION_LANDING_HOST}" = "${migrate_host}" ]]; then
-                        echo "---- MIGRATION was successful.  Instance ${UUID} was moved from $(hostname -f) to ${MIGRATION_LANDING_HOST}"
+                        echo "---- MIGRATION was successful.  Instance ${UUID} was moved from $(hostname) to ${MIGRATION_LANDING_HOST}"
                             break
                     else
                         echo "!! The migration FAILED.  Trying again."
@@ -171,7 +170,7 @@ for (( try_migrate=0; try_migrate < 5; try_migrate++ )) do
 done
 
 # see if anything remains
-MIGRATE_INSTANCES=$(nova list --host $(hostname -f) --all-tenants 1 | awk '{if(length($1)==1 && $2!="ID") print $2","$6}')
+MIGRATE_INSTANCES=$(nova list --host $(hostname) --all-tenants 1 | awk '{if(length($1)==1 && $2!="ID") print $2","$6}')
 if [[ ${#MIGRATE_INSTANCES[@]} -gt 1 ]]; then
     echo "There are still hosts remaining on the box and we have entered the DANGER ZONE.  We need MANUAL INTERVENTION"
     return_fact "maintenance_mode" "'failed'"
