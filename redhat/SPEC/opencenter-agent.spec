@@ -4,7 +4,7 @@
 %global __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')
 
 Name:       opencenter-agent
-Version:    0.1.0
+Version:    0.2.0
 Release:    %{ver}%{?dist}
 Summary:        Pluggable, modular host-based agent.
 
