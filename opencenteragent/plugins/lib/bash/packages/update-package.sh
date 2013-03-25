@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 #               OpenCenter(TM) is Copyright 2013 by Rackspace US, Inc.
 ##############################################################################
 #
@@ -39,21 +39,32 @@ export DEBIAN_FRONTEND=noninteractive
 
 function do_single_package() {
     if [[ $OS_TYPE = "debian"  ]] || [[ $OS_TYPE = "ubuntu" ]]; then
-        SKIP=$(echo ${DISABLE_RESTART} | tr '[:upper:]' '[:lower:]')
-        if [[ ${SKIP} = "true" ]]; then
-            echo -e '#!/bin/sh \nexit 101' > /usr/sbin/policy-rc.d
-            chmod +x /usr/sbin/policy-rc.d
+        dpkg -l ${PACKAGE_NAME} &> /dev/null
+        if [[ $? -eq 0 ]]; then
+            SKIP=$(echo ${DISABLE_RESTART} | tr '[:upper:]' '[:lower:]')
+            if [[ ${SKIP} = "true" ]]; then
+                echo -e '#!/bin/sh \nexit 101' > /usr/sbin/policy-rc.d
+                chmod +x /usr/sbin/policy-rc.d
+            fi
+            apt-get -o Dpkg::Options::='--force-confold' -o Dpkg::Options::='--force-confdef' -y install ${PACKAGE_NAME}
+            RETVAL=$?
+            if [[ -e /usr/sbin/policy-rc.d ]]; then
+                rm /usr/sbin/policy-rc.d
+            fi
+        else
+            RETVAL=1
         fi
-        apt-get -o Dpkg::Options::='--force-confold' -o Dpkg::Options::='--force-confdef' -y install ${PACKAGE_NAME}
-        RETVAL=$?
-        if [[ -e /usr/sbin/policy-rc.d ]]; then
-            rm /usr/sbin/policy-rc.d
-        fi
-        return $RETVAL
     else
-        yum -y install ${PACKAGE_NAME}
-        RETVAL=$?
+        rpm -q ${PACKAGE_NAME} &> /dev/null
+        if [[ $? -eq 0 ]]; then
+            yum -y install ${PACKAGE_NAME}
+            RETVAL=$?
+        else
+            RETVAL=1
+        fi
     fi
+
+    return $RETVAL
 }
 
 function do_update() {
