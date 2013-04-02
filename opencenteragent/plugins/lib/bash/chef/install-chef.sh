@@ -75,7 +75,7 @@ chef_environment "$CHEF_ENVIRONMENT"
 http_proxy  ENV['http_proxy'] if ENV.include?('http_proxy')
 https_proxy ENV['http_proxy'] if ENV.include?('https_proxy')
 no_proxy    ENV['no_proxy']   if ENV.include?('no_proxy')
-
+node_name "`hostname`"
 EOF
 cat <<EOF >/etc/chef/knife.rb
 chef_server_url "$CHEF_SERVER_URL"
