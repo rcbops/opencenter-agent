@@ -38,7 +38,7 @@ function return_consequence {
 }
 
 function id_OS {
-    if [ -f "/etc/lsb-release" ]; then
+    if grep -q "DISTRIB_ID" /etc/lsb-release >/dev/null 2>&1  ; then
       OS_TYPE=$(grep "DISTRIB_ID" /etc/lsb-release | cut -d"=" -f2 | tr "[:upper:]" "[:lower:]")
     elif [ -f "/etc/system-release-cpe" ]; then
       OS_TYPE=$(cat /etc/system-release-cpe | cut -d ":" -f 3)
