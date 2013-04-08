@@ -25,7 +25,7 @@ Package: opencenter-agent-input-task
 Architecture: all
 Section: python
 Depends: opencenter-agent (= ${binary:Version}),
- opencenter-client,
+ opencenter-client (= ${binary:Version}),
  python-requests
 Provides: ${python:Provides}
 Description: the input task plug-in
@@ -66,7 +66,7 @@ Architecture: all
 Section: python
 Depends: opencenter-agent(= ${binary:Version}),
  opencenter-agent-input-task(= ${binary:Version}),
- python-opencenter
+ python-opencenter(= ${binary:Version})
 Provides: ${python:Provides}
 Description: an output plugin to run adventures
 
