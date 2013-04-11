@@ -11,6 +11,9 @@ respawn limit 10 5
 umask 022
 
 script
+    . /etc/environment
+    export http_proxy https_proxy ftp_proxy no_proxy
+
     DAEMON_ARGS="-c /etc/opencenter/opencenter-agent.conf"
     [ -e /etc/default/opencenter-agent ] && . /etc/default/opencenter-agent
     mkdir -p /var/log/opencenter
