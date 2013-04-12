@@ -27,12 +27,14 @@
 import errno
 import json
 import os
+import sys
 import socket
 import threading
 import time
 from requests import ConnectionError
 
 from opencenterclient.client import OpenCenterEndpoint
+from opencenteragent.utils import detailed_exception
 
 name = 'taskerator'
 task_getter = None
@@ -52,7 +54,122 @@ class TaskThread(threading.Thread):
         self.running_tasks = {}
         self.host_id = host_id
         self.hostidfile = hostidfile
+        self.running = False
         self._maybe_init()
+
+    def node_deleted(self):
+        """Handle this node being deleted in the opencenter server."""
+
+        message = (
+            'This node was previously registered as %s, however '
+            'that node ID is no longer recognised by the server. '
+            'This agent will now exit. If you wish to re-register'
+            ' this node with the server, please delete %s and '
+            'restart the agent' % (
+                open(self.hostidfile).read(),
+                self.hostidfile
+            ))
+
+        LOG.error(message)
+        os._exit(1)
+
+    def register(self):
+        """Register with the OpenCenter server.
+
+        Registration requires two calls to whoami:
+
+        1) Call whoami with a hostname
+            This allocates the node ID in opencenter, creates the node object
+            and an attribute 'registered' which is false.
+
+        2) Call whoami with the node_id returned in the first call.
+            This sets the new node's parent_id and changes the registered
+            attribute to true.
+
+        """
+
+        #Return if we are already registered.
+        if self.host_id:
+            return True
+
+        host_id = None
+
+        reg_file = '.'.join((self.hostidfile, 'registering'))
+
+        # Node may be semi registered, try reading ID from
+        # registering file.
+        try:
+            host_id = open(reg_file).read()
+            LOG.info('Agent Registration: Resuming partially '
+                     'completed registation. ID %s read '
+                     'from registering file.' % host_id)
+        except:
+            # Doesn't matter if this file can't be read.
+            pass
+
+        try:
+            if not host_id:
+                # Get ID from hostname - This will allocate a new ID in
+                # opencenter and create a node with attrs.registered=false
+                resp = self.endpoint.whoami(hostname=self.name)
+                host_id = resp.json['node_id']
+                LOG.info('Initial connection: Opencenter ID allocated: %s' %
+                         (host_id))
+
+            # Write ID to temporary state file.
+            dirs = reg_file.rpartition(os.sep)[0]
+            if not os.path.exists(dirs):
+                os.makedirs(dirs)
+            with open(reg_file, 'wb') as f:
+                f.write(str(host_id))
+
+            # Complete registration by calling whoami with host_id. If this
+            # is successful, move the temporary file to the hostidfile
+            # location specified in configuration, and set self.host_id.
+            resp = self.endpoint.whoami(node_id=host_id)
+            if resp.json['node']['id'] == host_id:
+                os.rename(reg_file, self.hostidfile)
+                self.host_id = host_id
+                LOG.info('Registration Complete: Verified ID: %s' %
+                         self.host_id)
+            else:
+                #Second stage registration failed - IDs don't match
+                try:
+                    # Remove registration temp file, so that registration is
+                    # started from scratch next time.
+                    os.path.remove(reg_file)
+                except:
+                    pass
+                LOG.error('Registration Failed: Node ID mismatch.')
+                return False
+
+        except KeyError:
+            LOG.error('Unable to get node ID: %s %s' % (resp['message'],
+                                                        detailed_exception()))
+            return False
+
+        except (IOError, OSError):
+            LOG.error('Error storing node ID: %s' % detailed_exception())
+            return False
+
+        return True
+
+    def verify_id(self):
+        try:
+            LOG.debug('verify_id, local_id: %s' % self.host_id)
+            resp = self.endpoint.whoami(node_id=self.host_id)
+            LOG.debug('verify_id, response status code: %s' % resp.status_code)
+            return resp.json['node']['id'] == self.host_id
+        except Exception:
+            LOG.error("verify_id exception: " + detailed_exception())
+            return False
+        finally:
+            try:
+                if resp.status_code == 404:
+                    self.node_deleted()
+            except (UnboundLocalError, AttributeError):
+                LOG.error(detailed_exception())
+                pass
 
     def _maybe_init(self):
         if self.endpoint:
@@ -67,39 +184,9 @@ class TaskThread(threading.Thread):
                 raise
 
         if not self.host_id:
-            # try to find our host ID from the endpoint
-            LOG.info('Initial connection: fetching host ID')
-            #TODO: Fix up client to support whoami in a more
-            #reasonable manner and fix this code up
-            root = self.endpoint.nodes.filter(
-                'facts.parent_id = None and name = "workspace"').first()
-            resp = root.whoami(hostname=self.name).json
-            try:
-                host_id = resp['node_id']
-            except KeyError:
-                LOG.error('Unable to get node ID: %s' % resp['message'])
-                return False
-            reg_file = '.'.join((self.hostidfile, 'registering'))
-            dirs = reg_file.rpartition(os.sep)[0]
-            try:
-                os.makedirs(dirs)
-            except OSError:
-                pass
-
-            with open(reg_file, 'wb') as f:
-                f.write(str(host_id))
-            resp = root.whoami(node_id=host_id).json
-            try:
-                node = resp['node']
-            except KeyError:
-                LOG.error('Unable to get node ID: %s' % resp['message'])
-                return False
-            if node['id'] == host_id:
-                os.rename(reg_file, self.hostidfile)
-                self.host_id = node['id']
-            else:
-                LOG.error('Node ID mismatch.')
-                return False
+            # Never successfully registered - otherwise host_id would have
+            # been read from hostidfile.
+            self.register()
 
         # update the module list
         self.producer_lock.acquire()
@@ -131,7 +218,7 @@ class TaskThread(threading.Thread):
         while self.running:
             task = None
 
-            if not self._maybe_init():
+            if not (self._maybe_init() and self.verify_id()):
                 time.sleep(15)
                 continue
 
@@ -139,6 +226,9 @@ class TaskThread(threading.Thread):
                 task = self.endpoint.nodes[self.host_id].task_blocking
             except ConnectionError:
                 time.sleep(15)
+            except KeyError as e:
+                LOG.error(e)
+                self.node_deleted()
             except KeyboardInterrupt:
                 raise
 
@@ -166,6 +256,7 @@ class TaskThread(threading.Thread):
         self.running = False
 
     def fetch(self, blocking=True):
+
         # we'll assume any task we've marked as running
         # is under way, and we'll only return new pending tasks.
         retval = {}
@@ -173,7 +264,10 @@ class TaskThread(threading.Thread):
         LOG.debug("fetching new work item")
         self.producer_lock.acquire()
 
-        while(blocking and len(self.pending_tasks) == 0):
+        while (blocking
+               and len(self.pending_tasks) == 0
+               and self.running
+               ):
             self.producer_condition.wait()
 
         if len(self.pending_tasks) > 0:
@@ -195,6 +289,7 @@ class TaskThread(threading.Thread):
         return retval
 
     def result(self, txid, result):
+
         self.producer_lock.acquire()
         if txid in self.running_tasks.keys():
             try:
