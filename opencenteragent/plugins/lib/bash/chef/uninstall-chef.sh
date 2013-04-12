@@ -30,9 +30,11 @@ export DEBIAN_FRONTEND=noninteractive
 
 id_OS
 
+CHEF_NODE_NAME=${CHEF_NODE_NAME:-`hostname -f`}
+
 if [ -f /etc/chef/knife.rb ]; then
-    knife node delete `hostname` -y -c /etc/chef/knife.rb || :
-    knife client delete `hostname` -y -c /etc/chef/knife.rb || :
+    knife node delete $CHEF_NODE_NAME -y -c /etc/chef/knife.rb || :
+    knife client delete $CHEF_NODE_NAME -y -c /etc/chef/knife.rb || :
 fi
 
 if [[ $OS_TYPE = "debian"  ]] || [[ $OS_TYPE = "ubuntu" ]]; then
@@ -52,6 +54,6 @@ fi
 
 return_consequence "facts.backends := remove(facts.backends, 'chef-client')"
 return_attr "chef_client_version" "none"
-for fact in chef_environment chef_server_consumed; do
+for fact in chef_environment chef_server_consumed chef_node_name; do
     return_fact "${fact}" "none"
 done
