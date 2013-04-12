@@ -70,7 +70,6 @@ class TaskThread(threading.Thread):
                 self.hostidfile
             ))
 
-
         LOG.error(message)
         os._exit(1)
 
