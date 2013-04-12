@@ -30,10 +30,11 @@ source "$OPENCENTER_BASH_DIR/opencenter.sh"
 
 # forcing chef-client install to 11.2.0-1
 CHEF_CLIENT_VERSION=${CHEF_CLIENT_VERSION:-"11.2.0-1"}
+CHEF_NODE_NAME=${CHEF_NODE_NAME:-`hostname -f`}
 
 id_OS
 
-REQUIRED="CHEF_SERVER_URL CHEF_SERVER_PEM CHEF_SERVER_HOSTNAME"
+REQUIRED="CHEF_SERVER_URL CHEF_SERVER_PEM CHEF_SERVER_HOSTNAME CHEF_NODE_NAME"
 for r in $REQUIRED; do
     if [[ -z ${!r} ]]; then
         echo Environment variable $r required but not set 1>&2
@@ -75,7 +76,7 @@ chef_environment "$CHEF_ENVIRONMENT"
 http_proxy  ENV['http_proxy'] if ENV.include?('http_proxy')
 https_proxy ENV['https_proxy'] if ENV.include?('https_proxy')
 no_proxy    ENV['no_proxy']   if ENV.include?('no_proxy')
-node_name "`hostname`"
+node_name "$CHEF_NODE_NAME"
 EOF
 cat <<EOF >/etc/chef/knife.rb
 chef_server_url "$CHEF_SERVER_URL"
@@ -83,7 +84,7 @@ chef_environment "$CHEF_ENVIRONMENT"
 http_proxy  ENV['http_proxy'] if ENV.include?('http_proxy')
 https_proxy ENV['https_proxy'] if ENV.include?('https_proxy')
 no_proxy    ENV['no_proxy']   if ENV.include?('no_proxy')
-node_name "`hostname`"
+node_name "$CHEF_NODE_NAME"
 EOF
 if [ -n "${CHEF_VALIDATION_NAME}" ]; then
     echo "validation_client_name '$CHEF_VALIDATION_NAME'" >> /etc/chef/client.rb
@@ -113,3 +114,4 @@ chef-client
 
 return_attr "chef_client_version" "'${CHEF_CLIENT_VERSION}'"
 return_fact "chef_environment" "'${CHEF_ENVIRONMENT}'"
+return_fact "chef_node_name" "'${CHEF_NODE_NAME}'"
