@@ -99,7 +99,7 @@ class TaskThread(threading.Thread):
         # Node may be semi registered, try reading ID from
         # registering file.
         try:
-            host_id = open(reg_file).read()
+            host_id = int(open(reg_file).read())
             LOG.info('Agent Registration: Resuming partially '
                      'completed registation. ID %s read '
                      'from registering file.' % host_id)
@@ -368,12 +368,16 @@ def setup(config=None):
     name = config.get('hostname', socket.getfqdn().strip())
     try:
         with open(hostidfile) as f:
-            host_id = f.read()
+            host_id = int(f.read())
     except IOError as e:
         if e.errno == errno.ENOENT:
             host_id = None
         else:
             raise e
+    except ValueError as e:
+        LOG.error('Couldn\'t read integer from host id file: %s' % hostidfile)
+        host_id = None
+
     endpoint = global_config.get('endpoints', {}).get(
         'admin', 'http://localhost:8080/admin')
 
