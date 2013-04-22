@@ -99,12 +99,14 @@ class TaskThread(threading.Thread):
         # Node may be semi registered, try reading ID from
         # registering file.
         try:
-            host_id = int(open(reg_file).read())
+            with open(reg_file) as f:
+                host_id = int(f.read())
             LOG.info('Agent Registration: Resuming partially '
                      'completed registation. ID %s read '
                      'from registering file.' % host_id)
         except:
-            # Doesn't matter if this file can't be read.
+            # Doesn't matter if this file can't be read,
+            # Registration will start from step 1.
             pass
 
         try:
